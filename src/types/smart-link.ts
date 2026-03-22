@@ -1,0 +1,238 @@
+export type LinkType = 'external' | 'whatsapp' | 'instagram' | 'tiktok' | 'youtube' | 'telegram' | 'email' | 'phone' | 'page';
+
+export interface SmartLinkButton {
+  id: string;
+  label: string;
+  subtitle: string;
+  url: string;
+  linkType?: LinkType;
+  linkValue?: string;
+  icon: string;
+  imageUrl?: string;
+  gradientColor?: string;
+  iconEmoji?: string;
+  imagePosition?: "left" | "right";
+  imageOpacity?: number;
+  imageSize?: number;
+  textAlign?: "left" | "center" | "right";
+  titleSize?: number;
+  buttonHeight?: number;
+  order?: number;
+  pageId?: string;
+  badgeLabel?: string;
+  badgeColor?: string;
+  buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal';
+}
+
+export type BlockType =
+  | 'hero' | 'info' | 'button' | 'image-button' | 'badges'
+  | 'text' | 'separator' | 'cta' | 'image' | 'header'
+  | 'spacer' | 'video' | 'countdown' | 'faq' | 'gallery'
+  | 'testimonial' | 'stats' | 'product' | 'email-capture'
+  | 'spotify' | 'map' | 'carousel' | 'banner' | 'html'
+  | 'animated-button';
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface GalleryImage {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
+export interface StatItem {
+  id: string;
+  value: string;
+  label: string;
+}
+
+export interface CarouselSlide {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
+export interface LinkBlock {
+  id: string;
+  type: BlockType;
+  order: number;
+  content?: string;
+  subtitle?: string;
+  badges?: BadgeItem[];
+  imageUrl?: string;
+  height?: number;
+  videoUrl?: string;
+  borderRadius?: number;
+  emoji?: string;
+  // Image Button
+  buttonImageUrl?: string;
+  buttonUrl?: string;
+  buttonHeight?: number;
+  // Countdown
+  countdownDate?: string;
+  countdownLabel?: string;
+  // FAQ
+  faqItems?: FaqItem[];
+  // Gallery
+  galleryImages?: GalleryImage[];
+  // Testimonial
+  testimonialName?: string;
+  testimonialRole?: string;
+  testimonialAvatar?: string;
+  testimonialRating?: number;
+  // Stats
+  statItems?: StatItem[];
+  // Product
+  productImage?: string;
+  productName?: string;
+  productPrice?: string;
+  productOldPrice?: string;
+  productDescription?: string;
+  productButtonLabel?: string;
+  productButtonUrl?: string;
+  // Email Capture
+  emailPlaceholder?: string;
+  emailButtonLabel?: string;
+  emailSuccessMessage?: string;
+  // Spotify
+  spotifyUrl?: string;
+  spotifyCompact?: boolean;
+  // Map
+  mapUrl?: string;
+  mapHeight?: number;
+  mapAddress?: string;
+  // HTML
+  htmlContent?: string;
+  htmlHeight?: number;
+  // Carousel
+  carouselSlides?: CarouselSlide[];
+  carouselAutoplay?: boolean;
+  // Banner
+  bannerBg?: string;
+  bannerTag?: string;
+  // Animated Button
+  animStyle?: 'whatsapp' | 'location' | 'schedule' | 'cta' | 'instagram' | 'tiktok' | 'youtube' | 'phone' | 'email' | 'telegram';
+  animPrimaryColor?: string;
+  animSecondaryColor?: string;
+  animButtonLabel?: string;
+  animSubtitle?: string;
+  animUrl?: string;
+  animTitleSize?: number;
+  animButtonHeight?: number;
+}
+
+export interface BadgeItem {
+  id: string;
+  label: string;
+  emoji: string;
+  color: string;
+}
+
+export type EntryAnimation = 'none' | 'fade-up' | 'slide-left' | 'slide-right' | 'scale' | 'bounce';
+
+export interface SnowEffect {
+  enabled: boolean;
+  intensity: number;
+  color: string;
+}
+
+export interface BubblesEffect {
+  enabled: boolean;
+  intensity: number; // 5–100
+  color: string;
+}
+
+export interface FirefliesEffect {
+  enabled: boolean;
+  count: number; // 5–40
+  color: string;
+}
+
+export interface MatrixEffect {
+  enabled: boolean;
+  speed: number; // 1–10
+  color: string;
+}
+
+export interface StarsEffect {
+  enabled: boolean;
+  count: number; // 20–200
+  color: string;
+  shooting: boolean;
+}
+
+export interface BgHtmlEffect {
+  enabled: boolean;
+  html: string;
+}
+
+/** A sub-page within a SmartLink */
+export interface SubPage {
+  id: string;
+  title: string;
+  blocks: LinkBlock[];
+  backgroundColor?: string;
+  fontFamily?: string;
+  linkedButtonId?: string;
+}
+
+/** @deprecated use heroImageHeightPx instead */
+export type HeroImageHeight = 'sm' | 'md' | 'lg' | 'xl' | 'auto';
+
+export type HeroObjectFit = 'cover' | 'contain' | 'fill';
+
+export interface HeroFocalPoint {
+  x: number;  // 0–100 %
+  y: number;  // 0–100 %
+}
+
+export interface SmartLink {
+  id: string;
+  slug: string;
+  businessName: string;
+  businessNameHtml?: boolean;
+  tagline: string;
+  heroImage: string;
+  /** @deprecated — kept for backward-compat. Use heroImageHeightPx. */
+  heroImageHeight?: HeroImageHeight;
+  /** Banner height in px (80–500). Takes precedence over heroImageHeight. */
+  heroImageHeightPx?: number;
+  /** How the banner image fills its container */
+  heroObjectFit?: HeroObjectFit;
+  /** Focal point for object-position (0–100 each axis) */
+  heroFocalPoint?: HeroFocalPoint;
+  /** Opacity of the hero image itself (10–100, default 100) */
+  heroImageOpacity?: number;
+  /** Opacity of the overlay on top of hero image (0–80, default 0) */
+  heroOverlayOpacity?: number;
+  /** Color of the overlay: "dark" | "light" | hex string (default "dark") */
+  heroOverlayColor?: string;
+  logoUrl: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  fontFamily?: string;
+  titleSize?: number;
+  businessNameFontSize?: number; // font size in px, default 24
+  businessNameAlign?: "left" | "center" | "right"; // text alignment of business name, default center
+  entryAnimation?: EntryAnimation;
+  snowEffect?: SnowEffect;
+  bubblesEffect?: BubblesEffect;
+  firefliesEffect?: FirefliesEffect;
+  matrixEffect?: MatrixEffect;
+  starsEffect?: StarsEffect;
+  bgHtml?: BgHtmlEffect;
+  buttons: SmartLinkButton[];
+  badges: string[];
+  floatingEmojis: string[];
+  blocks: LinkBlock[];
+  pages: SubPage[];
+  views: number;
+  clicks: number;
+  isActive: boolean;
+  createdAt: string;
+}
