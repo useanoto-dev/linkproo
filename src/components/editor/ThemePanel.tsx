@@ -131,10 +131,10 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
     });
   }, [onUpdateLink]);
 
-  // Preload all fonts
+  // Load only the active font on mount — others load on hover
   useEffect(() => {
-    fontOptions.forEach(loadGoogleFont);
-  }, []);
+    loadGoogleFont(link.fontFamily ?? "Inter");
+  }, [link.fontFamily]);
 
   return (
     <div className="space-y-5">
@@ -335,6 +335,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
           {fontOptions.map((font) => (
             <button
               key={font}
+              onMouseEnter={() => loadGoogleFont(font)}
               onClick={() => {
                 loadGoogleFont(font);
                 onUpdateLink({ fontFamily: font });
