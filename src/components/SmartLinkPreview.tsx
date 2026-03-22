@@ -1,0 +1,346 @@
+import { motion } from "framer-motion";
+import DOMPurify from "dompurify";
+import { SmartLink, SmartLinkButton, LinkBlock } from "@/types/smart-link";
+import { Zap } from "lucide-react";
+import { useMemo, useEffect, useState, useRef, memo } from "react";
+import { SnowEffect } from "@/components/SnowEffect";
+import { BubblesEffect } from "@/components/BubblesEffect";
+import { FirefliesEffect } from "@/components/FirefliesEffect";
+import { MatrixEffect } from "@/components/MatrixEffect";
+import { StarsEffect } from "@/components/StarsEffect";
+import { BgHtmlEffect } from "@/components/BgHtmlEffect";
+import { extractBgColor } from "@/lib/color-utils";
+import { SubPageModal } from "@/components/SubPageModal";
+import { FloatingEmoji } from "@/components/preview/FloatingEmoji";
+import { ButtonPreview } from "@/components/preview/ButtonPreview";
+import { BlockRenderer } from "@/components/preview/BlockRenderer";
+import {
+  isDarkBg, parseCustomBg, FONT_LINKS, loadGoogleFont, getEntryVariants,
+} from "@/components/preview/preview-utils";
+
+// ─── HtmlTitle — renderiza HTML completo do usuário dentro de um iframe isolado ──
+
+function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: number; align?: "left" | "center" | "right" }) {
+  const [height, setHeight] = useState(80);
+
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === "html-title-height" && typeof e.data.height === "number") {
+        setHeight(Math.max(20, e.data.height));
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  // Inject a tiny postMessage reporter so the parent knows the body height
+  const srcDoc = useMemo(() => {
+    const defaultStyle = `<style>html,body{margin:0;padding:0;text-align:${align};}</style>`;
+    const reporter =
+      `<scr` +
+      `ipt>function r(){window.parent.postMessage({type:'html-title-height',height:document.body.scrollHeight},'*');}` +
+      `window.addEventListener('load',r);setTimeout(r,120);setTimeout(r,600);</scr` +
+      `ipt>`;
+    let doc = html;
+    if (doc.includes("</head>")) {
+      doc = doc.replace("</head>", defaultStyle + "</head>");
+    } else {
+      doc = defaultStyle + doc;
+    }
+    return doc.includes("</body>")
+      ? doc.replace("</body>", reporter + "</body>")
+      : doc + reporter;
+  }, [html, align]);
+
+  return (
+    // Outer div reserves the SCALED layout height so content below isn't overlapped
+    <div style={{ height: height * scale, overflow: "hidden", width: "100%" }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", height, width: "100%" }}>
+        <iframe
+          srcDoc={srcDoc}
+          sandbox="allow-scripts"
+          scrolling="no"
+          style={{ width: "100%", height, border: "none", background: "transparent", display: "block", overflow: "hidden" }}
+          title="business-name"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SmartLinkPreviewProps {
+  link: SmartLink;
+}
+
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLinkPreviewProps) {
+  const hasContent = link.businessName || link.heroImage || link.buttons.length > 0;
+  const dark = isDarkBg(link.backgroundColor);
+  const customBg = parseCustomBg(link.backgroundColor);
+  const heroBgColor = extractBgColor(link.backgroundColor);
+  const accent = link.accentColor || "#f59e0b";
+  const entryAnim = link.entryAnimation ?? "fade-up";
+  const snow = link.snowEffect;
+  const [openPageId, setOpenPageId] = useState<string | null>(null);
+  const openPage = (link.pages || []).find((p) => p.id === openPageId) || null;
+
+  // Key to force remount and replay animations when animation type changes
+  const [animKey, setAnimKey] = useState(0);
+  const prevAnimRef = useRef(entryAnim);
+  useEffect(() => {
+    if (prevAnimRef.current !== entryAnim) {
+      prevAnimRef.current = entryAnim;
+      setAnimKey((k) => k + 1);
+    }
+  }, [entryAnim]);
+
+  const textClass = dark ? "text-white" : "text-gray-900";
+  const subtextClass = dark ? "text-white/60" : "text-gray-500";
+  const fontFamily = FONT_LINKS[link.fontFamily || "Inter"] || "'Inter', sans-serif";
+
+  useEffect(() => {
+    if (link.fontFamily) loadGoogleFont(link.fontFamily);
+  }, [link.fontFamily]);
+
+  // Build unified list sorted by order
+  const items = useMemo(() => {
+    type UnifiedPreviewItem =
+      | { kind: "button"; data: SmartLinkButton; order: number }
+      | { kind: "block"; data: LinkBlock; order: number };
+
+    const list: UnifiedPreviewItem[] = [
+      ...link.buttons.map((b, i) => ({ kind: "button" as const, data: b, order: b.order ?? i })),
+      ...link.blocks.map((b, i) => ({ kind: "block" as const, data: b, order: b.order ?? (link.buttons.length + i) })),
+    ].sort((a, b) => a.order - b.order);
+    return list;
+  }, [link.buttons, link.blocks]);
+
+  if (!hasContent) {
+    return (
+      <div className="flex items-center justify-center min-h-full h-full text-sm p-8 text-center" style={{ color: "#999", minHeight: "100%" }}>
+        <div>
+          <div className="text-4xl mb-3">📱</div>
+          <p className="text-xs leading-relaxed">Preencha o nome do negócio ou adicione um botão para ver o preview aqui</p>
+        </div>
+      </div>
+    );
+  }
+
+  const bgStyle = customBg ? { background: customBg, fontFamily } : { fontFamily };
+  const bgClass = customBg ? "" : `bg-gradient-to-b ${link.backgroundColor}`;
+
+  return (
+    <div className={`min-h-full ${bgClass} relative overflow-hidden`} style={bgStyle}>
+      {link.bgHtml?.enabled && link.bgHtml.html && (
+        <BgHtmlEffect html={link.bgHtml.html} />
+      )}
+
+      {link.starsEffect?.enabled && (
+        <StarsEffect
+          count={link.starsEffect.count}
+          color={link.starsEffect.color}
+          shooting={link.starsEffect.shooting}
+        />
+      )}
+      {link.matrixEffect?.enabled && (
+        <MatrixEffect speed={link.matrixEffect.speed} color={link.matrixEffect.color} />
+      )}
+
+      {snow?.enabled && <SnowEffect intensity={snow.intensity} color={snow.color} />}
+      {link.bubblesEffect?.enabled && (
+        <BubblesEffect intensity={link.bubblesEffect.intensity} color={link.bubblesEffect.color} />
+      )}
+      {link.firefliesEffect?.enabled && (
+        <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />
+      )}
+
+      {/* Decorative particles — stable positions */}
+      <DecorativeParticles accent={accent} />
+
+      {/* Floating Emojis */}
+      {link.floatingEmojis.map((emoji, i) => (
+        <FloatingEmoji key={`${emoji}-${i}`} emoji={emoji} delay={i * 1.5} />
+      ))}
+
+      {/* Hero Image */}
+      {link.heroImage && (() => {
+        // Resolve height — new px value takes precedence over legacy enum
+        const legacyMap: Record<string, number | undefined> = {
+          sm: 128, md: 192, lg: 256, xl: 320,
+        };
+        const heightPx: number | undefined =
+          link.heroImageHeightPx ??
+          (link.heroImageHeight === 'auto' ? undefined : legacyMap[link.heroImageHeight ?? 'md'] ?? 192);
+
+        const objectFit  = link.heroObjectFit ?? 'cover';
+        const objectPos  = link.heroFocalPoint
+          ? `${link.heroFocalPoint.x}% ${link.heroFocalPoint.y}%`
+          : 'center';
+
+        return (
+          <motion.div
+            className="relative w-full"
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <img
+              src={link.heroImage}
+              alt={link.businessName}
+              className="w-full"
+              style={{
+                height:         heightPx ?? 'auto',
+                maxHeight:      heightPx ? undefined : '24rem',
+                objectFit,
+                objectPosition: objectPos,
+                display:        'block',
+                opacity:        (link.heroImageOpacity ?? 100) / 100,
+              }}
+            />
+            {(link.heroOverlayOpacity ?? 0) > 0 && (() => {
+              const color = link.heroOverlayColor ?? 'dark';
+              const bg = color === 'dark' ? '#000000' : color === 'light' ? '#ffffff' : color;
+              return (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundColor: bg,
+                    opacity: (link.heroOverlayOpacity ?? 0) / 100,
+                  }}
+                />
+              );
+            })()}
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(to bottom, ${heroBgColor}80 0%, transparent 40%)` }}
+            />
+          </motion.div>
+        );
+      })()}
+
+      {/* Business Info — overlaps banner with rounded top corners */}
+      <motion.div
+        className={`px-5 py-4 relative z-10 ${bgClass} ${link.heroImage ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
+        style={{ ...bgStyle, textAlign: link.businessNameAlign ?? "center" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        {link.logoUrl && (
+          <motion.div
+            className="relative inline-block mb-2"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+          >
+            <img src={link.logoUrl} alt="Logo" className="max-w-[80px] max-h-[80px] object-contain drop-shadow-xl" />
+          </motion.div>
+        )}
+        {link.businessNameHtml ? (
+          <HtmlTitle
+            html={link.businessName || "<p>Nome do Negócio</p>"}
+            scale={(link.businessNameFontSize ?? 100) / 100}
+            align={link.businessNameAlign ?? "center"}
+          />
+        ) : (
+          <h1
+            className="font-bold leading-tight break-words"
+            style={{ color: accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
+          >
+            {link.businessName || "Nome do Negócio"}
+          </h1>
+        )}
+        {link.tagline && (
+          <p className={`text-xs mt-1 italic ${subtextClass}`}>{link.tagline}</p>
+        )}
+      </motion.div>
+
+      {/* Unified rendering */}
+      <div key={`items-${animKey}`} className="relative z-10">
+        {items.map((item, idx) => {
+          const itemDelay = 0.3 + idx * 0.08;
+          const ev = getEntryVariants(entryAnim, itemDelay);
+
+          if (item.kind === "button") {
+            return (
+              <ButtonPreview
+                key={item.data.id}
+                btn={item.data}
+                accent={accent}
+                linkId={link.id}
+                entryVariants={ev}
+                onOpenPage={setOpenPageId}
+              />
+            );
+          }
+
+          return (
+            <BlockRenderer
+              key={item.data.id}
+              block={item.data}
+              accent={accent}
+              dark={dark}
+              textClass={textClass}
+              subtextClass={subtextClass}
+              delay={itemDelay}
+              linkId={link.id}
+              entryVariants={ev}
+            />
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <motion.div
+        className="px-5 pb-6 pt-4 text-center relative z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+      >
+        <div className={`inline-flex items-center gap-1.5 text-[10px] rounded-full px-3 py-1.5 shadow-md border ${
+          dark ? "bg-white/10 backdrop-blur-sm border-white/10" : "bg-white border-gray-100"
+        }`}>
+          <span className={dark ? "text-white/50" : "text-gray-400"}>Feito pela</span>
+          <Zap className="h-2.5 w-2.5" style={{ color: accent }} />
+          <span className={`font-bold ${dark ? "text-white/80" : "text-gray-700"}`}>LinkPro</span>
+        </div>
+      </motion.div>
+
+      <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />
+    </div>
+  );
+});
+
+// Stable particle positions — computed once
+const PARTICLE_CONFIGS = Array.from({ length: 6 }, (_, i) => ({
+  width: 4 + (((i * 7 + 3) % 6)),
+  height: 4 + (((i * 5 + 2) % 6)),
+  left: `${10 + ((i * 13 + 5) % 80)}%`,
+  top: `${10 + ((i * 17 + 11) % 80)}%`,
+  duration: 4 + (i % 3),
+  delay: i * 0.8,
+}));
+
+const DecorativeParticles = memo(function DecorativeParticles({ accent }: { accent: string }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {PARTICLE_CONFIGS.map((p, i) => (
+        <motion.div
+          key={`particle-${i}`}
+          className="absolute rounded-full"
+          style={{
+            width: p.width,
+            height: p.height,
+            left: p.left,
+            top: p.top,
+            backgroundColor: accent,
+            opacity: 0.15,
+          }}
+          animate={{ y: [0, -30, 0], opacity: [0.1, 0.3, 0.1], scale: [1, 1.5, 1] }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+});
