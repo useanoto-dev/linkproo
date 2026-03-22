@@ -275,8 +275,8 @@ export default function LinkEditor() {
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
-              className="absolute left-0 top-0 bottom-0 z-40 w-[280px] bg-card border-r border-border shadow-2xl flex flex-col"
+              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="absolute left-0 top-0 bottom-0 z-40 w-[280px] bg-card border-r border-border shadow-lg flex flex-col"
             >
               <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
                 <div className="flex items-center gap-2">
@@ -319,7 +319,7 @@ export default function LinkEditor() {
         {/* Center panel */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-background">
           {/* Top toolbar */}
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card/50 backdrop-blur-sm shrink-0 overflow-x-auto custom-scroll min-w-0">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card shrink-0 overflow-x-auto custom-scroll min-w-0">
             {[
               { key: "elements" as const, icon: Layers, label: "Elementos" },
               { key: "theme" as const, icon: Palette, label: "Tema" },
@@ -425,6 +425,7 @@ export default function LinkEditor() {
           {/* Editor content */}
           <div
             className="flex-1 overflow-y-auto custom-scroll p-4 lg:p-6"
+            style={{ contain: 'paint', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
             onPointerDown={() => { if (openDrawer) { setOpenDrawer(null); setEditingSubPageId(null); } }}
           >
             <div className={`mx-auto ${showPreview ? "max-w-3xl" : "max-w-2xl"}`}>
@@ -437,12 +438,13 @@ export default function LinkEditor() {
         <AnimatePresence>
           {showPreview && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: isMobile ? "100%" : 380, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              style={{ width: isMobile ? "100%" : 380 }}
               className={`shrink-0 border-l border-border bg-secondary/20 flex flex-col items-center justify-center overflow-hidden ${
-                isMobile ? "fixed inset-0 z-50 bg-background/95 backdrop-blur-xl" : ""
+                isMobile ? "fixed inset-0 z-50 bg-background" : ""
               }`}
             >
               {isMobile && (
