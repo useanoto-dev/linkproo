@@ -6,8 +6,8 @@ import { SubPagePreview } from "@/components/SubPagePreview";
 import { ElementsSidebar } from "@/components/editor/ElementsSidebar";
 import { BlockEditor } from "@/components/editor/BlockEditor";
 import { ThemePanel } from "@/components/editor/ThemePanel";
-import { SmartLink, BlockType } from "@/types/smart-link";
-import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText } from "lucide-react";
+import { SmartLink, BlockType, SubPage } from "@/types/smart-link";
+import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard, ArrowLeft } from "lucide-react";
 import { EffectsPanel } from "@/components/editor/EffectsPanel";
 import { SubPageEditor } from "@/components/editor/SubPageEditor";
 import { DeviceFrame, DeviceType, DEVICE_LABELS } from "@/components/editor/DeviceFrame";
@@ -17,11 +17,12 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { templates } from "@/data/templates";
 import { useSaveLink, useLink, getPublicLinkUrl } from "@/hooks/use-links";
 import { smartLinkToRow } from "@/lib/link-mappers";
+import { createBlockDefaults } from "@/lib/block-utils";
 import { useAutosave } from "@/hooks/use-autosave";
 import { useEditorHistory } from "@/hooks/use-editor-history";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { validateSlug, normalizeSlug, checkSlugAvailability } from "@/lib/slug-utils";
+import { validateSlug, checkSlugAvailability } from "@/lib/slug-utils";
 
 function createDefaultLink(): SmartLink {
   return {
@@ -87,13 +88,15 @@ export default function LinkEditor() {
   const previewTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    previewTimerRef.current = setTimeout(() => setPreviewLink(link), 150);
+    previewTimerRef.current = setTimeout(() => setPreviewLink(link), 50);
     return () => { if (previewTimerRef.current) clearTimeout(previewTimerRef.current); };
   }, [link]);
 
   const [showPreview, setShowPreview] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [device, setDevice] = useState<DeviceType>("iphone15");
   const [openDrawer, setOpenDrawer] = useState<"elements" | "theme" | "effects" | "pages" | null>(null);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [editingSubPageId, setEditingSubPageId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(!isEditing);
 
@@ -109,7 +112,7 @@ export default function LinkEditor() {
       .eq("user_id", user.id);
     if (error) throw error;
   }, [user]);
-  const { status: autosaveStatus, initializeRef } = useAutosave(link, autosaveFn, isExistingLink && initialized, 2500);
+  const { status: autosaveStatus, initializeRef, savedAt, retry, flush } = useAutosave(link, autosaveFn, isExistingLink && initialized, 1500);
 
   useEffect(() => {
     if (existingLink && !initialized) {
@@ -119,26 +122,45 @@ export default function LinkEditor() {
     }
   }, [existingLink, initialized, reset, initializeRef]);
 
+  // Warn before leaving with unsaved changes and attempt immediate save
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Try to flush pending saves synchronously before unload
+      // Note: async operations during beforeunload are unreliable,
+      // but we can at minimum reduce the risk
+      if (autosaveStatus === "saving" || autosaveStatus === "error") {
+        e.preventDefault();
+        e.returnValue = "Há alterações não salvas. Tem certeza que deseja sair?";
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // When tab becomes hidden (user switching tabs or about to close),
+      // trigger immediate save
+      if (document.visibilityState === "hidden") {
+        flush();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [autosaveStatus, flush]);
+
+  // Save on unmount (navigation away within the app)
+  useEffect(() => {
+    return () => {
+      flush();
+    };
+  }, [flush]);
+
   useEffect(() => {
     if (isMobile) setShowPreview(false);
   }, [isMobile]);
-
-  // Keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) redo();
-        else undo();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
-        e.preventDefault();
-        redo();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo]);
 
   const updateLink = useCallback((updates: Partial<SmartLink>) => {
     setLink((prev) => ({ ...prev, ...updates }));
@@ -150,8 +172,58 @@ export default function LinkEditor() {
     return Math.max(maxBtnOrder, maxBlkOrder, link.buttons.length + link.blocks.length - 1) + 1;
   };
 
+  const insertBlockAt = useCallback((type: BlockType, atIndex: number, extraDefaults?: Record<string, unknown>) => {
+    // Bump order of all existing items at or after atIndex by 1
+    const updatedButtons = link.buttons.map((b) =>
+      (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    const updatedBlocks = link.blocks.map((b) =>
+      (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+
+    const names: Record<string, string> = {
+      button: "Botão Visual", "image-button": "Botão Imagem", text: "Texto",
+      badges: "Badges", cta: "CTA", separator: "Separador", image: "Imagem",
+      header: "Título", spacer: "Espaçador", video: "Vídeo", hero: "Hero",
+      info: "Info", countdown: "Countdown", faq: "FAQ", gallery: "Galeria",
+      testimonial: "Depoimento", stats: "Números/Stats", product: "Produto",
+      "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
+      carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
+    };
+
+    if (type === "button") {
+      const newBtn = {
+        id: Date.now().toString(),
+        label: "",
+        subtitle: "",
+        url: "",
+        icon: "",
+        gradientColor: "from-blue-600 to-blue-800",
+        iconEmoji: "",
+        imagePosition: "right" as const,
+        imageOpacity: 85,
+        imageSize: 50,
+        order: atIndex,
+      };
+      updateLink({ buttons: [...updatedButtons, newBtn], blocks: updatedBlocks });
+    } else {
+      const newBlock = createBlockDefaults(type, atIndex, extraDefaults);
+      updateLink({ buttons: updatedButtons, blocks: [...updatedBlocks, newBlock] });
+    }
+    toast.success(`${names[type] || "Bloco"} inserido!`);
+  }, [link, updateLink]);
+
   const addBlock = (type: BlockType, extraDefaults?: Record<string, unknown>) => {
     const nextOrder = getNextOrder();
+    const names: Record<string, string> = {
+      button: "Botão Visual", "image-button": "Botão Imagem", text: "Texto",
+      badges: "Badges", cta: "CTA", separator: "Separador", image: "Imagem",
+      header: "Título", spacer: "Espaçador", video: "Vídeo", hero: "Hero",
+      info: "Info", countdown: "Countdown", faq: "FAQ", gallery: "Galeria",
+      testimonial: "Depoimento", stats: "Números/Stats", product: "Produto",
+      "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
+      carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
+    };
     if (type === "button") {
       updateLink({
         buttons: [
@@ -172,53 +244,37 @@ export default function LinkEditor() {
         ],
       });
     } else {
-      const baseBlock = {
-        id: Date.now().toString(),
-        type,
-        order: nextOrder,
-        content: "",
-        subtitle: "",
-        badges: type === "badges" ? [] : undefined,
-        height: type === "spacer" ? 24 : undefined,
-        borderRadius: type === "image" ? 12 : undefined,
-        videoUrl: type === "video" ? "" : undefined,
-        // New block defaults
-        testimonialRating: type === "testimonial" ? 5 : undefined,
-        statItems: type === "stats" ? [
-          { id: `stat-${Date.now()}-1`, value: "10k", label: "Clientes" },
-          { id: `stat-${Date.now()}-2`, value: "4.9★", label: "Avaliação" },
-          { id: `stat-${Date.now()}-3`, value: "100%", label: "Satisfação" },
-        ] : undefined,
-        emailPlaceholder: type === "email-capture" ? "seu@email.com" : undefined,
-        emailButtonLabel: type === "email-capture" ? "Quero receber!" : undefined,
-        spotifyCompact: type === "spotify" ? false : undefined,
-        mapHeight: type === "map" ? 220 : undefined,
-        carouselSlides: type === "carousel" ? [] : undefined,
-        carouselAutoplay: type === "carousel" ? true : undefined,
-        bannerBg: type === "banner" ? "#6366f1" : undefined,
-        animStyle: type === "animated-button" ? "whatsapp" : undefined,
-        animSubtitle: type === "animated-button" ? "Atendimento rápido pelo chat" : undefined,
-        animButtonLabel: type === "animated-button" ? "Falar no WhatsApp" : undefined,
-      };
-      const newBlock = { ...baseBlock, ...(extraDefaults || {}) };
-      updateLink({
-        blocks: [
-          ...link.blocks,
-          newBlock,
-        ],
-      });
+      const newBlock = createBlockDefaults(type, nextOrder, extraDefaults);
+      updateLink({ blocks: [...link.blocks, newBlock] });
     }
-    const names: Record<string, string> = {
-      button: "Botão Visual", "image-button": "Botão Imagem", text: "Texto",
-      badges: "Badges", cta: "CTA", separator: "Separador", image: "Imagem",
-      header: "Título", spacer: "Espaçador", video: "Vídeo", hero: "Hero",
-      info: "Info", countdown: "Countdown", faq: "FAQ", gallery: "Galeria",
-      testimonial: "Depoimento", stats: "Números/Stats", product: "Produto",
-      "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
-      carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
-    };
     toast.success(`${names[type] || "Bloco"} adicionado!`);
   };
+
+  const updateSubPage = useCallback((pageId: string, updates: Partial<SubPage>) => {
+    setLink((prev) => ({
+      ...prev,
+      pages: (prev.pages || []).map((p) => p.id === pageId ? { ...p, ...updates } : p),
+    }));
+  }, [setLink]);
+
+  const addBlockToSubPage = useCallback((pageId: string, type: BlockType, extraDefaults?: Record<string, unknown>) => {
+    const page = (link.pages || []).find((p) => p.id === pageId);
+    if (!page) return;
+    const nextOrder = page.blocks.reduce((max, b) => Math.max(max, b.order ?? 0), -1) + 1;
+    const newBlock = createBlockDefaults(type, nextOrder, extraDefaults);
+    updateSubPage(pageId, { blocks: [...page.blocks, newBlock] });
+    toast.success("Bloco adicionado!");
+  }, [link.pages, updateSubPage]);
+
+  const insertBlockToSubPageAt = useCallback((pageId: string, type: BlockType, atIndex: number, extraDefaults?: Record<string, unknown>) => {
+    const page = (link.pages || []).find((p) => p.id === pageId);
+    if (!page) return;
+    const sorted = [...page.blocks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const newOrder = atIndex;
+    const bumpedBlocks = sorted.map((b) => (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b);
+    const newBlock = createBlockDefaults(type, newOrder, extraDefaults);
+    updateSubPage(pageId, { blocks: [...bumpedBlocks, newBlock] });
+  }, [link.pages, updateSubPage]);
 
   const handleSave = async () => {
     // Validate slug
@@ -254,6 +310,27 @@ export default function LinkEditor() {
     }
   };
 
+  // Keyboard shortcuts for undo/redo/save
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo, handleSave]);
+
   if (isEditing && isLoading) {
     return (
       <DashboardLayout title="Editor de Link" noPadding>
@@ -270,13 +347,24 @@ export default function LinkEditor() {
 
         {/* Slide-out drawer for Elements / Theme */}
         <AnimatePresence>
+          {openDrawer && isMobile && (
+            <motion.div
+              key="drawer-scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="absolute inset-0 z-30 bg-black/50"
+              onClick={() => { setOpenDrawer(null); setEditingSubPageId(null); }}
+            />
+          )}
           {openDrawer && (
             <motion.div
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="absolute left-0 top-0 bottom-0 z-40 w-[280px] bg-card border-r border-border shadow-lg flex flex-col"
+              className={`absolute left-0 top-0 bottom-0 z-40 ${isMobile ? "w-full" : "w-[280px]"} bg-card border-r border-border shadow-lg flex flex-col`}
             >
               <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
                 <div className="flex items-center gap-2">
@@ -307,7 +395,7 @@ export default function LinkEditor() {
                 ) : openDrawer === "effects" ? (
                   <EffectsPanel link={link} onUpdateLink={updateLink} />
                 ) : openDrawer === "pages" ? (
-                  <SubPageEditor link={link} onUpdateLink={updateLink} onEditingPageChange={setEditingSubPageId} />
+                  <SubPageEditor link={link} onUpdateLink={updateLink} onEditingPageChange={setEditingSubPageId} onOpenPageEditor={(id) => { setEditingSubPageId(id); setOpenDrawer(null); }} />
                 ) : (
                   <ThemePanel link={link} onUpdateLink={updateLink} />
                 )}
@@ -361,6 +449,14 @@ export default function LinkEditor() {
               >
                 <Redo2 className="h-4 w-4" />
               </button>
+              <button
+                type="button"
+                onClick={() => setShowShortcuts(true)}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer select-none"
+                title="Atalhos de teclado"
+              >
+                <Keyboard className="h-4 w-4" />
+              </button>
             </div>
 
             <div className="flex-1" />
@@ -375,10 +471,21 @@ export default function LinkEditor() {
                   <><Check className="h-3 w-3 text-green-400" /><span className="text-green-400">Salvo</span></>
                 )}
                 {autosaveStatus === "error" && (
-                  <><AlertCircle className="h-3 w-3 text-destructive" /><span className="text-destructive">Erro</span></>
+                  <button
+                    type="button"
+                    onClick={retry}
+                    className="flex items-center gap-1 text-destructive hover:underline cursor-pointer"
+                  >
+                    <AlertCircle className="h-3 w-3" />
+                    <span>Erro — tentar novamente</span>
+                  </button>
                 )}
                 {autosaveStatus === "idle" && isExistingLink && (
-                  <><Cloud className="h-3 w-3" /><span>Autosave</span></>
+                  savedAt ? (
+                    <><Check className="h-3 w-3 opacity-40" /><span>Salvo às {savedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></>
+                  ) : (
+                    <><Cloud className="h-3 w-3" /><span>Autosave</span></>
+                  )
                 )}
               </div>
             )}
@@ -429,7 +536,40 @@ export default function LinkEditor() {
             onPointerDown={() => { if (openDrawer) { setOpenDrawer(null); setEditingSubPageId(null); } }}
           >
             <div className={`mx-auto ${showPreview ? "max-w-3xl" : "max-w-2xl"}`}>
-              <BlockEditor link={link} onUpdateLink={updateLink} />
+              {editingSubPageId && (link.pages || []).find(p => p.id === editingSubPageId) ? (() => {
+                const subPage = (link.pages || []).find(p => p.id === editingSubPageId)!;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                      <button
+                        type="button"
+                        onClick={() => { setEditingSubPageId(null); if (openDrawer !== "pages") setOpenDrawer("pages"); }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        Páginas
+                      </button>
+                      <div className="w-px h-4 bg-border shrink-0" />
+                      <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-sm font-semibold text-foreground truncate">{subPage.title}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{subPage.blocks.length} blocos</span>
+                    </div>
+                    <BlockEditor
+                      link={link}
+                      onUpdateLink={updateLink}
+                      onInsertBlockAt={insertBlockAt}
+                      subPageMode={{
+                        page: subPage,
+                        onUpdatePage: (updates) => updateSubPage(editingSubPageId, updates),
+                        onAddBlock: (type, defaults) => addBlockToSubPage(editingSubPageId, type, defaults),
+                        onInsertBlockAt: (type, atIndex, defaults) => insertBlockToSubPageAt(editingSubPageId, type, atIndex, defaults),
+                      }}
+                    />
+                  </div>
+                );
+              })() : (
+                <BlockEditor link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt} selectedElementId={selectedElementId ?? undefined} onElementSelected={setSelectedElementId} />
+              )}
             </div>
           </div>
         </div>
@@ -486,11 +626,18 @@ export default function LinkEditor() {
               <DeviceFrame device={device}>
                 {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
                   <SubPagePreview
-                    page={(previewLink.pages || []).find((p) => p.id === editingSubPageId)!}
+                    page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
                     link={previewLink}
                   />
                 ) : (
-                  <SmartLinkPreview link={previewLink} />
+                  <SmartLinkPreview
+                    link={previewLink}
+                    selectedId={selectedElementId ?? undefined}
+                    onSelectElement={(id) => {
+                      setSelectedElementId(id);
+                      if (openDrawer) setOpenDrawer(null);
+                    }}
+                  />
                 )}
               </DeviceFrame>
 
@@ -507,6 +654,55 @@ export default function LinkEditor() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Keyboard shortcuts overlay */}
+        {showShortcuts && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowShortcuts(false)}
+          >
+            <div
+              className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Keyboard className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-bold text-foreground">Atalhos de Teclado</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcuts(false)}
+                  className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {[
+                  { keys: ["Ctrl", "Z"], description: "Desfazer" },
+                  { keys: ["Ctrl", "Shift", "Z"], description: "Refazer" },
+                  { keys: ["Ctrl", "Y"], description: "Refazer (alternativo)" },
+                  { keys: ["Ctrl", "S"], description: "Salvar" },
+                ].map(({ keys, description }) => (
+                  <div key={description} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0">
+                    <span className="text-sm text-muted-foreground">{description}</span>
+                    <div className="flex items-center gap-1">
+                      {keys.map((k, i) => (
+                        <kbd
+                          key={i}
+                          className="px-1.5 py-0.5 rounded-md bg-secondary border border-border text-[11px] font-mono font-semibold text-foreground leading-none"
+                        >
+                          {k}
+                        </kbd>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Preview toggle */}
         <button

@@ -85,6 +85,38 @@ export type Database = {
         }
         Relationships: []
       }
+      email_captures: {
+        Row: {
+          id: string
+          link_id: string
+          email: string
+          captured_at: string
+          source_block_id: string | null
+        }
+        Insert: {
+          id?: string
+          link_id: string
+          email: string
+          captured_at?: string
+          source_block_id?: string | null
+        }
+        Update: {
+          id?: string
+          link_id?: string
+          email?: string
+          captured_at?: string
+          source_block_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_captures_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "links"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       lesson_materials: {
         Row: {
           created_at: string
@@ -239,9 +271,14 @@ export type Database = {
           hero_image_opacity: number | null
           hero_overlay_opacity: number | null
           hero_overlay_color: string | null
+          hide_business_name: boolean | null
+          hide_tagline: boolean | null
           id: string
           is_active: boolean | null
           logo_url: string | null
+          logo_size_px: number | null
+          logo_shape: string | null
+          logo_shadow: boolean | null
           pages: Json | null
           slug: string
           snow_effect: Json | null
@@ -267,9 +304,14 @@ export type Database = {
           hero_image_opacity?: number | null
           hero_overlay_opacity?: number | null
           hero_overlay_color?: string | null
+          hide_business_name?: boolean | null
+          hide_tagline?: boolean | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          logo_size_px?: number | null
+          logo_shape?: string | null
+          logo_shadow?: boolean | null
           pages?: Json | null
           slug: string
           snow_effect?: Json | null
@@ -295,9 +337,14 @@ export type Database = {
           hero_image_opacity?: number | null
           hero_overlay_opacity?: number | null
           hero_overlay_color?: string | null
+          hide_business_name?: boolean | null
+          hide_tagline?: boolean | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          logo_size_px?: number | null
+          logo_shape?: string | null
+          logo_shadow?: boolean | null
           pages?: Json | null
           slug?: string
           snow_effect?: Json | null
@@ -423,7 +470,7 @@ export type Database = {
     }
     Functions: {
       get_admin_users: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           avatar_url: string
           company: string
@@ -435,8 +482,12 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_course_modules: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_links_with_stats: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           accent_color: string
           background_color: string

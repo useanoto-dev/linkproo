@@ -1,4 +1,15 @@
 import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect } from "@/types/smart-link";
+import type { Json } from "@/integrations/supabase/types";
+
+/**
+ * Serializa um valor TypeScript tipado para o tipo Json do Supabase (colunas JSONB).
+ * A conversão passa por JSON.parse(JSON.stringify()) para garantir que o valor
+ * seja serializable e remover referências circulares ou métodos não-serializáveis.
+ * Use apenas para campos JSONB onde o tipo TS é a fonte canônica de verdade.
+ */
+function toJsonb<T>(value: T): Json {
+  return JSON.parse(JSON.stringify(value ?? null)) as Json;
+}
 
 /**
  * Single source of truth for DB row ↔ SmartLink conversion.
@@ -14,11 +25,14 @@ export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0): SmartLi
     businessNameHtml: row.business_name_html || false,
     tagline: row.tagline || "",
     heroImage: row.hero_image || "",
-    heroImageHeight: row.hero_image_height || undefined,
+    heroImageHeight: row.hero_image_height || undefined,  // @deprecated — usar heroImageHeightPx
     heroImageOpacity: row.hero_image_opacity ?? undefined,
     heroOverlayOpacity: row.hero_overlay_opacity ?? undefined,
     heroOverlayColor: row.hero_overlay_color ?? undefined,
     logoUrl: row.logo_url || "",
+    logoSizePx: row.logo_size_px ?? 80,
+    logoShape: (row.logo_shape as SmartLink['logoShape']) ?? 'rounded',
+    logoShadow: row.logo_shadow ?? true,
     backgroundColor: row.background_color || "from-gray-50 to-white",
     textColor: row.text_color || "text-white",
     accentColor: row.accent_color || "#f59e0b",
@@ -26,6 +40,8 @@ export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0): SmartLi
     titleSize: row.title_size ?? undefined,
     businessNameFontSize: row.business_name_font_size ? Number(row.business_name_font_size) : undefined,
     businessNameAlign: (row.business_name_align as "left" | "center" | "right") || "center",
+    hideBusinessName: row.hide_business_name ?? false,
+    hideTagline: row.hide_tagline ?? false,
     entryAnimation: (row.entry_animation || "fade-up") as EntryAnimation,
     snowEffect: row.snow_effect ? (row.snow_effect as SnowEffect) : undefined,
     bubblesEffect: row.bg_effects?.bubbles as BubblesEffect | undefined,
@@ -54,11 +70,14 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     business_name_html: link.businessNameHtml || false,
     tagline: link.tagline,
     hero_image: link.heroImage,
-    hero_image_height: link.heroImageHeight || null,
+    hero_image_height: link.heroImageHeight || null,  // @deprecated — usar heroImageHeightPx // TODO: remover após confirmar que migration 20260322200001 rodou em prod
     hero_image_opacity: link.heroImageOpacity ?? null,
     hero_overlay_opacity: link.heroOverlayOpacity ?? null,
     hero_overlay_color: link.heroOverlayColor ?? null,
     logo_url: link.logoUrl,
+    logo_size_px: link.logoSizePx ?? 80,
+    logo_shape: link.logoShape ?? 'rounded',
+    logo_shadow: link.logoShadow ?? true,
     background_color: link.backgroundColor,
     text_color: link.textColor,
     accent_color: link.accentColor,
@@ -66,21 +85,24 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     title_size: link.titleSize ?? null,
     business_name_font_size: link.businessNameFontSize || null,
     business_name_align: link.businessNameAlign || "center",
-    buttons: link.buttons as any,
-    pages: link.pages as any,
-    badges: link.badges as any,
-    floating_emojis: link.floatingEmojis as any,
-    blocks: link.blocks as any,
+    hide_business_name: link.hideBusinessName ?? false,
+    hide_tagline: link.hideTagline ?? false,
+    buttons: toJsonb(link.buttons),
+    pages: toJsonb(link.pages),
+    badges: toJsonb(link.badges),
+    floating_emojis: toJsonb(link.floatingEmojis),
+    blocks: toJsonb(link.blocks),
     is_active: link.isActive,
-    custom_domain: (link as any).customDomain || null,
+    custom_domain: link.customDomain ?? null,
     entry_animation: link.entryAnimation || "fade-up",
-    snow_effect: link.snowEffect ? (link.snowEffect as any) : null,
-    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml) ? {
+    // SnowEffect is a structured object that maps to JSONB in the DB
+    snow_effect: toJsonb(link.snowEffect ?? null),
+    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml) ? toJsonb({
       bubbles: link.bubblesEffect ?? null,
       fireflies: link.firefliesEffect ?? null,
       matrix: link.matrixEffect ?? null,
       stars: link.starsEffect ?? null,
       bgHtml: link.bgHtml ?? null,
-    } : null,
+    }) : null,
   };
 }

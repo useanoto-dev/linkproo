@@ -1,0 +1,269 @@
+#lovable-badge {
+  display: none !important;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── NEXUS MODE (Light / Off-white Glass — Apple category) ───────────────── */
+@layer base {
+  :root {
+    /* Nexus — warm off-white with glass surfaces */
+    --background: 48 20% 97%;          /* #F8F7F4 warm off-white */
+    --foreground: 240 6% 10%;          /* #1C1C1E Apple dark */
+    --card: 0 0% 100%;                 /* pure white */
+    --card-foreground: 240 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 10%;
+    --primary: 262 83% 58%;            /* violet */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 48 15% 93%;           /* #EEECEA warm gray */
+    --secondary-foreground: 240 5% 26%;
+    --muted: 48 12% 90%;
+    --muted-foreground: 240 4% 42%;    /* #6E6E73 Apple gray */
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;              /* subtle border */
+    --input: 0 0% 100%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 6% 10%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 48 15% 93%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 262 83% 58%;
+
+    --surface: 0 0% 100%;
+    --surface-foreground: 240 6% 10%;
+    --surface-hover: 48 15% 94%;
+    --glow: 262 83% 58%;
+    --glow-muted: 292 70% 45%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    --editor-bg: 48 20% 97%;
+    --editor-surface: 0 0% 100%;
+    --editor-surface-hover: 48 15% 94%;
+    --editor-border: 240 6% 88%;
+    --editor-text: 240 6% 10%;
+    --editor-text-muted: 240 4% 46%;
+  }
+
+  /* ─── DARK MODE ──────────────────────────────────────────────────────────── */
+  .dark {
+    --background: 252 29% 3%;
+    --foreground: 0 0% 95%;
+    --card: 255 25% 7%;
+    --card-foreground: 0 0% 95%;
+    --popover: 255 25% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 255 20% 12%;
+    --secondary-foreground: 0 0% 93%;
+    --muted: 255 18% 12%;
+    --muted-foreground: 250 10% 50%;
+    --accent: 292 84% 61%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 255 15% 14%;
+    --input: 255 18% 16%;
+    --ring: 262 83% 58%;
+
+    --sidebar-background: 252 29% 3%;
+    --sidebar-foreground: 250 10% 50%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 255 20% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 255 15% 11%;
+    --sidebar-ring: 262 83% 58%;
+
+    --surface: 255 25% 6%;
+    --surface-foreground: 0 0% 95%;
+    --surface-hover: 255 20% 12%;
+    --glow: 262 83% 58%;
+    --glow-muted: 292 70% 45%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    --editor-bg: 252 29% 3%;
+    --editor-surface: 255 25% 7%;
+    --editor-surface-hover: 255 20% 12%;
+    --editor-border: 255 15% 16%;
+    --editor-text: 0 0% 93%;
+    --editor-text-muted: 250 10% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  input, textarea, select {
+    @apply text-foreground;
+  }
+
+  input::placeholder, textarea::placeholder {
+    @apply text-muted-foreground/60;
+  }
+
+  /* Touch: remove tap highlight on mobile */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  /* ─── Glass utilities — context-aware ──────────────────────────────────── */
+  .glass {
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .glass {
+    background: hsl(var(--card) / 0.80);
+    border-color: hsl(var(--border) / 0.50);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .glass-strong {
+    background: hsl(var(--card) / 0.90);
+    border-color: hsl(var(--border) / 0.60);
+    box-shadow: none;
+  }
+
+  /* ─── Nexus card — the Apple-style frosted glass card ───────────────────── */
+  .nexus-card {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.90);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      0 8px 24px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.90);
+  }
+
+  .dark .nexus-card {
+    background: hsl(var(--card) / 0.85);
+    border-color: hsl(var(--border) / 0.40);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  /* ─── Glow effects ──────────────────────────────────────────────────────── */
+  .glow-border {
+    box-shadow: 0 0 20px -5px hsl(var(--glow) / 0.3);
+  }
+
+  .glow-border-strong {
+    box-shadow: 0 0 30px -5px hsl(var(--glow) / 0.5), inset 0 1px 0 0 hsl(var(--glow) / 0.1);
+  }
+
+  /* ─── Text ──────────────────────────────────────────────────────────────── */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  /* ─── Editor utilities ──────────────────────────────────────────────────── */
+  .editor-panel {
+    @apply bg-card border border-border rounded-xl;
+  }
+
+  .editor-input {
+    @apply bg-secondary/80 border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-primary/20 transition-all duration-200;
+  }
+
+  /* ─── Editor card — clean Apple-style in Nexus, unchanged in dark ────────── */
+  .editor-card {
+    @apply rounded-xl border border-border bg-card overflow-hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  :root:not(.dark) .editor-card {
+    border-color: hsl(240 6% 91%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+  }
+  :root:not(.dark) .editor-card:hover {
+    border-color: hsl(262 83% 58% / 0.25);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(124,58,237,0.06);
+  }
+
+  /* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  /* ─── Phone chrome ──────────────────────────────────────────────────────── */
+  .phone-notch {
+    background: linear-gradient(180deg, hsl(var(--card)) 0%, transparent 100%);
+  }
+
+  /* ─── Safe area (iOS notch/home bar) ────────────────────────────────────── */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* ─── HTML content inside businessName ──────────────────────────────────── */
+  .business-name-html {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    overflow: hidden;
+  }
+  .business-name-html * {
+    max-width: 100% !important;
+  }
+  .business-name-html img {
+    height: auto;
+    max-width: 100% !important;
+  }
+
+  /* ─── Reduced motion ────────────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

@@ -1,5 +1,5 @@
+import React from "react";
 import { motion } from "framer-motion";
-import DOMPurify from "dompurify";
 import { SmartLink, SmartLinkButton, LinkBlock } from "@/types/smart-link";
 import { Zap } from "lucide-react";
 import { useMemo, useEffect, useState, useRef, memo } from "react";
@@ -72,9 +72,11 @@ function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: num
 
 interface SmartLinkPreviewProps {
   link: SmartLink;
+  selectedId?: string;
+  onSelectElement?: (id: string) => void;
 }
 
-export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLinkPreviewProps) {
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, onSelectElement }: SmartLinkPreviewProps) {
   const hasContent = link.businessName || link.heroImage || link.buttons.length > 0;
   const dark = isDarkBg(link.backgroundColor);
   const customBg = parseCustomBg(link.backgroundColor);
@@ -127,13 +129,26 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLi
     );
   }
 
-  const bgStyle = customBg ? { background: customBg, fontFamily } : { fontFamily };
-  const bgClass = customBg ? "" : `bg-gradient-to-b ${link.backgroundColor}`;
+  // Use solid color for preset backgrounds so the entire content area below the
+  // banner renders in a single uniform tone. Gradient presets have very similar
+  // from/to values (e.g. slate-950 → slate-900) but, when painted over the full
+  // page height, create a visible tonal shift between the business-name section
+  // and the buttons section — making them look like separate containers.
+  // Custom two-color backgrounds (custom:c1:c2) keep their gradient intentionally.
+  const bgStyle = customBg
+    ? { background: customBg, fontFamily }
+    : { background: heroBgColor, fontFamily };
 
   return (
-    <div className={`min-h-full ${bgClass} relative overflow-hidden`} style={bgStyle}>
+    <div className="min-h-full relative overflow-hidden" style={bgStyle}>
       {link.bgHtml?.enabled && link.bgHtml.html && (
         <BgHtmlEffect html={link.bgHtml.html} />
+      )}
+      {link.bgHtml?.enabled && (link.bgHtml.overlay ?? 0) > 0 && (
+        <div
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ backgroundColor: `rgba(0,0,0,${(link.bgHtml.overlay ?? 0) / 100})` }}
+        />
       )}
 
       {link.starsEffect?.enabled && (
@@ -171,6 +186,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLi
         };
         const heightPx: number | undefined =
           link.heroImageHeightPx ??
+          // legado — remove quando hero_image_height_px estiver populado em todos os registros
           (link.heroImageHeight === 'auto' ? undefined : legacyMap[link.heroImageHeight ?? 'md'] ?? 192);
 
         const objectFit  = link.heroObjectFit ?? 'cover';
@@ -180,7 +196,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLi
 
         return (
           <motion.div
-            className="relative w-full"
+            className="relative w-full z-[2]"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -219,85 +235,122 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLi
         );
       })()}
 
-      {/* Business Info — overlaps banner with rounded top corners */}
-      <motion.div
-        className={`px-5 py-4 relative z-10 ${bgClass} ${link.heroImage ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
-        style={{ ...bgStyle, textAlign: link.businessNameAlign ?? "center" }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+      {/* ── Single unified content container ────────────────────────────────────
+          Business info, items, and footer all live in ONE div so they share
+          the exact same background layer with zero compositing seam.
+          When a hero image is present the div overlaps the banner's bottom
+          edge with rounded top corners and re-applies the background to cover
+          the image. Without a hero image the outer container already provides
+          the background and this div is transparent. */}
+      <div
+        className={`relative z-10 ${link.heroImage && !link.bgHtml?.enabled ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
+        style={link.heroImage && !link.bgHtml?.enabled ? bgStyle : undefined}
       >
-        {link.logoUrl && (
-          <motion.div
-            className="relative inline-block mb-2"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
-          >
-            <img src={link.logoUrl} alt="Logo" className="max-w-[80px] max-h-[80px] object-contain drop-shadow-xl" />
-          </motion.div>
-        )}
-        {link.businessNameHtml ? (
-          <HtmlTitle
-            html={link.businessName || "<p>Nome do Negócio</p>"}
-            scale={(link.businessNameFontSize ?? 100) / 100}
-            align={link.businessNameAlign ?? "center"}
-          />
-        ) : (
-          <h1
-            className="font-bold leading-tight break-words"
-            style={{ color: accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
-          >
-            {link.businessName || "Nome do Negócio"}
-          </h1>
-        )}
-        {link.tagline && (
-          <p className={`text-xs mt-1 italic ${subtextClass}`}>{link.tagline}</p>
-        )}
-      </motion.div>
+        {/* Business Info */}
+        <motion.div
+          className="px-5 py-4"
+          style={{ textAlign: link.businessNameAlign ?? "center" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {link.logoUrl && (
+            <motion.div
+              className="relative inline-block mb-2"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+            >
+              <img
+                src={link.logoUrl}
+                alt="Logo"
+                style={{
+                  width: link.logoSizePx ?? 80,
+                  height: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                  borderRadius: '6px',
+                }}
+                className={link.logoShadow ?? true ? "drop-shadow-xl" : ""}
+              />
+            </motion.div>
+          )}
+          {!link.hideBusinessName && (link.businessNameHtml ? (
+            <HtmlTitle
+              html={link.businessName || "<p>Nome do Negócio</p>"}
+              scale={(link.businessNameFontSize ?? 100) / 100}
+              align={link.businessNameAlign ?? "center"}
+            />
+          ) : (
+            <h1
+              className="font-bold leading-tight break-words"
+              style={{ color: accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
+            >
+              {link.businessName || "Nome do Negócio"}
+            </h1>
+          ))}
+          {link.tagline && !link.hideTagline && (
+            <p className={`text-xs mt-1 italic ${subtextClass}`}>{link.tagline}</p>
+          )}
+        </motion.div>
 
-      {/* Unified rendering */}
-      <div key={`items-${animKey}`} className="relative z-10">
-        {items.map((item, idx) => {
-          const itemDelay = 0.3 + idx * 0.08;
-          const ev = getEntryVariants(entryAnim, itemDelay);
+        {/* Buttons + Blocks */}
+        <div key={`items-${animKey}`}>
+          {items.map((item, idx) => {
+            const itemDelay = 0.3 + idx * 0.08;
+            const ev = getEntryVariants(entryAnim, itemDelay);
+            const itemId = item.data.id;
+            const isSelected = selectedId === itemId;
 
-          if (item.kind === "button") {
-            return (
-              <ButtonPreview
-                key={item.data.id}
-                btn={item.data}
+            const selectionWrapper = (children: React.ReactNode) => (
+              <div
+                key={itemId}
+                onClick={onSelectElement ? (e) => { e.stopPropagation(); onSelectElement(itemId); } : undefined}
+                style={isSelected
+                  ? { outline: '2px solid #6366f1', outlineOffset: '3px', borderRadius: '12px', cursor: 'pointer', transition: 'outline 0.15s ease' }
+                  : onSelectElement ? { cursor: 'pointer' } : undefined}
+              >
+                {children}
+              </div>
+            );
+
+            if (item.kind === "button") {
+              return selectionWrapper(
+                <ButtonPreview
+                  key={itemId}
+                  btn={item.data}
+                  accent={accent}
+                  linkId={link.id}
+                  entryVariants={ev}
+                  onOpenPage={onSelectElement ? undefined : setOpenPageId}
+                />
+              );
+            }
+
+            return selectionWrapper(
+              <BlockRenderer
+                key={itemId}
+                block={item.data}
                 accent={accent}
+                dark={dark}
+                textClass={textClass}
+                subtextClass={subtextClass}
+                delay={itemDelay}
                 linkId={link.id}
                 entryVariants={ev}
-                onOpenPage={setOpenPageId}
+                onOpenPage={onSelectElement ? undefined : setOpenPageId}
               />
             );
-          }
+          })}
+        </div>
 
-          return (
-            <BlockRenderer
-              key={item.data.id}
-              block={item.data}
-              accent={accent}
-              dark={dark}
-              textClass={textClass}
-              subtextClass={subtextClass}
-              delay={itemDelay}
-              linkId={link.id}
-              entryVariants={ev}
-            />
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <motion.div
-        className="px-5 pb-6 pt-4 text-center relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
-      >
+        {/* Footer */}
+        <motion.div
+          className="px-5 pb-6 pt-4 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+        >
         <div className={`inline-flex items-center gap-1.5 text-[10px] rounded-full px-3 py-1.5 shadow-md border ${
           dark ? "bg-white/10 backdrop-blur-sm border-white/10" : "bg-white border-gray-100"
         }`}>
@@ -305,7 +358,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link }: SmartLi
           <Zap className="h-2.5 w-2.5" style={{ color: accent }} />
           <span className={`font-bold ${dark ? "text-white/80" : "text-gray-700"}`}>LinkPro</span>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>{/* end unified content container */}
 
       <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />
     </div>

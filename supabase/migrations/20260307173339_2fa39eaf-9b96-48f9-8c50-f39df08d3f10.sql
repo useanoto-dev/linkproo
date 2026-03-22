@@ -1,0 +1,1 @@
+-- Admin role assigned manually after project setup via SQL Editor

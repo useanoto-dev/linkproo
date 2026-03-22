@@ -1,0 +1,1 @@
+ALTER TABLE public.link_clicks ADD COLUMN IF NOT EXISTS button_id text DEFAULT NULL;

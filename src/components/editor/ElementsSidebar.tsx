@@ -5,7 +5,7 @@ import {
   Megaphone, Search, Code, Zap, Calendar, Instagram, Youtube, Phone, Send
 } from "lucide-react";
 import { BlockType } from "@/types/smart-link";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface ElementsSidebarProps {
   onAddBlock: (type: BlockType, defaults?: Record<string, unknown>) => void;
@@ -83,16 +83,24 @@ const categories = [
 ];
 
 export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
+  const [inputValue, setInputValue] = useState("");
   const [search, setSearch] = useState("");
 
-  const filtered = search.trim()
-    ? categories.map(cat => ({
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(inputValue), 200);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return categories;
+    const lower = search.toLowerCase();
+    return categories
+      .map(cat => ({
         ...cat,
-        items: cat.items.filter(el =>
-          el.label.toLowerCase().includes(search.toLowerCase())
-        ),
-      })).filter(cat => cat.items.length > 0)
-    : categories;
+        items: cat.items.filter(el => el.label.toLowerCase().includes(lower)),
+      }))
+      .filter(cat => cat.items.length > 0);
+  }, [search]);
 
   return (
     <div className="space-y-4">
@@ -100,8 +108,8 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
           placeholder="Buscar elemento..."
           className="w-full h-8 pl-8 pr-3 text-xs bg-secondary border border-border rounded-lg outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground transition-colors"
         />
@@ -109,18 +117,27 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
 
       {/* Categories */}
       <div className="space-y-4">
-        {filtered.map((cat, ci) => (
+        {filtered.map((cat, _ci) => (
           <div key={cat.label}>
             <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${cat.color}`}>
               {cat.label}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
-              {cat.items.map((el, i) => (
+              {cat.items.map((el, _i) => (
                 <button
                   key={el.type}
                   type="button"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("application/x-block-type", el.type);
+                    e.dataTransfer.setData(
+                      "application/x-block-defaults",
+                      JSON.stringify((el as any).defaults || {})
+                    );
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
                   onClick={() => onAddBlock(el.type, (el as any).defaults)}
-                  className="flex items-center gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/40 hover:bg-secondary hover:scale-[1.02] hover:-translate-y-px active:scale-[0.98] transition-transform duration-150 group text-left cursor-pointer"
+                  className="flex items-center gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/40 hover:bg-secondary hover:scale-[1.02] hover:-translate-y-px active:scale-[0.98] transition-transform duration-150 group text-left cursor-grab active:cursor-grabbing"
                 >
                   <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
                     <el.icon className="h-3.5 w-3.5 text-primary" />

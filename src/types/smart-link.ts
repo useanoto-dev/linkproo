@@ -22,6 +22,7 @@ export interface SmartLinkButton {
   badgeLabel?: string;
   badgeColor?: string;
   buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal';
+  buttonBorderRadius?: number;  // per-button border radius override, 0-24px
 }
 
 export type BlockType =
@@ -105,6 +106,9 @@ export interface LinkBlock {
   mapUrl?: string;
   mapHeight?: number;
   mapAddress?: string;
+  // Text/Header/CTA overrides
+  blockTextColor?: string;      // override text color for this block
+  blockTextAlign?: 'left' | 'center' | 'right';  // text alignment for this block
   // HTML
   htmlContent?: string;
   htmlHeight?: number;
@@ -123,6 +127,8 @@ export interface LinkBlock {
   animUrl?: string;
   animTitleSize?: number;
   animButtonHeight?: number;
+  // Sub-page linking (for image-button and animated-button blocks)
+  blockPageId?: string;  // if set, clicking this block opens the sub-page with this id
 }
 
 export interface BadgeItem {
@@ -168,12 +174,14 @@ export interface StarsEffect {
 export interface BgHtmlEffect {
   enabled: boolean;
   html: string;
+  overlay?: number; // 0-100 opacity overlay on top of the HTML background
 }
 
 /** A sub-page within a SmartLink */
 export interface SubPage {
   id: string;
   title: string;
+  slug?: string;
   blocks: LinkBlock[];
   backgroundColor?: string;
   fontFamily?: string;
@@ -212,6 +220,9 @@ export interface SmartLink {
   /** Color of the overlay: "dark" | "light" | hex string (default "dark") */
   heroOverlayColor?: string;
   logoUrl: string;
+  logoSizePx?: number;           // Logo display size in px, default 80
+  logoShape?: 'square' | 'rounded' | 'circle';  // default: 'rounded'
+  logoShadow?: boolean;                           // default: true
   backgroundColor: string;
   textColor: string;
   accentColor: string;
@@ -219,6 +230,8 @@ export interface SmartLink {
   titleSize?: number;
   businessNameFontSize?: number; // font size in px, default 24
   businessNameAlign?: "left" | "center" | "right"; // text alignment of business name, default center
+  hideBusinessName?: boolean;  // default: false
+  hideTagline?: boolean;       // default: false
   entryAnimation?: EntryAnimation;
   snowEffect?: SnowEffect;
   bubblesEffect?: BubblesEffect;
@@ -235,4 +248,5 @@ export interface SmartLink {
   clicks: number;
   isActive: boolean;
   createdAt: string;
+  customDomain?: string;
 }

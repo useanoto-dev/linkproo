@@ -1,12 +1,13 @@
+import React from "react";
 import { SmartLink, SmartLinkButton, LinkBlock, BlockType, FaqItem, GalleryImage, SubPage, CarouselSlide, StatItem } from "@/types/smart-link";
 import { PUBLISHED_DOMAIN } from "@/hooks/use-links";
-import { getMapEmbedUrl } from "@/components/preview/preview-utils";
 import { ButtonBlockEditor } from "./ButtonBlockEditor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, GripVertical, CopyPlus, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, GripVertical, CopyPlus, AlignLeft, AlignCenter, AlignRight, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageUploader, buildButtonPresets } from "./ImageUploader";
 import { Slider } from "@/components/ui/slider";
@@ -27,11 +28,114 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo, useCallback, memo, useState, useRef } from "react";
+import { useMemo, useCallback, memo, useState, useRef, useEffect } from "react";
+import { checkSlugAvailability, normalizeSlug } from "@/lib/slug-utils";
+
+// ─── Module-level constants (never re-created on render) ──────────────────────
+
+const BLOCK_LABELS: Record<BlockType, string> = {
+  hero: "Hero",
+  info: "Informações",
+  button: "Botão",
+  "image-button": "Botão Imagem",
+  badges: "Badges",
+  text: "Texto",
+  separator: "Separador",
+  cta: "CTA",
+  image: "Imagem",
+  header: "Título",
+  spacer: "Espaçador",
+  video: "Vídeo",
+  countdown: "Countdown",
+  faq: "FAQ",
+  gallery: "Galeria",
+  testimonial: "Depoimento",
+  stats: "Números/Stats",
+  product: "Produto",
+  "email-capture": "Captura Email",
+  spotify: "Spotify",
+  map: "Mapa",
+  carousel: "Carrossel",
+  banner: "Banner Promo",
+  html: "HTML Customizado",
+  "animated-button": "Botão Animado",
+};
+
+const ANIM_STYLE_OPTIONS = [
+  { value: 'whatsapp', label: 'WhatsApp', color: 'bg-green-700' },
+  { value: 'location', label: 'Localização', color: 'bg-blue-900' },
+  { value: 'schedule', label: 'Agendamento', color: 'bg-blue-200 !text-blue-900' },
+  { value: 'cta', label: 'CTA Custom', color: 'bg-purple-700' },
+  { value: 'instagram', label: 'Instagram', color: 'bg-pink-600' },
+  { value: 'tiktok', label: 'TikTok', color: 'bg-gray-900' },
+  { value: 'youtube', label: 'YouTube', color: 'bg-red-600' },
+  { value: 'phone', label: 'Telefone', color: 'bg-blue-700' },
+  { value: 'email', label: 'E-mail', color: 'bg-teal-700' },
+  { value: 'telegram', label: 'Telegram', color: 'bg-sky-600' },
+] as const;
+
+const BUSINESS_NAME_SIZE_OPTIONS = [
+  { label: 'XS', size: 14 },
+  { label: 'S',  size: 18 },
+  { label: 'M',  size: 24 },
+  { label: 'G',  size: 32 },
+  { label: 'XG', size: 42 },
+];
+
+const BUSINESS_NAME_ALIGN_OPTIONS = [
+  { value: "left" as const, Icon: AlignLeft },
+  { value: "center" as const, Icon: AlignCenter },
+  { value: "right" as const, Icon: AlignRight },
+] as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class BlockErrorBoundary extends React.Component<
+  { children: React.ReactNode; blockId: string; onRemove: (id: string) => void },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="mx-0 my-1 p-3 rounded-xl border border-destructive/30 bg-destructive/5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+            <span className="text-xs text-destructive">Erro neste bloco</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => this.props.onRemove(this.props.blockId)}
+            className="text-[10px] text-destructive/70 hover:text-destructive underline cursor-pointer"
+          >
+            Remover
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+interface SubPageMode {
+  page: SubPage;
+  onUpdatePage: (updates: Partial<SubPage>) => void;
+  onAddBlock: (type: BlockType, defaults?: Record<string, unknown>) => void;
+  onInsertBlockAt: (type: BlockType, atIndex: number, defaults?: Record<string, unknown>) => void;
+}
 
 interface BlockEditorProps {
   link: SmartLink;
   onUpdateLink: (updates: Partial<SmartLink>) => void;
+  onInsertBlockAt?: (type: BlockType, atIndex: number, defaults?: Record<string, unknown>) => void;
+  subPageMode?: SubPageMode;
+  selectedElementId?: string;
+  onElementSelected?: (id: string | null) => void;
 }
 
 // Unified item type for the sortable list
@@ -53,6 +157,19 @@ function getUnifiedItems(link: SmartLink): UnifiedItem[] {
   return [...buttonItems, ...blockItems].sort(
     (a, b) => (a.data.order ?? 0) - (b.data.order ?? 0)
   );
+}
+
+function getUnifiedItemsForMode(link: SmartLink, subPageMode?: SubPageMode): UnifiedItem[] {
+  if (subPageMode) {
+    return subPageMode.page.blocks
+      .map((b, i) => ({
+        kind: "block" as const,
+        id: b.id,
+        data: { ...b, order: b.order ?? i },
+      }))
+      .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0));
+  }
+  return getUnifiedItems(link);
 }
 
 const SortableButton = memo(function SortableButton({
@@ -93,44 +210,59 @@ const SortableBlock = memo(function SortableBlock({
   onUpdate,
   onRemove,
   onDuplicate,
+  pages,
+  openKey,
 }: {
   block: LinkBlock;
   onUpdate: (id: string, updates: Partial<LinkBlock>) => void;
   onRemove: (id: string) => void;
   onDuplicate: (id: string) => void;
+  pages?: SubPage[];
+  openKey?: number;  // incrementa quando o usuário clica no elemento no preview
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
-  const labels: Record<BlockType, string> = {
-    hero: "Hero",
-    info: "Informações",
-    button: "Botão",
-    "image-button": "Botão Imagem",
-    badges: "Badges",
-    text: "Texto",
-    separator: "Separador",
-    cta: "CTA",
-    image: "Imagem",
-    header: "Título",
-    spacer: "Espaçador",
-    video: "Vídeo",
-    countdown: "Countdown",
-    faq: "FAQ",
-    gallery: "Galeria",
-    testimonial: "Depoimento",
-    stats: "Números/Stats",
-    product: "Produto",
-    "email-capture": "Captura Email",
-    spotify: "Spotify",
-    map: "Mapa",
-    carousel: "Carrossel",
-    banner: "Banner Promo",
-    html: "HTML Customizado",
-    "animated-button": "Botão Animado",
-  };
+  const buttonPresets = useMemo(
+    () => buildButtonPresets(block.buttonHeight ?? 110),
+    [block.buttonHeight]
+  );
 
   const [open, setOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (openKey) setOpen(true);
+  }, [openKey]);
+
+  const applyTextFormat = useCallback(
+    (tag: string, url?: string) => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const current = block.content || "";
+      const selected = current.slice(start, end);
+      let replacement: string;
+      if (tag === "a") {
+        const href = url || "";
+        const text = selected || "link";
+        replacement = `<a href="${href}" target="_blank">${text}</a>`;
+      } else {
+        const text = selected || (tag === "b" ? "texto em negrito" : "texto em itálico");
+        replacement = `<${tag}>${text}</${tag}>`;
+      }
+      const newContent = current.slice(0, start) + replacement + current.slice(end);
+      onUpdate(block.id, { content: newContent });
+      // Restore focus after React re-render
+      requestAnimationFrame(() => {
+        el.focus();
+        const newCursor = start + replacement.length;
+        el.setSelectionRange(newCursor, newCursor);
+      });
+    },
+    [block.id, block.content, onUpdate]
+  );
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} className="editor-card">
@@ -146,7 +278,7 @@ const SortableBlock = memo(function SortableBlock({
         >
           <GripVertical className="h-3.5 w-3.5" />
         </div>
-        <span className="text-xs font-semibold text-foreground flex-1 truncate">{labels[block.type]}</span>
+        <span className="text-xs font-semibold text-foreground flex-1 truncate">{BLOCK_LABELS[block.type]}</span>
         <button
           onClick={(e) => { e.stopPropagation(); onDuplicate(block.id); }}
           className="p-1.5 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
@@ -182,7 +314,39 @@ const SortableBlock = memo(function SortableBlock({
               <Label className="text-xs text-muted-foreground">
                 {block.type === "cta" ? "Título do CTA" : "Texto"}
               </Label>
+              {block.type === "text" && (
+                <div className="flex gap-1 mb-1">
+                  <button
+                    type="button"
+                    title="Negrito"
+                    className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
+                    onClick={() => applyTextFormat("b")}
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    title="Itálico"
+                    className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary italic"
+                    onClick={() => applyTextFormat("i")}
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    title="Link"
+                    className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
+                    onClick={() => {
+                      const url = window.prompt("URL do link:");
+                      if (url !== null) applyTextFormat("a", url);
+                    }}
+                  >
+                    🔗
+                  </button>
+                </div>
+              )}
               <Textarea
+                ref={block.type === "text" ? textareaRef : undefined}
                 value={block.content || ""}
                 onChange={(e) => onUpdate(block.id, { content: e.target.value })}
                 placeholder={block.type === "cta" ? "Transforme Seus Projetos em Realidade" : "Seu texto aqui..."}
@@ -200,6 +364,32 @@ const SortableBlock = memo(function SortableBlock({
                 />
               </div>
             )}
+            {/* Cor do texto */}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Cor do texto</Label>
+              <input
+                type="color"
+                value={block.blockTextColor || "#ffffff"}
+                onChange={(e) => onUpdate(block.id, { blockTextColor: e.target.value })}
+                className="h-7 w-10 rounded cursor-pointer border border-border bg-transparent p-0.5"
+              />
+            </div>
+            {/* Alinhamento */}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Alinhamento</Label>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map(align => (
+                  <button
+                    key={align}
+                    type="button"
+                    onClick={() => onUpdate(block.id, { blockTextAlign: align })}
+                    className={`p-1 rounded text-xs ${(block.blockTextAlign || 'center') === align ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {align === 'left' ? '⬅' : align === 'center' ? '↔' : '➡'}
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
 
@@ -222,6 +412,32 @@ const SortableBlock = memo(function SortableBlock({
                 placeholder="🚀"
                 className="text-sm h-9 w-20 text-center text-lg"
               />
+            </div>
+            {/* Cor do texto */}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Cor do texto</Label>
+              <input
+                type="color"
+                value={block.blockTextColor || "#ffffff"}
+                onChange={(e) => onUpdate(block.id, { blockTextColor: e.target.value })}
+                className="h-7 w-10 rounded cursor-pointer border border-border bg-transparent p-0.5"
+              />
+            </div>
+            {/* Alinhamento */}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">Alinhamento</Label>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map(align => (
+                  <button
+                    key={align}
+                    type="button"
+                    onClick={() => onUpdate(block.id, { blockTextAlign: align })}
+                    className={`p-1 rounded text-xs ${(block.blockTextAlign || 'center') === align ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {align === 'left' ? '⬅' : align === 'center' ? '↔' : '➡'}
+                  </button>
+                ))}
+              </div>
             </div>
           </>
         )}
@@ -306,7 +522,7 @@ const SortableBlock = memo(function SortableBlock({
               aspectRatio={348 / (block.buttonHeight ?? 110)}
               label="Arte do botão"
               allowOriginal
-              presets={buildButtonPresets(block.buttonHeight ?? 110)}
+              presets={buttonPresets}
             />
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Altura do Botão: {block.buttonHeight ?? 110}px</Label>
@@ -318,14 +534,55 @@ const SortableBlock = memo(function SortableBlock({
                 step={5}
               />
             </div>
+            {/* Link type: URL or sub-page */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Link (URL)</Label>
-              <Input
-                value={block.buttonUrl || ""}
-                onChange={(e) => onUpdate(block.id, { buttonUrl: e.target.value })}
-                placeholder="https://..."
-                className="text-sm h-9 font-mono"
-              />
+              <Label className="text-xs text-muted-foreground">Destino ao clicar</Label>
+              <div className="flex gap-1 p-0.5 rounded-lg bg-secondary/50">
+                {(['url', 'page'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      if (t === 'page') onUpdate(block.id, { buttonUrl: '' });
+                      else onUpdate(block.id, { blockPageId: undefined });
+                    }}
+                    className={`flex-1 py-1.5 rounded-md text-[10px] font-medium transition-all ${
+                      (t === 'page' ? !!block.blockPageId : !block.blockPageId)
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {t === 'url' ? 'Link externo' : 'Sub-página'}
+                  </button>
+                ))}
+              </div>
+              {block.blockPageId ? (
+                <>
+                  <Select
+                    value={block.blockPageId}
+                    onValueChange={(val) => onUpdate(block.id, { blockPageId: val, buttonUrl: '' })}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Selecione a página" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(pages || []).map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(pages || []).length === 0 && (
+                    <p className="text-[10px] text-amber-500">Crie uma sub-página primeiro no menu "Páginas"</p>
+                  )}
+                </>
+              ) : (
+                <Input
+                  value={block.buttonUrl || ""}
+                  onChange={(e) => onUpdate(block.id, { buttonUrl: e.target.value })}
+                  placeholder="https://..."
+                  className="text-sm h-9 font-mono"
+                />
+              )}
             </div>
           </div>
         )}
@@ -729,7 +986,7 @@ const SortableBlock = memo(function SortableBlock({
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Conteúdo HTML</Label>
               <Textarea
-                value={(block as any).htmlContent || ""}
+                value={block.htmlContent || ""}
                 onChange={e => onUpdate(block.id, { htmlContent: e.target.value })}
                 placeholder="<div>Seu HTML aqui...</div>"
                 className="font-mono text-xs min-h-[120px]"
@@ -737,10 +994,10 @@ const SortableBlock = memo(function SortableBlock({
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
-                Altura: {(block as any).htmlHeight ? `${(block as any).htmlHeight}px` : "Automática"}
+                Altura: {block.htmlHeight ? `${block.htmlHeight}px` : "Automática"}
               </Label>
               <Slider
-                value={[(block as any).htmlHeight || 0]}
+                value={[block.htmlHeight || 0]}
                 onValueChange={([v]) => onUpdate(block.id, { htmlHeight: v === 0 ? undefined : v })}
                 min={0}
                 max={800}
@@ -799,22 +1056,11 @@ const SortableBlock = memo(function SortableBlock({
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Estilo</Label>
               <div className="grid grid-cols-2 gap-1.5 mt-1">
-                {[
-                  { value: 'whatsapp', label: 'WhatsApp', color: 'bg-green-700' },
-                  { value: 'location', label: 'Localização', color: 'bg-blue-900' },
-                  { value: 'schedule', label: 'Agendamento', color: 'bg-blue-200 !text-blue-900' },
-                  { value: 'cta', label: 'CTA Custom', color: 'bg-purple-700' },
-                  { value: 'instagram', label: 'Instagram', color: 'bg-pink-600' },
-                  { value: 'tiktok', label: 'TikTok', color: 'bg-gray-900' },
-                  { value: 'youtube', label: 'YouTube', color: 'bg-red-600' },
-                  { value: 'phone', label: 'Telefone', color: 'bg-blue-700' },
-                  { value: 'email', label: 'E-mail', color: 'bg-teal-700' },
-                  { value: 'telegram', label: 'Telegram', color: 'bg-sky-600' },
-                ].map(s => (
+                {ANIM_STYLE_OPTIONS.map(s => (
                   <button
                     key={s.value}
                     type="button"
-                    onClick={() => onUpdate(block.id, { animStyle: s.value as any })}
+                    onClick={() => onUpdate(block.id, { animStyle: s.value })}
                     className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer text-white ${s.color} ${
                       (block.animStyle || 'cta') === s.value ? 'ring-2 ring-primary ring-offset-1' : 'opacity-70 hover:opacity-90'
                     }`}
@@ -869,20 +1115,60 @@ const SortableBlock = memo(function SortableBlock({
                 className="text-sm h-9"
               />
             </div>
-            {/* URL */}
+            {/* Link de destino: URL ou sub-página */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Link de destino</Label>
-              <Input
-                value={block.animUrl || ""}
-                onChange={e => onUpdate(block.id, { animUrl: e.target.value })}
-                placeholder={
-                  block.animStyle === 'location' ? 'https://maps.google.com/...' :
-                  block.animStyle === 'schedule' ? 'https://calendly.com/...' :
-                  block.animStyle === 'cta' ? 'https://...' :
-                  'https://wa.me/5511999999999'
-                }
-                className="text-sm h-9"
-              />
+              <div className="flex gap-1 p-0.5 rounded-lg bg-secondary/50">
+                {(['url', 'page'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      if (t === 'page') onUpdate(block.id, { animUrl: '' });
+                      else onUpdate(block.id, { blockPageId: undefined });
+                    }}
+                    className={`flex-1 py-1.5 rounded-md text-[10px] font-medium transition-all ${
+                      (t === 'page' ? !!block.blockPageId : !block.blockPageId)
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {t === 'url' ? 'Link externo' : 'Sub-página'}
+                  </button>
+                ))}
+              </div>
+              {block.blockPageId ? (
+                <>
+                  <Select
+                    value={block.blockPageId}
+                    onValueChange={(val) => onUpdate(block.id, { blockPageId: val, animUrl: '' })}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Selecione a página" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(pages || []).map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(pages || []).length === 0 && (
+                    <p className="text-[10px] text-amber-500">Crie uma sub-página primeiro no menu "Páginas"</p>
+                  )}
+                </>
+              ) : (
+                <Input
+                  value={block.animUrl || ""}
+                  onChange={e => onUpdate(block.id, { animUrl: e.target.value })}
+                  placeholder={
+                    block.animStyle === 'location' ? 'https://maps.google.com/...' :
+                    block.animStyle === 'schedule' ? 'https://calendly.com/...' :
+                    block.animStyle === 'cta' ? 'https://...' :
+                    'https://wa.me/5511999999999'
+                  }
+                  className="text-sm h-9"
+                />
+              )}
             </div>
 
             {/* Title size */}
@@ -1042,56 +1328,125 @@ const SortableItem = memo(function SortableItem({
   buttonIndex,
   onUpdateButton,
   onRemoveButton,
-  onDuplicateButton,
+  onDuplicateButton: _onDuplicateButton,
   onUpdateBlock,
   onRemoveBlock,
   onDuplicateBlock,
   pages,
+  openKey,
 }: {
   item: UnifiedItem;
   buttonIndex: number;
   onUpdateButton: (id: string, updates: Partial<SmartLinkButton>) => void;
   onRemoveButton: (id: string) => void;
-  onDuplicateButton: (id: string) => void;
+  onDuplicateButton: (id: string) => void;  // accepted but intentionally unused in SortableItem
   onUpdateBlock: (id: string, updates: Partial<LinkBlock>) => void;
   onRemoveBlock: (id: string) => void;
   onDuplicateBlock: (id: string) => void;
   pages: SubPage[];
+  openKey?: number;  // incrementa quando o usuário clica no elemento no preview
 }) {
   if (item.kind === "button") {
     return (
-      <SortableButton
-        button={item.data}
-        index={buttonIndex}
-        onUpdate={onUpdateButton}
-        onRemove={onRemoveButton}
-        pages={pages}
-      />
+      <BlockErrorBoundary blockId={item.id} onRemove={onRemoveButton}>
+        <SortableButton
+          button={item.data}
+          index={buttonIndex}
+          onUpdate={onUpdateButton}
+          onRemove={onRemoveButton}
+          pages={pages}
+        />
+      </BlockErrorBoundary>
     );
   }
   return (
-    <SortableBlock
-      block={item.data}
-      onUpdate={onUpdateBlock}
-      onRemove={onRemoveBlock}
-      onDuplicate={onDuplicateBlock}
-    />
+    <BlockErrorBoundary blockId={item.id} onRemove={onRemoveBlock}>
+      <SortableBlock
+        block={item.data}
+        onUpdate={onUpdateBlock}
+        onRemove={onRemoveBlock}
+        onDuplicate={onDuplicateBlock}
+        pages={pages}
+        openKey={openKey}
+      />
+    </BlockErrorBoundary>
   );
 });
 
-export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
+export function BlockEditor({ link, onUpdateLink, onInsertBlockAt, subPageMode, selectedElementId, onElementSelected }: BlockEditorProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const unifiedItems = useMemo(() => getUnifiedItems(link), [link.buttons, link.blocks]);
+  const isSubPage = !!subPageMode;
+
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const unifiedItems = useMemo(
+    () => getUnifiedItemsForMode(link, subPageMode),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [link.buttons, link.blocks, subPageMode?.page.blocks]
+  );
+
+  const updateBlocks = useCallback((newBlocks: LinkBlock[]) => {
+    if (isSubPage) {
+      subPageMode!.onUpdatePage({ blocks: newBlocks });
+    } else {
+      onUpdateLink({ blocks: newBlocks });
+    }
+  }, [isSubPage, subPageMode, onUpdateLink]);
 
   // Stable refs — callbacks read from these instead of capturing arrays in closure
   const buttonsRef = useRef(link.buttons);
   buttonsRef.current = link.buttons;
   const blocksRef = useRef(link.blocks);
   blocksRef.current = link.blocks;
+  const subPageBlocksRef = useRef(isSubPage ? subPageMode!.page.blocks : link.blocks);
+  subPageBlocksRef.current = isSubPage ? subPageMode!.page.blocks : link.blocks;
+
+  // Refs for selected element scrolling
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [selectedOpenKey, setSelectedOpenKey] = useState(0);
+  useEffect(() => {
+    if (selectedElementId && itemRefs.current[selectedElementId]) {
+      itemRefs.current[selectedElementId]!.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setSelectedOpenKey(k => k + 1);  // força re-trigger mesmo se mesmo ID
+    }
+  }, [selectedElementId]);
+
+  // Slug real-time availability state
+  const [slugChecking, setSlugChecking] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const slugDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Cleanup slug debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    };
+  }, []);
+
+  const handleSlugChange = useCallback((newSlug: string) => {
+    const normalized = normalizeSlug(newSlug);
+    onUpdateLink({ slug: normalized });
+    setSlugAvailable(null);
+
+    if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    if (!normalized || normalized.length < 2) return;
+
+    slugDebounceRef.current = setTimeout(async () => {
+      setSlugChecking(true);
+      try {
+        const available = await checkSlugAvailability(normalized, link.id.startsWith("new-") ? undefined : link.id);
+        setSlugAvailable(available);
+      } catch {
+        setSlugAvailable(null);
+      } finally {
+        setSlugChecking(false);
+      }
+    }, 500);
+  }, [link.id, onUpdateLink]);
 
   const updateButton = useCallback((id: string, updates: Partial<SmartLinkButton>) => {
     onUpdateLink({
@@ -1116,26 +1471,27 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
   }, [onUpdateLink]);
 
   const updateBlock = useCallback((id: string, updates: Partial<LinkBlock>) => {
-    onUpdateLink({
-      blocks: blocksRef.current.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-    });
-  }, [onUpdateLink]);
+    const blocks = subPageBlocksRef.current;
+    updateBlocks(blocks.map((b) => (b.id === id ? { ...b, ...updates } : b)));
+  }, [updateBlocks]);
 
   const removeBlock = useCallback((id: string) => {
-    onUpdateLink({ blocks: blocksRef.current.filter((b) => b.id !== id) });
-  }, [onUpdateLink]);
+    const blocks = subPageBlocksRef.current;
+    updateBlocks(blocks.filter((b) => b.id !== id));
+  }, [updateBlocks]);
 
   const duplicateBlock = useCallback((id: string) => {
-    const blk = blocksRef.current.find((b) => b.id === id);
+    const blocks = subPageBlocksRef.current;
+    const blk = blocks.find((b) => b.id === id);
     if (!blk) return;
     const maxOrder = Math.max(
-      ...buttonsRef.current.map((b) => b.order ?? 0),
-      ...blocksRef.current.map((b) => b.order ?? 0),
+      ...(isSubPage ? [] : buttonsRef.current.map((b) => b.order ?? 0)),
+      ...blocks.map((b) => b.order ?? 0),
       0
     );
     const newBlk = { ...blk, id: `blk-${Date.now()}`, order: maxOrder + 1 };
-    onUpdateLink({ blocks: [...blocksRef.current, newBlk] });
-  }, [onUpdateLink]);
+    updateBlocks([...blocks, newBlk]);
+  }, [isSubPage, updateBlocks]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -1149,6 +1505,12 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove([...unifiedItems], oldIndex, newIndex);
+
+    if (isSubPage) {
+      const newBlocks: LinkBlock[] = reordered.map((item, i) => ({ ...(item.data as LinkBlock), order: i }));
+      updateBlocks(newBlocks);
+      return;
+    }
 
     // Assign new order values and split back into buttons/blocks
     const newButtons: SmartLinkButton[] = [];
@@ -1168,10 +1530,18 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
   // Track button index for display purposes
   let buttonCounter = 0;
 
+  const handleDropInsert = (type: BlockType, atIndex: number, defaults: Record<string, unknown>) => {
+    if (isSubPage) {
+      subPageMode!.onInsertBlockAt(type, atIndex, defaults);
+    } else {
+      onInsertBlockAt?.(type, atIndex, defaults);
+    }
+  };
+
   return (
     <div className="space-y-3">
-      {/* Hero & Info */}
-      <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+      {/* Hero & Info — hidden in sub-page mode */}
+      {!isSubPage && <div className="rounded-xl border border-border bg-card p-3 space-y-3">
         <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide text-muted-foreground">Informações do Negócio</h3>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -1227,13 +1597,7 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
               <div>
                 <Label className="text-xs text-muted-foreground">Tamanho do texto</Label>
                 <div className="flex gap-1 mt-1">
-                  {[
-                    { label: 'XS', size: 14 },
-                    { label: 'S',  size: 18 },
-                    { label: 'M',  size: 24 },
-                    { label: 'G',  size: 32 },
-                    { label: 'XG', size: 42 },
-                  ].map(({ label, size }) => (
+                  {BUSINESS_NAME_SIZE_OPTIONS.map(({ label, size }) => (
                     <button
                       key={label}
                       type="button"
@@ -1254,13 +1618,7 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Alinhamento do Título</Label>
             <div className="flex gap-1">
-              {(
-                [
-                  { value: "left" as const, Icon: AlignLeft },
-                  { value: "center" as const, Icon: AlignCenter },
-                  { value: "right" as const, Icon: AlignRight },
-                ] as const
-              ).map(({ value, Icon }) => (
+              {BUSINESS_NAME_ALIGN_OPTIONS.map(({ value, Icon }) => (
                 <button
                   key={value}
                   type="button"
@@ -1284,11 +1642,15 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
               </span>
               <input
                 value={link.slug}
-                onChange={(e) => onUpdateLink({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") })}
+                onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="meu-negocio"
                 className="flex-1 h-9 px-2.5 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground font-mono"
               />
             </div>
+            {/* Slug availability indicator */}
+            {slugChecking && <span className="text-[10px] text-muted-foreground">Verificando...</span>}
+            {!slugChecking && slugAvailable === true && <span className="text-[10px] text-green-400">✓ Disponível</span>}
+            {!slugChecking && slugAvailable === false && <span className="text-[10px] text-destructive">✗ Já está em uso</span>}
             <p className="text-[10px] text-muted-foreground">Este é o link que você compartilha com seus clientes</p>
           </div>
         </div>
@@ -1301,7 +1663,7 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
             className="text-sm h-9"
           />
         </div>
-      </div>
+      </div>}
 
       {/* Unified sortable list */}
       {unifiedItems.length > 0 ? (
@@ -1310,31 +1672,127 @@ export function BlockEditor({ link, onUpdateLink }: BlockEditorProps) {
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={unifiedItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-1.5">
-                {unifiedItems.map((item) => {
+                {unifiedItems.map((item, itemIndex) => {
                   const bi = item.kind === "button" ? buttonCounter++ : 0;
+                  const isSelectedItem = !isSubPage && selectedElementId === item.id;
                   return (
-                    <SortableItem
+                    <div
                       key={item.id}
-                      item={item}
-                      buttonIndex={bi}
-                      onUpdateButton={updateButton}
-                      onRemoveButton={removeButton}
-                      onDuplicateButton={duplicateButton}
-                      onUpdateBlock={updateBlock}
-                      onRemoveBlock={removeBlock}
-                      onDuplicateBlock={duplicateBlock}
-                      pages={link.pages || []}
-                    />
+                      ref={(el) => { itemRefs.current[item.id] = el; }}
+                      className={`rounded-xl transition-all duration-200 ${isSelectedItem ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
+                      onClick={!isSubPage && onElementSelected ? () => onElementSelected(item.id) : undefined}
+                      onDragOver={(e) => {
+                        if (!e.dataTransfer.types.includes("application/x-block-type")) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "copy";
+                        setDragOverIndex(itemIndex);
+                      }}
+                      onDragLeave={(e) => {
+                        // Only clear if leaving the outer div entirely (not entering a child)
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                          setDragOverIndex(null);
+                        }
+                      }}
+                      onDrop={(e) => {
+                        const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
+                        if (!type) return;
+                        e.preventDefault();
+                        const rawDefaults = e.dataTransfer.getData("application/x-block-defaults");
+                        const defaults = rawDefaults ? (JSON.parse(rawDefaults) as Record<string, unknown>) : {};
+                        handleDropInsert(type, itemIndex, defaults);
+                        setDragOverIndex(null);
+                      }}
+                    >
+                      {dragOverIndex === itemIndex && (
+                        <div className="h-0.5 bg-primary rounded-full mx-2 mb-1.5 opacity-90" />
+                      )}
+                      <SortableItem
+                        item={item}
+                        buttonIndex={bi}
+                        onUpdateButton={updateButton}
+                        onRemoveButton={removeButton}
+                        onDuplicateButton={duplicateButton}
+                        onUpdateBlock={updateBlock}
+                        onRemoveBlock={removeBlock}
+                        onDuplicateBlock={duplicateBlock}
+                        pages={link.pages || []}
+                        openKey={isSelectedItem ? selectedOpenKey : 0}
+                      />
+                    </div>
                   );
                 })}
+                {/* Drop zone after the last item */}
+                <div
+                  className={`transition-all duration-100 rounded-xl border-2 border-dashed ${
+                    dragOverIndex === unifiedItems.length
+                      ? "border-primary/70 bg-primary/5 py-3"
+                      : "border-transparent py-0.5"
+                  }`}
+                  onDragOver={(e) => {
+                    if (!e.dataTransfer.types.includes("application/x-block-type")) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "copy";
+                    setDragOverIndex(unifiedItems.length);
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setDragOverIndex(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
+                    if (!type) return;
+                    e.preventDefault();
+                    const rawDefaults = e.dataTransfer.getData("application/x-block-defaults");
+                    const defaults = rawDefaults ? (JSON.parse(rawDefaults) as Record<string, unknown>) : {};
+                    handleDropInsert(type, unifiedItems.length, defaults);
+                    setDragOverIndex(null);
+                  }}
+                >
+                  {dragOverIndex === unifiedItems.length && (
+                    <p className="text-center text-xs text-primary font-medium pointer-events-none">Solte aqui para adicionar ao final</p>
+                  )}
+                </div>
               </div>
             </SortableContext>
           </DndContext>
         </div>
       ) : (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="text-sm">Adicione elementos usando o painel à esquerda</p>
-          <p className="text-xs mt-1">Arraste para reordenar</p>
+        <div
+          className={`transition-all duration-100 rounded-xl border-2 border-dashed text-center py-12 text-muted-foreground ${
+            dragOverIndex === 0
+              ? "border-primary/70 bg-primary/5"
+              : "border-border/30"
+          }`}
+          onDragOver={(e) => {
+            if (!e.dataTransfer.types.includes("application/x-block-type")) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+            setDragOverIndex(0);
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setDragOverIndex(null);
+            }
+          }}
+          onDrop={(e) => {
+            const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
+            if (!type) return;
+            e.preventDefault();
+            const rawDefaults = e.dataTransfer.getData("application/x-block-defaults");
+            const defaults = rawDefaults ? (JSON.parse(rawDefaults) as Record<string, unknown>) : {};
+            handleDropInsert(type, 0, defaults);
+            setDragOverIndex(null);
+          }}
+        >
+          {dragOverIndex === 0 ? (
+            <p className="text-sm text-primary font-medium">Solte aqui para adicionar</p>
+          ) : (
+            <>
+              <p className="text-sm">Adicione elementos usando o painel à esquerda</p>
+              <p className="text-xs mt-1">Clique ou arraste elementos para cá</p>
+            </>
+          )}
         </div>
       )}
     </div>

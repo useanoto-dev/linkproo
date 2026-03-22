@@ -1,0 +1,17 @@
+{
+  "name": "LinkPro",
+  "short_name": "LinkPro",
+  "description": "Crie páginas de link visuais e interativas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07060B",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

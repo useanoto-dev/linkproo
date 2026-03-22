@@ -1,0 +1,1 @@
+ALTER TABLE public.links ADD COLUMN IF NOT EXISTS logo_size_px INTEGER DEFAULT 80;

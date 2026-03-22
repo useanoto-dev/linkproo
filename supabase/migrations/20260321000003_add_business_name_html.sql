@@ -1,0 +1,1 @@
+ALTER TABLE public.links ADD COLUMN IF NOT EXISTS business_name_html BOOLEAN DEFAULT FALSE;

@@ -1,0 +1,3 @@
+ALTER TABLE public.links
+  ADD COLUMN IF NOT EXISTS logo_shape TEXT DEFAULT 'rounded',
+  ADD COLUMN IF NOT EXISTS logo_shadow BOOLEAN DEFAULT true;

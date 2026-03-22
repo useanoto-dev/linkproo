@@ -1,0 +1,137 @@
+<h2>Como deve funcionar o Flow Builder ao "Criar do Zero"?</h2>
+<p class="subtitle">Três interpretações diferentes — qual é mais próxima do que você imagina?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="node-graph" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0d1117; padding: 16px; min-height: 220px; position: relative; overflow: hidden;">
+      <!-- Grid background -->
+      <div style="position: absolute; inset: 0; background-image: radial-gradient(circle, #30363d 1px, transparent 1px); background-size: 20px 20px; opacity: 0.4;"></div>
+
+      <!-- Nodes -->
+      <div style="position: relative; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; padding: 8px;">
+
+        <!-- Start node -->
+        <div style="background: #1f6feb; border: 1px solid #388bfd; border-radius: 8px; padding: 8px 14px; color: white; font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; background: #58a6ff; border-radius: 50%; display: inline-block;"></span>
+          INÍCIO — Perfil
+        </div>
+
+        <!-- Arrow -->
+        <div style="color: #30363d; font-size: 18px; margin-left: 28px;">↓</div>
+
+        <!-- Row with two nodes -->
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 12px; color: #e6edf3; font-size: 11px;">
+            📸 Botão Instagram
+          </div>
+          <div style="color: #388bfd; font-size: 16px;">+</div>
+          <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 12px; color: #e6edf3; font-size: 11px;">
+            🛒 Botão Loja
+          </div>
+        </div>
+
+        <div style="color: #30363d; font-size: 18px; margin-left: 28px;">↓</div>
+
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 12px; color: #e6edf3; font-size: 11px;">
+          📊 Bloco de Analytics
+        </div>
+
+        <div style="color: #30363d; font-size: 18px; margin-left: 28px;">↓</div>
+
+        <div style="background: #0d1117; border: 1px solid #238636; border-radius: 8px; padding: 8px 12px; color: #3fb950; font-size: 11px; font-weight: 600;">
+          ✓ Publicar Página
+        </div>
+
+        <!-- Add node button -->
+        <div style="position: absolute; right: 12px; bottom: 12px; background: #238636; border-radius: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700;">+</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Grafo de Nós (estilo n8n)</h3>
+      <p>Canvas infinito com nós conectáveis. Cada bloco da página (perfil, botão, seção) é um nó. Você conecta na ordem que quiser. Máxima flexibilidade, curva de aprendizado maior.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="mind-map" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 16px; min-height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
+      <div style="position: absolute; inset: 0; background-image: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 18px 18px; opacity: 0.5;"></div>
+
+      <!-- Mind map center -->
+      <div style="position: relative; text-align: center;">
+        <!-- Center -->
+        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700; margin: 0 auto; box-shadow: 0 0 20px rgba(99,102,241,0.4);">MINHA<br>PÁGINA</div>
+
+        <!-- Branches -->
+        <div style="display: flex; justify-content: center; gap: 40px; margin-top: 12px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 1px; height: 16px; background: #6366f1;"></div>
+            <div style="background: #1e1b4b; border: 1px solid #6366f1; border-radius: 8px; padding: 5px 10px; color: #a5b4fc; font-size: 10px;">Botões</div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <div style="background: #312e81; border-radius: 6px; padding: 3px 8px; color: #c7d2fe; font-size: 9px;">IG</div>
+              <div style="background: #312e81; border-radius: 6px; padding: 3px 8px; color: #c7d2fe; font-size: 9px;">WA</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 1px; height: 16px; background: #8b5cf6;"></div>
+            <div style="background: #1e1b4b; border: 1px solid #8b5cf6; border-radius: 8px; padding: 5px 10px; color: #c4b5fd; font-size: 10px;">Seções</div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <div style="background: #2e1065; border-radius: 6px; padding: 3px 8px; color: #ddd6fe; font-size: 9px;">FAQ</div>
+              <div style="background: #2e1065; border-radius: 6px; padding: 3px 8px; color: #ddd6fe; font-size: 9px;">Bio</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 1px; height: 16px; background: #ec4899;"></div>
+            <div style="background: #1e1b4b; border: 1px solid #ec4899; border-radius: 8px; padding: 5px 10px; color: #f9a8d4; font-size: 10px;">Tema</div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <div style="background: #831843; border-radius: 6px; padding: 3px 8px; color: #fce7f3; font-size: 9px;">Cores</div>
+              <div style="background: #831843; border-radius: 6px; padding: 3px 8px; color: #fce7f3; font-size: 9px;">Font</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mapa Mental por Categorias</h3>
+      <p>A página central se expande em ramos: Botões, Seções, Tema, Mídias. Você navega por categorias e adiciona itens em cada galho. Mais organizado que o grafo, menos livre.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="guided-wizard" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0a0a0a; padding: 16px; min-height: 220px;">
+
+      <!-- Step indicator -->
+      <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 16px;">
+        <div style="width: 24px; height: 24px; background: #6366f1; border-radius: 50%; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">1</div>
+        <div style="flex: 1; height: 2px; background: #6366f1;"></div>
+        <div style="width: 24px; height: 24px; background: #6366f1; border-radius: 50%; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">2</div>
+        <div style="flex: 1; height: 2px; background: #374151;"></div>
+        <div style="width: 24px; height: 24px; background: #374151; border-radius: 50%; color: #6b7280; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">3</div>
+        <div style="flex: 1; height: 2px; background: #374151;"></div>
+        <div style="width: 24px; height: 24px; background: #374151; border-radius: 50%; color: #6b7280; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">4</div>
+      </div>
+
+      <!-- Current step content -->
+      <div style="background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 14px;">
+        <div style="color: #9ca3af; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Passo 2 — Escolha seus blocos</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <div style="background: #1f2937; border: 1px solid #6366f1; border-radius: 8px; padding: 8px; color: white; font-size: 10px; text-align: center;">✅ Botões de Redes<br><span style="color:#6366f1">selecionado</span></div>
+          <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 8px; color: #9ca3af; font-size: 10px; text-align: center;">📊 Contador<br><span style="color:#4b5563">adicionar</span></div>
+          <div style="background: #1f2937; border: 1px solid #6366f1; border-radius: 8px; padding: 8px; color: white; font-size: 10px; text-align: center;">✅ FAQ<br><span style="color:#6366f1">selecionado</span></div>
+          <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 8px; color: #9ca3af; font-size: 10px; text-align: center;">🎥 Vídeo<br><span style="color:#4b5563">adicionar</span></div>
+        </div>
+        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+          <div style="background: #6366f1; border-radius: 6px; padding: 6px 14px; color: white; font-size: 10px; font-weight: 600;">Próximo →</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="card-body">
+      <h3>C — Wizard Guiado com Passos</h3>
+      <p>Fluxo linear em etapas: escolha o template → selecione blocos → configure cada um → publique. Mais fácil de usar, menos intimidador para iniciantes.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top: 12px; text-align: center;">O "estilo n8n" que você mencionou seria mais próximo de A. Confirme o que você quer.</p>

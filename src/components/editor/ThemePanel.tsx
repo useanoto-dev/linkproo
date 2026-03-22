@@ -1,9 +1,9 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SmartLink, HeroObjectFit } from "@/types/smart-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Palette, Sparkles, Type, Crosshair } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
 import { ImageUploader } from "./ImageUploader";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -60,7 +60,7 @@ interface FocalPointPickerProps {
   onChange: (x: number, y: number) => void;
 }
 
-function FocalPointPicker({ imageUrl, x, y, onChange }: FocalPointPickerProps) {
+const FocalPointPicker = React.memo(function FocalPointPicker({ imageUrl, x, y, onChange }: FocalPointPickerProps) {
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = Math.round(((e.clientX - rect.left) / rect.width)  * 100);
@@ -92,11 +92,23 @@ function FocalPointPicker({ imageUrl, x, y, onChange }: FocalPointPickerProps) {
       </div>
     </div>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COMMON_EMOJIS = ["🔥", "⭐", "❤️", "🎉", "✨", "🍕", "💰", "🎯", "💎", "🚀", "👑", "🌟", "💪", "🎁", "📱", "🛒", "💬", "📍", "🏆", "💥"];
+
+const HERO_FIT_OPTIONS = [
+  { value: 'cover'   as HeroObjectFit, label: 'Preencher', hint: 'Recorta para cobrir' },
+  { value: 'contain' as HeroObjectFit, label: 'Conter',    hint: 'Mostra tudo' },
+  { value: 'fill'    as HeroObjectFit, label: 'Esticar',   hint: 'Estica sem recorte' },
+] as const;
+
+const HERO_OVERLAY_COLOR_OPTIONS = [
+  { value: 'dark'   as const, label: 'Escuro',       preview: '#000000' as string | null },
+  { value: 'light'  as const, label: 'Claro',         preview: '#ffffff' as string | null },
+  { value: 'custom' as const, label: 'Personalizado', preview: null },
+] as const;
 
 export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
   const [customColors, setCustomColors] = useState({
@@ -121,6 +133,16 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
   // RAF throttle — batches rapid slider updates into one per animation frame
   const pendingUpdateRef = useRef<Partial<SmartLink> | null>(null);
   const rafRef = useRef<number | undefined>(undefined);
+
+  // Cancel any pending RAF on unmount to avoid callbacks on an unmounted component
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== undefined) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
   const throttledUpdate = useCallback((updates: Partial<SmartLink>) => {
     pendingUpdateRef.current = { ...(pendingUpdateRef.current ?? {}), ...updates };
     if (rafRef.current !== undefined) return;
@@ -179,11 +201,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-muted-foreground">Ajuste da imagem</Label>
             <div className="grid grid-cols-3 gap-1.5">
-              {([
-                { value: 'cover'   as HeroObjectFit, label: 'Preencher', hint: 'Recorta para cobrir' },
-                { value: 'contain' as HeroObjectFit, label: 'Conter',    hint: 'Mostra tudo' },
-                { value: 'fill'    as HeroObjectFit, label: 'Esticar',   hint: 'Estica sem recorte' },
-              ]).map((opt) => {
+              {HERO_FIT_OPTIONS.map((opt) => {
                 const active = (link.heroObjectFit ?? 'cover') === opt.value;
                 return (
                   <button
@@ -271,11 +289,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-muted-foreground">Cor do Overlay</Label>
               <div className="grid grid-cols-3 gap-1.5">
-                {([
-                  { value: 'dark' as const,   label: 'Escuro',        preview: '#000000' as string | null },
-                  { value: 'light' as const,  label: 'Claro',          preview: '#ffffff' as string | null },
-                  { value: 'custom' as const, label: 'Personalizado',  preview: null },
-                ]).map((opt) => {
+                {HERO_OVERLAY_COLOR_OPTIONS.map((opt) => {
                   const current = link.heroOverlayColor ?? 'dark';
                   const isCustom = opt.value === 'custom';
                   const active = isCustom
@@ -324,6 +338,50 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
         onChange={(url) => onUpdateLink({ logoUrl: url })}
         label="Logo"
       />
+
+      {/* Logo Size */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-[11px] font-medium text-muted-foreground">Tamanho da logo</Label>
+          <span className="text-[11px] font-mono text-foreground tabular-nums">
+            {link.logoSizePx ?? 80}px
+          </span>
+        </div>
+        <input
+          type="range"
+          min={32}
+          max={200}
+          step={4}
+          value={link.logoSizePx ?? 80}
+          onChange={(e) => throttledUpdate({ logoSizePx: Number(e.target.value) })}
+          className="w-full h-1.5 accent-primary cursor-pointer"
+        />
+        <div className="flex justify-between text-[9px] text-muted-foreground">
+          <span>32px</span><span>200px</span>
+        </div>
+      </div>
+
+      {/* Logo Shadow */}
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">Sombra</label>
+        <Switch
+          checked={link.logoShadow ?? true}
+          onCheckedChange={(v) => throttledUpdate({ logoShadow: v })}
+        />
+      </div>
+
+      {/* Visibility toggles */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Visibilidade</label>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Nome do negócio</span>
+          <Switch checked={!(link.hideBusinessName ?? false)} onCheckedChange={(v) => throttledUpdate({ hideBusinessName: !v })} />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Slogan / Bio</span>
+          <Switch checked={!(link.hideTagline ?? false)} onCheckedChange={(v) => throttledUpdate({ hideTagline: !v })} />
+        </div>
+      </div>
 
       {/* Font Selector */}
       <div className="space-y-2">

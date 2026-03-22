@@ -1,0 +1,1 @@
+ALTER TABLE public.links ADD COLUMN title_size integer;
