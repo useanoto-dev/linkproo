@@ -622,7 +622,9 @@ export const BlockRenderer = memo(function BlockRenderer({
     );
   }
 
-  if (block.type === "banner" && block.content) {
+  if (block.type === "banner") {
+    // Hide completely if nothing to show (avoids empty box in public view)
+    if (!block.content && !block.bannerTag && !block.subtitle) return null;
     const bg = block.bannerBg || accent;
     // blockTextColor overrides the default white text on the banner
     const bannerTextColor = block.blockTextColor || "white";
@@ -639,7 +641,9 @@ export const BlockRenderer = memo(function BlockRenderer({
               {block.bannerTag}
             </span>
           )}
-          <p className="font-black text-base leading-tight relative z-10" style={{ color: bannerTextColor }}>{block.content}</p>
+          {block.content && (
+            <p className="font-black text-base leading-tight relative z-10" style={{ color: bannerTextColor }}>{block.content}</p>
+          )}
           {block.subtitle && (
             <p className="text-xs mt-1 relative z-10" style={{ color: bannerTextColor, opacity: 0.8 }}>{block.subtitle}</p>
           )}

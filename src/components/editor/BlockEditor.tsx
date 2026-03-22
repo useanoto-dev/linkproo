@@ -1726,7 +1726,7 @@ export function BlockEditor({ link, onUpdateLink, onInsertBlockAt, subPageMode, 
                   className={`transition-all duration-100 rounded-xl border-2 border-dashed ${
                     dragOverIndex === unifiedItems.length
                       ? "border-primary/70 bg-primary/5 py-3"
-                      : "border-transparent py-0.5"
+                      : "border-border/25 py-2"
                   }`}
                   onDragOver={(e) => {
                     if (!e.dataTransfer.types.includes("application/x-block-type")) return;
@@ -1749,9 +1749,11 @@ export function BlockEditor({ link, onUpdateLink, onInsertBlockAt, subPageMode, 
                     setDragOverIndex(null);
                   }}
                 >
-                  {dragOverIndex === unifiedItems.length && (
-                    <p className="text-center text-xs text-primary font-medium pointer-events-none">Solte aqui para adicionar ao final</p>
-                  )}
+                  <p className={`text-center text-xs font-medium pointer-events-none transition-opacity duration-100 ${
+                    dragOverIndex === unifiedItems.length ? "text-primary opacity-100" : "text-muted-foreground/40 opacity-100"
+                  }`}>
+                    {dragOverIndex === unifiedItems.length ? "Solte aqui para adicionar ao final" : "↓ solte aqui"}
+                  </p>
                 </div>
               </div>
             </SortableContext>

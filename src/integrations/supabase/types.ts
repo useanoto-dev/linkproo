@@ -268,6 +268,9 @@ export type Database = {
           floating_emojis: Json | null
           font_family: string | null
           hero_image: string | null
+          hero_image_height_px: number | null
+          hero_object_fit: string | null
+          hero_focal_point: Json | null
           hero_image_opacity: number | null
           hero_overlay_opacity: number | null
           hero_overlay_color: string | null
@@ -301,6 +304,9 @@ export type Database = {
           floating_emojis?: Json | null
           font_family?: string | null
           hero_image?: string | null
+          hero_image_height_px?: number | null
+          hero_object_fit?: string | null
+          hero_focal_point?: Json | null
           hero_image_opacity?: number | null
           hero_overlay_opacity?: number | null
           hero_overlay_color?: string | null
@@ -334,6 +340,9 @@ export type Database = {
           floating_emojis?: Json | null
           font_family?: string | null
           hero_image?: string | null
+          hero_image_height_px?: number | null
+          hero_object_fit?: string | null
+          hero_focal_point?: Json | null
           hero_image_opacity?: number | null
           hero_overlay_opacity?: number | null
           hero_overlay_color?: string | null

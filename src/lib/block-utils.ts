@@ -26,7 +26,7 @@ export function createBlockDefaults(
       case "spotify": return { spotifyCompact: false };
       case "map": return { mapHeight: 220 };
       case "carousel": return { carouselSlides: [], carouselAutoplay: true };
-      case "banner": return { bannerBg: "#6366f1" };
+      case "banner": return { bannerBg: "#6366f1", bannerTag: "🔥 OFERTA", content: "Promoção Especial", subtitle: "Aproveite agora!" };
       case "animated-button": return {
         animStyle: "whatsapp",
         content: "Chama no WhatsApp",
