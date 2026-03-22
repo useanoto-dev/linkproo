@@ -181,13 +181,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       {/* Hero Image */}
       {link.heroImage && (() => {
         // Resolve height — new px value takes precedence over legacy enum
-        const legacyMap: Record<string, number | undefined> = {
-          sm: 128, md: 192, lg: 256, xl: 320,
-        };
-        const heightPx: number | undefined =
-          link.heroImageHeightPx ??
-          // legado — remove quando hero_image_height_px estiver populado em todos os registros
-          (link.heroImageHeight === 'auto' ? undefined : legacyMap[link.heroImageHeight ?? 'md'] ?? 192);
+        const heightPx: number | undefined = link.heroImageHeightPx ?? 192;
 
         const objectFit  = link.heroObjectFit ?? 'cover';
         const objectPos  = link.heroFocalPoint

@@ -188,9 +188,6 @@ export interface SubPage {
   linkedButtonId?: string;
 }
 
-/** @deprecated use heroImageHeightPx instead */
-export type HeroImageHeight = 'sm' | 'md' | 'lg' | 'xl' | 'auto';
-
 export type HeroObjectFit = 'cover' | 'contain' | 'fill';
 
 export interface HeroFocalPoint {
@@ -205,9 +202,7 @@ export interface SmartLink {
   businessNameHtml?: boolean;
   tagline: string;
   heroImage: string;
-  /** @deprecated — kept for backward-compat. Use heroImageHeightPx. */
-  heroImageHeight?: HeroImageHeight;
-  /** Banner height in px (80–500). Takes precedence over heroImageHeight. */
+  /** Banner height in px (80–500). */
   heroImageHeightPx?: number;
   /** How the banner image fills its container */
   heroObjectFit?: HeroObjectFit;

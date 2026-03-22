@@ -25,7 +25,6 @@ export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0): SmartLi
     businessNameHtml: row.business_name_html || false,
     tagline: row.tagline || "",
     heroImage: row.hero_image || "",
-    heroImageHeight: row.hero_image_height || undefined,  // @deprecated — usar heroImageHeightPx
     heroImageOpacity: row.hero_image_opacity ?? undefined,
     heroOverlayOpacity: row.hero_overlay_opacity ?? undefined,
     heroOverlayColor: row.hero_overlay_color ?? undefined,
@@ -70,7 +69,6 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     business_name_html: link.businessNameHtml || false,
     tagline: link.tagline,
     hero_image: link.heroImage,
-    hero_image_height: link.heroImageHeight || null,  // @deprecated — usar heroImageHeightPx // TODO: remover após confirmar que migration 20260322200001 rodou em prod
     hero_image_opacity: link.heroImageOpacity ?? null,
     hero_overlay_opacity: link.heroOverlayOpacity ?? null,
     hero_overlay_color: link.heroOverlayColor ?? null,

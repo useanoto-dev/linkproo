@@ -234,7 +234,6 @@ describe("smartLinkToRow", () => {
 
     const row = smartLinkToRow(minimalLink, USER_ID);
 
-    expect(row.hero_image_height).toBeNull();
     expect(row.hero_image_opacity).toBeNull();
     expect(row.hero_overlay_opacity).toBeNull();
     expect(row.hero_overlay_color).toBeNull();
