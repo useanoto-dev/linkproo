@@ -99,10 +99,12 @@ function FocalPointPicker({ imageUrl, x, y, onChange }: FocalPointPickerProps) {
 const COMMON_EMOJIS = ["🔥", "⭐", "❤️", "🎉", "✨", "🍕", "💰", "🎯", "💎", "🚀", "👑", "🌟", "💪", "🎁", "📱", "🛒", "💬", "📍", "🏆", "💥"];
 
 export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
-  const [customBgColor, setCustomBgColor] = useState("#1a1a2e");
-  const [isGradient, setIsGradient] = useState(false);
-  const [gradFrom, setGradFrom] = useState("#1a1a2e");
-  const [gradTo, setGradTo] = useState("#16213e");
+  const [customColors, setCustomColors] = useState({
+    bg: "#1a1a2e",
+    from: "#1a1a2e",
+    to: "#16213e",
+    isGradient: false,
+  });
   const [emojiSearch, setEmojiSearch] = useState("");
   const emojiPopoverRef = useRef<HTMLButtonElement>(null);
 
@@ -113,12 +115,21 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
     // format: "custom:#color1:#color2"
     const from = parts[1] ?? "#1a1a2e";
     const to = parts[2] ?? "#16213e";
-    const gradient = from !== to;
-    setCustomBgColor(from);
-    setGradFrom(from);
-    setGradTo(to);
-    setIsGradient(gradient);
+    setCustomColors({ bg: from, from, to, isGradient: from !== to }); // ONE call
   }, [link.backgroundColor]);
+
+  // RAF throttle — batches rapid slider updates into one per animation frame
+  const pendingUpdateRef = useRef<Partial<SmartLink> | null>(null);
+  const rafRef = useRef<number | undefined>(undefined);
+  const throttledUpdate = useCallback((updates: Partial<SmartLink>) => {
+    pendingUpdateRef.current = { ...(pendingUpdateRef.current ?? {}), ...updates };
+    if (rafRef.current !== undefined) return;
+    rafRef.current = requestAnimationFrame(() => {
+      if (pendingUpdateRef.current) onUpdateLink(pendingUpdateRef.current);
+      pendingUpdateRef.current = null;
+      rafRef.current = undefined;
+    });
+  }, [onUpdateLink]);
 
   // Preload all fonts
   useEffect(() => {
@@ -156,7 +167,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
               max={500}
               step={4}
               value={link.heroImageHeightPx ?? 192}
-              onChange={(e) => onUpdateLink({ heroImageHeightPx: Number(e.target.value) })}
+              onChange={(e) => throttledUpdate({ heroImageHeightPx: Number(e.target.value) })}
               className="w-full h-1.5 accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[9px] text-muted-foreground">
@@ -225,7 +236,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
               max={100}
               step={5}
               value={link.heroImageOpacity ?? 100}
-              onChange={(e) => onUpdateLink({ heroImageOpacity: Number(e.target.value) })}
+              onChange={(e) => throttledUpdate({ heroImageOpacity: Number(e.target.value) })}
               className="w-full h-1.5 accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[9px] text-muted-foreground">
@@ -247,7 +258,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
               max={80}
               step={5}
               value={link.heroOverlayOpacity ?? 0}
-              onChange={(e) => onUpdateLink({ heroOverlayOpacity: Number(e.target.value) })}
+              onChange={(e) => throttledUpdate({ heroOverlayOpacity: Number(e.target.value) })}
               className="w-full h-1.5 accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[9px] text-muted-foreground">
@@ -370,30 +381,30 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
         {/* Solid / Gradient toggle */}
         <div className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border/50">
           <span className="text-[11px] font-medium text-foreground">Degradê</span>
-          <Switch checked={isGradient} onCheckedChange={setIsGradient} />
+          <Switch checked={customColors.isGradient} onCheckedChange={(v) => setCustomColors(prev => ({ ...prev, isGradient: v }))} />
         </div>
 
-        {!isGradient ? (
+        {!customColors.isGradient ? (
           /* Solid color */
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <input
                 type="color"
-                value={customBgColor}
-                onChange={(e) => setCustomBgColor(e.target.value)}
+                value={customColors.bg}
+                onChange={(e) => setCustomColors(prev => ({ ...prev, bg: e.target.value }))}
                 className="w-10 h-10 rounded-xl border-2 border-border cursor-pointer bg-transparent"
               />
               <div className="flex-1">
                 <Input
-                  value={customBgColor}
-                  onChange={(e) => setCustomBgColor(e.target.value)}
+                  value={customColors.bg}
+                  onChange={(e) => setCustomColors(prev => ({ ...prev, bg: e.target.value }))}
                   placeholder="#1a1a2e"
                   className="text-xs h-8 font-mono"
                 />
               </div>
             </div>
             <button
-              onClick={() => onUpdateLink({ backgroundColor: `custom:${customBgColor}:${customBgColor}` })}
+              onClick={() => onUpdateLink({ backgroundColor: `custom:${customColors.bg}:${customColors.bg}` })}
               className="w-full h-9 rounded-xl text-[11px] font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
             >
               Aplicar Cor
@@ -405,7 +416,7 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
             {/* Preview bar */}
             <div
               className="h-10 rounded-xl border border-border/50 shadow-inner"
-              style={{ background: `linear-gradient(135deg, ${gradFrom}, ${gradTo})` }}
+              style={{ background: `linear-gradient(135deg, ${customColors.from}, ${customColors.to})` }}
             />
             <div className="flex gap-2">
               <div className="flex-1 space-y-1">
@@ -413,11 +424,11 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
                 <div className="flex items-center gap-1.5">
                   <input
                     type="color"
-                    value={gradFrom}
-                    onChange={(e) => setGradFrom(e.target.value)}
+                    value={customColors.from}
+                    onChange={(e) => setCustomColors(prev => ({ ...prev, from: e.target.value }))}
                     className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
                   />
-                  <Input value={gradFrom} onChange={(e) => setGradFrom(e.target.value)} className="text-[10px] h-7 font-mono px-1.5" />
+                  <Input value={customColors.from} onChange={(e) => setCustomColors(prev => ({ ...prev, from: e.target.value }))} className="text-[10px] h-7 font-mono px-1.5" />
                 </div>
               </div>
               <div className="flex-1 space-y-1">
@@ -425,16 +436,16 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
                 <div className="flex items-center gap-1.5">
                   <input
                     type="color"
-                    value={gradTo}
-                    onChange={(e) => setGradTo(e.target.value)}
+                    value={customColors.to}
+                    onChange={(e) => setCustomColors(prev => ({ ...prev, to: e.target.value }))}
                     className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
                   />
-                  <Input value={gradTo} onChange={(e) => setGradTo(e.target.value)} className="text-[10px] h-7 font-mono px-1.5" />
+                  <Input value={customColors.to} onChange={(e) => setCustomColors(prev => ({ ...prev, to: e.target.value }))} className="text-[10px] h-7 font-mono px-1.5" />
                 </div>
               </div>
             </div>
             <button
-              onClick={() => onUpdateLink({ backgroundColor: `custom:${gradFrom}:${gradTo}` })}
+              onClick={() => onUpdateLink({ backgroundColor: `custom:${customColors.from}:${customColors.to}` })}
               className="w-full h-9 rounded-xl text-[11px] font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
             >
               Aplicar Degradê
