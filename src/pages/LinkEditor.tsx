@@ -717,7 +717,7 @@ export default function LinkEditor() {
 
               {link.slug && !editingSubPageId && (
                 <div className="mt-3 px-3 py-1 rounded-full bg-secondary border border-border text-[10px] text-muted-foreground font-mono">
-                  linkpro.app/<span className="text-primary font-semibold">{link.slug}</span>
+                  {window.location.host}/l/<span className="text-primary font-semibold">{link.slug}</span>
                 </div>
               )}
               {editingSubPageId && (

@@ -86,7 +86,7 @@ export default function PublicLinkPage() {
       createdMetas.forEach((el) => el.remove());
       // Restore canonical to root
       if (canonicalEl) {
-        canonicalEl.setAttribute("href", "https://liinkpro.lovable.app");
+        canonicalEl.setAttribute("href", window.location.origin);
       }
     };
   }, [link]);

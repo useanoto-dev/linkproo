@@ -6,20 +6,13 @@ import { toast } from "sonner";
 import { rowToSmartLink, smartLinkToRow } from "@/lib/link-mappers";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
-// The published domain for share URLs — uses current host when running locally
-const _isLocal =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-
-export const PUBLISHED_DOMAIN = _isLocal
-  ? window.location.host
-  : (import.meta.env.VITE_PUBLIC_DOMAIN || "liinkpro.lovable.app");
-
-/** Returns the full URL (with correct protocol) for a published link slug */
+/** Returns the full public URL for a published link slug — always uses current origin */
 export function getPublicLinkUrl(slug: string): string {
-  const protocol = _isLocal ? "http" : "https";
-  return `${protocol}://${PUBLISHED_DOMAIN}/l/${slug}`;
+  return `${window.location.origin}/l/${slug}`;
 }
+
+/** The current host, for display purposes */
+export const PUBLISHED_DOMAIN = typeof window !== "undefined" ? window.location.host : "";
 
 // Re-export mappers for backward compat
 export { rowToSmartLink, smartLinkToRow };
