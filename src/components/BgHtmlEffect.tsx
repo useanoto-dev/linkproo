@@ -19,15 +19,18 @@ export function BgHtmlEffect({ html }: Props) {
   }, []);
 
   const srcDoc = useMemo(() => {
+    const patchedHtml = html
+      .replace(/window\.innerWidth/g, '(document.documentElement.clientWidth||400)')
+      .replace(/window\.innerHeight/g, '(document.documentElement.clientHeight||700)');
     const base = `<style>*{margin:0;padding:0;box-sizing:border-box;}html,body{width:100%;height:100%;overflow:hidden;}canvas{position:absolute;width:100%!important;height:100%!important;}</style>`;
-    const fixScript = `<script>window.addEventListener('load',function(){var cs=document.querySelectorAll('canvas');cs.forEach(function(c){if(!c.hasAttribute('width')||c.width<2){c.width=window.innerWidth||document.documentElement.offsetWidth||400}if(!c.hasAttribute('height')||c.height<2){c.height=window.innerHeight||document.documentElement.offsetHeight||700}})});<\/script>`;
+    const fixScript = `<script>window.addEventListener('load',function(){var W=document.documentElement.clientWidth||400,H=document.documentElement.clientHeight||700;document.querySelectorAll('canvas').forEach(function(c){if(c.width<2){c.width=c.offsetWidth||W}if(c.height<2){c.height=c.offsetHeight||H}});window.dispatchEvent(new Event('resize'))});<\/script>`;
     let doc: string;
-    if (html.includes("</head>")) {
-      doc = html.replace("</head>", base + "</head>");
-    } else if (html.includes("<html")) {
-      doc = html.replace(/>/, ">" + base);
+    if (patchedHtml.includes("</head>")) {
+      doc = patchedHtml.replace("</head>", base + "</head>");
+    } else if (patchedHtml.includes("<html")) {
+      doc = patchedHtml.replace(/>/, ">" + base);
     } else {
-      doc = base + html;
+      doc = base + patchedHtml;
     }
     if (doc.includes("</body>")) {
       doc = doc.replace("</body>", fixScript + "</body>");

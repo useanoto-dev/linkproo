@@ -195,8 +195,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
         <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />
       )}
 
-      {/* Decorative particles — stable positions */}
-      <DecorativeParticles accent={accent} />
+      {/* Decorative particles removed — only animated templates (bgHtml) should have effects */}
 
       {/* Floating Emojis */}
       {link.floatingEmojis.map((emoji, i) => (
