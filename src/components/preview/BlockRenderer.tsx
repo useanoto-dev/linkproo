@@ -583,8 +583,8 @@ export const BlockRenderer = memo(function BlockRenderer({
           className="w-full overflow-hidden rounded-xl"
           style={{ height: block.htmlHeight || 'auto', minHeight: 60, maxHeight: 800 }}
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.htmlContent || '', {
-            ALLOWED_TAGS: ['div', 'span', 'p', 'a', 'b', 'i', 'em', 'strong', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'img', 'video', 'iframe', 'br', 'hr', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'form', 'input', 'button', 'label', 'select', 'option', 'textarea', 'script', 'style'],
-            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'type', 'value', 'placeholder', 'name', 'action', 'method', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow'],
+            ALLOWED_TAGS: ['div', 'span', 'p', 'a', 'b', 'i', 'em', 'strong', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'img', 'video', 'iframe', 'br', 'hr', 'table', 'tr', 'td', 'th', 'thead', 'tbody'],
+            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow'],
             FORCE_BODY: false,
             ADD_TAGS: ['iframe'],
             ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'],

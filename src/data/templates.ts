@@ -32,6 +32,10 @@ export const templateCategories = [
   { id: "coach",     label: "Coach & Mentor",          emoji: "🎯", description: "Coaching, mentoria, desenvolvimento",    color: "bg-amber-600" },
   { id: "padaria",   label: "Padaria & Confeitaria",   emoji: "🥐", description: "Padarias, confeitarias, bolos",          color: "bg-yellow-600" },
   { id: "vet",       label: "Clínica Veterinária",     emoji: "🐾", description: "Veterinários, clínicas, cuidados pet",   color: "bg-teal-600" },
+  { id: "animados",   label: "✨ Efeitos Animados",      emoji: "🎨", description: "Templates com fundos HTML/CSS animados exclusivos", color: "bg-violet-600" },
+  { id: "mini-sites", label: "🌐 Mini Sites",             emoji: "🌐", description: "Templates estilo site completo com múltiplas seções",  color: "bg-indigo-600" },
+  { id: "entretenimento", label: "🎮 Entretenimento",      emoji: "🎮", description: "Games, streamers, eventos, baladas",                   color: "bg-fuchsia-600" },
+  { id: "gastronomia", label: "🍷 Gastronomia",           emoji: "🍷", description: "Restaurantes gourmet, chefs, sommeliers",              color: "bg-amber-700" },
 ];
 
 export const templates: LinkTemplate[] = [
@@ -1430,6 +1434,444 @@ export const templates: LinkTemplate[] = [
           { id: "2", label: "Mentoria ao Vivo", emoji: "💬", color: "bg-indigo-700" },
           { id: "3", label: "Acesso Vitalício", emoji: "♾️", color: "bg-cyan-700" },
         ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ══════════════════════ CATEGORIA: EFEITOS ANIMADOS ══════════════════════
+
+  // ─── HACKER / MATRIX ────────────────────────────────────────────
+  {
+    id: "tpl-hacker",
+    category: "animados",
+    categoryEmoji: "💻",
+    name: "Hacker & Matrix",
+    description: "Chuva de código Matrix — letras verdes neon descendo numa tela de hacker cinematográfica",
+    template: {
+      slug: "",
+      businessName: "0x4C756361732056",
+      tagline: "> SYSTEM ONLINE — INITIALIZING SEQUENCE_",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-green-950 to-slate-950",
+      textColor: "text-green-400",
+      accentColor: "#00ff41",
+      fontFamily: "Space Grotesk",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#000300;overflow:hidden}canvas{position:absolute;top:0;left:0}.scanline{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px);pointer-events:none}.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.7) 100%);pointer-events:none}</style><canvas id="c"></canvas><div class="scanline"></div><div class="vignette"></div><script>(function(){var c=document.getElementById('c'),ctx=c.getContext('2d');c.width=window.innerWidth;c.height=window.innerHeight;var W=c.width,H=c.height;var fontSize=14,cols=Math.floor(W/fontSize);var drops=[];for(var i=0;i<cols;i++)drops[i]=Math.random()*-50;var chars='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF<>{}[]|/\\\\';var brightDrops={};function draw(){ctx.fillStyle='rgba(0,3,0,.05)';ctx.fillRect(0,0,W,H);for(var i=0;i<cols;i++){var ch=chars[Math.floor(Math.random()*chars.length)];var bright=brightDrops[i]===drops[i];ctx.fillStyle=bright?'#ccffcc':'#00ff41';ctx.font=fontSize+'px monospace';ctx.fillText(ch,i*fontSize,drops[i]*fontSize);if(Math.random()>.02)ctx.fillStyle='rgba(0,180,0,.6)';if(drops[i]*fontSize>H&&Math.random()>.975){drops[i]=0;brightDrops[i]=Math.random()>.7?0:null}drops[i]+=Math.random()>.3?1:.5}}setInterval(draw,45)})()</script>`,
+        overlay: 15,
+      },
+      buttons: [
+        { id: "1", label: "GitHub", subtitle: "// open source projects", url: "", icon: "", gradientColor: "from-green-900 to-black", iconEmoji: "💻", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "2", label: "Portfólio", subtitle: "// projetos e sistemas", url: "", icon: "", gradientColor: "from-emerald-900 to-black", iconEmoji: "🖥️", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "LinkedIn", subtitle: "// network protocols", url: "", icon: "", gradientColor: "from-cyan-900 to-black", iconEmoji: "🔗", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "Contato", subtitle: "// send_message()", url: "", icon: "", gradientColor: "from-teal-900 to-black", iconEmoji: "📡", linkType: "email", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["💻", "⚡", "🔒", "🛸"],
+      blocks: [
+        { id: "b1", type: "badges", order: 0, badges: [
+          { id: "1", label: "Full Stack", emoji: "⚙️", color: "bg-green-900" },
+          { id: "2", label: "DevSecOps", emoji: "🔒", color: "bg-emerald-900" },
+          { id: "3", label: "IA & ML", emoji: "🤖", color: "bg-teal-900" },
+          { id: "4", label: "Cloud Arch", emoji: "☁️", color: "bg-cyan-900" },
+        ]},
+        { id: "b2", type: "stats", order: 1, statItems: [
+          { id: "s1", value: "100+", label: "Repositórios" },
+          { id: "s2", value: "7 anos", label: "Escrevendo código" },
+          { id: "s3", value: "99.9%", label: "Uptime dos projetos" },
+        ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── SPACE / COSMOS ─────────────────────────────────────────────
+  {
+    id: "tpl-cosmos",
+    category: "animados",
+    categoryEmoji: "🌌",
+    name: "Cosmos & Espaço",
+    description: "Campo de estrelas com nebulosa animada — para criadores de conteúdo de astronomia, ficção científica ou visual impactante",
+    template: {
+      slug: "",
+      businessName: "Cosmos Studio",
+      tagline: "Explorando o universo através da arte e da ciência",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-indigo-950 to-slate-950",
+      textColor: "text-white",
+      accentColor: "#818cf8",
+      fontFamily: "Raleway",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#02020a;overflow:hidden}canvas{position:absolute;inset:0}.nebula{position:absolute;border-radius:50%;filter:blur(60px);animation:drift ease-in-out infinite}.n1{width:300px;height:200px;background:radial-gradient(ellipse,rgba(99,102,241,.25),transparent);top:10%;left:-50px;animation-duration:20s}.n2{width:250px;height:180px;background:radial-gradient(ellipse,rgba(168,85,247,.2),transparent);bottom:5%;right:-30px;animation-duration:25s;animation-delay:-10s}.n3{width:200px;height:150px;background:radial-gradient(ellipse,rgba(236,72,153,.15),transparent);top:40%;left:40%;animation-duration:18s;animation-delay:-7s}@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-15px) scale(1.05)}66%{transform:translate(-10px,20px) scale(.95)}}</style><canvas id="c"></canvas><div class="nebula n1"></div><div class="nebula n2"></div><div class="nebula n3"></div><script>(function(){var c=document.getElementById('c'),ctx=c.getContext('2d');c.width=window.innerWidth;c.height=window.innerHeight;var stars=[];for(var i=0;i<200;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,r:.3+Math.random()*1.5,spd:.2+Math.random()*.3,phase:Math.random()*Math.PI*2});var shooting={x:-10,y:-10,vx:0,vy:0,life:0,maxLife:0};function spawnShoot(){shooting.x=Math.random()*c.width*.5;shooting.y=Math.random()*c.height*.3;shooting.vx=3+Math.random()*3;shooting.vy=1.5+Math.random()*2;shooting.life=0;shooting.maxLife=40}spawnShoot();var t=0;function draw(){t++;ctx.clearRect(0,0,c.width,c.height);stars.forEach(function(s,i){s.phase+=.02;var a=.4+.4*Math.sin(s.phase);ctx.fillStyle='rgba(255,255,255,'+a+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()});if(shooting.life<shooting.maxLife){ctx.strokeStyle='rgba(200,220,255,'+(1-shooting.life/shooting.maxLife)+')';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(shooting.x,shooting.y);ctx.lineTo(shooting.x-shooting.vx*6,shooting.y-shooting.vy*6);ctx.stroke();shooting.x+=shooting.vx;shooting.y+=shooting.vy;shooting.life++}else if(t%180===0)spawnShoot();requestAnimationFrame(draw)}draw()})()</script>`,
+        overlay: 20,
+      },
+      buttons: [
+        { id: "1", label: "YouTube", subtitle: "Documentários e vídeos 🔭", url: "", icon: "", gradientColor: "from-red-700 to-red-900", iconEmoji: "▶️", linkType: "youtube", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "Instagram", subtitle: "Fotos do cosmos 📸", url: "", icon: "", gradientColor: "from-indigo-700 to-purple-900", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Loja de Prints", subtitle: "Arte espacial para sua parede 🖼️", url: "", icon: "", gradientColor: "from-violet-700 to-indigo-900", iconEmoji: "🖼️", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "Newsletter", subtitle: "Notícias do cosmos 📡", url: "", icon: "", gradientColor: "from-cyan-800 to-blue-950", iconEmoji: "📡", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["🌌", "⭐", "🪐", "🚀"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "500+", label: "Fotos do universo" },
+          { id: "s2", value: "200K+", label: "Seguidores" },
+          { id: "s3", value: "50+", label: "Países alcançados" },
+        ]},
+        { id: "b2", type: "cta", order: 1, content: "🌌 Junte-se à exploração", subtitle: "Inscreva-se e receba o cosmos na sua tela toda semana" },
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── AURORA BOREAL ──────────────────────────────────────────────
+  {
+    id: "tpl-aurora",
+    category: "animados",
+    categoryEmoji: "🌌",
+    name: "Aurora Boreal",
+    description: "Aurora boreal com cores hipnóticas animadas — para artistas, coaches e marcas com identidade única",
+    template: {
+      slug: "",
+      businessName: "Aurora Creative",
+      tagline: "Onde criatividade encontra magia",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-teal-950 to-indigo-950",
+      textColor: "text-white",
+      accentColor: "#2dd4bf",
+      fontFamily: "Outfit",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#010d12;overflow:hidden}.aurora{position:absolute;width:200%;height:60%;top:0;left:-50%;animation:shift 12s ease-in-out infinite}.a1{background:linear-gradient(180deg,transparent,rgba(0,200,150,.35) 40%,rgba(0,150,200,.3) 70%,transparent);animation-duration:14s}.a2{background:linear-gradient(180deg,transparent,rgba(100,0,255,.2) 35%,rgba(0,220,180,.25) 65%,transparent);animation-duration:10s;animation-delay:-5s;opacity:.8}.a3{background:linear-gradient(180deg,transparent,rgba(0,255,200,.15) 45%,rgba(50,0,200,.2) 75%,transparent);animation-duration:16s;animation-delay:-8s;opacity:.6}.stars{position:absolute;inset:0;background:radial-gradient(1px 1px at 20% 30%,white,transparent),radial-gradient(1px 1px at 80% 10%,white,transparent),radial-gradient(1px 1px at 45% 60%,rgba(255,255,255,.7),transparent),radial-gradient(1px 1px at 10% 80%,white,transparent),radial-gradient(1px 1px at 90% 70%,rgba(255,255,255,.5),transparent),radial-gradient(1px 1px at 60% 20%,white,transparent),radial-gradient(2px 2px at 35% 85%,rgba(255,255,255,.6),transparent)}@keyframes shift{0%,100%{transform:translateX(0) skewX(0deg)}50%{transform:translateX(10%) skewX(3deg)}}</style><div class="stars"></div><div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>`,
+        overlay: 20,
+      },
+      buttons: [
+        { id: "1", label: "Meu Trabalho", subtitle: "Portfolio e projetos ✨", url: "", icon: "", gradientColor: "from-teal-700 to-teal-900", iconEmoji: "✨", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "Instagram", subtitle: "Arte e inspiração 🌈", url: "", icon: "", gradientColor: "from-indigo-700 to-purple-900", iconEmoji: "🌈", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Mentoria", subtitle: "Sessão 1:1 disponível 🧭", url: "", icon: "", gradientColor: "from-cyan-700 to-teal-900", iconEmoji: "🧭", linkType: "whatsapp", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "Newsletter", subtitle: "Criatividade toda semana 💌", url: "", icon: "", gradientColor: "from-violet-700 to-indigo-900", iconEmoji: "💌", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["🌌", "✨", "🎨", "💎"],
+      blocks: [
+        { id: "b1", type: "cta", order: 0, content: "🌌 Sessão Gratuita de Mentoria", subtitle: "30 minutos para transformar sua visão criativa em realidade" },
+        { id: "b2", type: "badges", order: 1, badges: [
+          { id: "1", label: "Criação de Conteúdo", emoji: "✨", color: "bg-teal-700" },
+          { id: "2", label: "Branding Pessoal", emoji: "🎨", color: "bg-indigo-700" },
+          { id: "3", label: "Mentoria Criativa", emoji: "🧭", color: "bg-cyan-700" },
+        ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── NEON CITY / CYBERPUNK ───────────────────────────────────────
+  {
+    id: "tpl-neon-city",
+    category: "animados",
+    categoryEmoji: "🌃",
+    name: "Neon City",
+    description: "Cidade cyberpunk com luzes neon refletindo na chuva — visual cinematográfico para marcas ousadas",
+    template: {
+      slug: "",
+      businessName: "NX Studio",
+      tagline: "Creative direction for the future",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-slate-950 to-fuchsia-950",
+      textColor: "text-white",
+      accentColor: "#f0abfc",
+      fontFamily: "Sora",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#03000a;overflow:hidden}.city{position:absolute;bottom:0;left:0;right:0;height:45%}.building{position:absolute;bottom:0;background:#06020f}.win{position:absolute;animation:flicker ease-in-out infinite}.rain-layer{position:absolute;inset:0;overflow:hidden}.drop{position:absolute;width:1px;background:linear-gradient(to bottom,transparent,rgba(200,150,255,.4));animation:rain linear infinite}.reflection{position:absolute;bottom:0;left:0;right:0;height:25%;background:linear-gradient(to bottom,transparent,rgba(240,100,255,.06));filter:blur(4px)}.glow-r{position:absolute;bottom:30%;left:5%;width:80px;height:4px;background:#ff00ff;filter:blur(6px);animation:pulse 3s ease-in-out infinite;border-radius:2px}.glow-b{position:absolute;bottom:35%;right:8%;width:60px;height:3px;background:#00ffff;filter:blur(5px);animation:pulse 2.5s ease-in-out infinite;animation-delay:-1.2s;border-radius:2px}@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:0}94%{opacity:1}97%{opacity:.4}98%{opacity:1}}@keyframes rain{0%{transform:translateY(-20px)}100%{transform:translateY(100vh)}}@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}</style><div class="city" id="city"></div><div class="reflection"></div><div class="glow-r"></div><div class="glow-b"></div><div class="rain-layer" id="rain"></div><script>(function(){var city=document.getElementById('city');var bldgs=[{w:60,h:120,l:0},{w:45,h:90,l:55},{w:80,h:160,l:90},{w:50,h:110,l:165},{w:70,h:140,l:210},{w:40,h:85,l:275},{w:90,h:180,l:305},{w:55,h:130,l:390},{w:65,h:150,l:440},{w:45,h:100,l:500},{w:85,h:170,l:540}];bldgs.forEach(function(b){var el=document.createElement('div');el.className='building';el.style.cssText='left:'+b.l+'px;width:'+b.w+'px;height:'+b.h+'px;background:linear-gradient(to top,#09030f,#0d0418)';city.appendChild(el);for(var i=0;i<6;i++){for(var j=0;j<4;j++){var w=document.createElement('div');w.className='win';w.style.cssText='left:'+(b.l+5+j*13)+'px;bottom:'+(b.h-10-i*18)+'px;width:8px;height:6px;background:'+(Math.random()>.5?'rgba(255,200,100,.7)':'rgba(100,200,255,.6)')+';animation-duration:'+(3+Math.random()*5)+'s;animation-delay:'+Math.random()*5+'s';document.body.appendChild(w)}}});var rain=document.getElementById('rain');for(var i=0;i<80;i++){var d=document.createElement('div');d.className='drop';d.style.cssText='left:'+Math.random()*100+'%;height:'+(8+Math.random()*15)+'px;animation-duration:'+(0.4+Math.random()*.4)+'s;animation-delay:'+Math.random()*.8+'s;top:-20px';rain.appendChild(d)}})()</script>`,
+        overlay: 35,
+      },
+      buttons: [
+        { id: "1", label: "Portfólio", subtitle: "Work & projects", url: "", icon: "", gradientColor: "from-fuchsia-700 to-purple-900", iconEmoji: "🎨", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "Instagram", subtitle: "Visual diary", url: "", icon: "", gradientColor: "from-pink-700 to-fuchsia-900", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Behance", subtitle: "Design projects", url: "", icon: "", gradientColor: "from-blue-700 to-indigo-900", iconEmoji: "🖌️", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "Contact", subtitle: "Let's create together", url: "", icon: "", gradientColor: "from-cyan-700 to-blue-950", iconEmoji: "✉️", linkType: "email", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["🌃", "✨", "🎨", "⚡"],
+      blocks: [
+        { id: "b1", type: "badges", order: 0, badges: [
+          { id: "1", label: "Motion Design", emoji: "🎬", color: "bg-fuchsia-700" },
+          { id: "2", label: "Brand Identity", emoji: "🎨", color: "bg-purple-700" },
+          { id: "3", label: "UI/UX Design", emoji: "✏️", color: "bg-indigo-700" },
+          { id: "4", label: "3D & CGI", emoji: "🔮", color: "bg-pink-700" },
+        ]},
+        { id: "b2", type: "cta", order: 1, content: "🌃 Projetos criativos sob medida", subtitle: "Direção de arte para marcas que querem se destacar" },
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── PARTÍCULAS DOURADAS ─────────────────────────────────────────
+  {
+    id: "tpl-golden-luxury",
+    category: "animados",
+    categoryEmoji: "✨",
+    name: "Luxo Dourado",
+    description: "Partículas douradas com efeito bokeh — para marcas premium, joalherias e serviços de luxo",
+    template: {
+      slug: "",
+      businessName: "House of Gold",
+      tagline: "Excelência em cada detalhe",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-yellow-950 to-neutral-950",
+      textColor: "text-white",
+      accentColor: "#d4af37",
+      fontFamily: "Raleway",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#07060a;overflow:hidden}canvas{position:absolute;inset:0}.shimmer{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(212,175,55,.08),transparent 55%),radial-gradient(ellipse at 70% 60%,rgba(180,140,30,.06),transparent 50%)}</style><canvas id="c"></canvas><div class="shimmer"></div><script>(function(){var c=document.getElementById('c'),ctx=c.getContext('2d');c.width=window.innerWidth;c.height=window.innerHeight;var particles=[];for(var i=0;i<120;i++){particles.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2.5+.5,vx:(Math.random()-.5)*.3,vy:-.1-Math.random()*.4,alpha:Math.random(),alphaD:.005+Math.random()*.01,gold:Math.random()>.5})}function draw(){ctx.clearRect(0,0,c.width,c.height);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.alpha+=p.alphaD;if(p.alpha>1){p.alphaD*=-1}if(p.alpha<0){p.alphaD*=-1;p.y=c.height+5;p.x=Math.random()*c.width}if(p.y<-5){p.y=c.height+5;p.x=Math.random()*c.width}var g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*3);var col=p.gold?'212,175,55':'255,220,100';g.addColorStop(0,'rgba('+col+','+p.alpha+')');g.addColorStop(1,'rgba('+col+',0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,p.r*3,0,Math.PI*2);ctx.fill()});requestAnimationFrame(draw)}draw()})()</script>`,
+        overlay: 20,
+      },
+      buttons: [
+        { id: "1", label: "Coleção Exclusiva", subtitle: "Peças únicas sob medida 💎", url: "", icon: "", gradientColor: "from-yellow-800 to-amber-950", iconEmoji: "💎", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "Atendimento VIP", subtitle: "Consultoria personalizada 👑", url: "", icon: "", gradientColor: "from-stone-700 to-neutral-900", iconEmoji: "👑", linkType: "whatsapp", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Instagram", subtitle: "Coleções e bastidores 📸", url: "", icon: "", gradientColor: "from-amber-700 to-yellow-950", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "Catálogo Digital", subtitle: "Ver todas as peças 📖", url: "", icon: "", gradientColor: "from-zinc-700 to-zinc-950", iconEmoji: "📖", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["💎", "✨", "👑", "🌟"],
+      blocks: [
+        { id: "b1", type: "testimonial", order: 0, content: "Cada peça é uma obra de arte. O atendimento é excepcional e a qualidade é imbatível.", testimonialName: "Isabela von M.", testimonialRole: "Cliente desde 2019", testimonialRating: 5 },
+        { id: "b2", type: "badges", order: 1, badges: [
+          { id: "1", label: "Joias Exclusivas", emoji: "💍", color: "bg-yellow-800" },
+          { id: "2", label: "Ouro 18k e 24k", emoji: "✨", color: "bg-amber-800" },
+          { id: "3", label: "Pedras Certificadas", emoji: "💎", color: "bg-stone-700" },
+          { id: "4", label: "Entrega Blindada", emoji: "🛡️", color: "bg-neutral-700" },
+        ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── VAPORWAVE / RETRO ──────────────────────────────────────────
+  {
+    id: "tpl-vaporwave",
+    category: "animados",
+    categoryEmoji: "🌊",
+    name: "Vaporwave Retro",
+    description: "Grade geométrica retro estilo vaporwave com degradê lilás-rosa — para marcas nostálgicas e estéticas",
+    template: {
+      slug: "",
+      businessName: "ÆSTHETIC™",
+      tagline: "// W E L C O M E  T O  T H E  F U T U R E  O F  T H E  P A S T",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-fuchsia-950 to-blue-950",
+      textColor: "text-white",
+      accentColor: "#e879f9",
+      fontFamily: "Space Grotesk",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:linear-gradient(180deg,#1a0533 0%,#2d0a5e 40%,#150233 100%);overflow:hidden}.sun{position:absolute;left:50%;transform:translateX(-50%);top:15%;width:120px;height:60px;background:linear-gradient(180deg,#ff6ec7,#ff8c00);border-radius:60px 60px 0 0;overflow:hidden}.sun-lines{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end}.sun-line{height:8%;background:#1a0533;margin-bottom:3%}.grid-wrap{position:absolute;bottom:0;left:0;right:0;height:50%;perspective:300px;overflow:hidden}.grid{width:100%;height:200%;transform-origin:bottom;transform:rotateX(45deg);background-image:linear-gradient(rgba(232,121,249,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(232,121,249,.4) 1px,transparent 1px);background-size:40px 40px;animation:gridmove 4s linear infinite}.mountains{position:absolute;bottom:50%;left:0;right:0}.glow{position:absolute;bottom:48%;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ff6ec7,#e879f9,#ff6ec7,transparent);box-shadow:0 0 15px #e879f9,0 0 30px #e879f9}@keyframes gridmove{0%{background-position:0 0}100%{background-position:0 40px}}</style><div class="sun"><div class="sun-lines"><div class="sun-line"></div><div class="sun-line"></div><div class="sun-line"></div><div class="sun-line" style="height:12%"></div></div></div><div class="grid-wrap"><div class="grid"></div></div><div class="glow"></div>`,
+        overlay: 25,
+      },
+      buttons: [
+        { id: "1", label: "Loja Estética", subtitle: "Merch & produtos 🛍️", url: "", icon: "", gradientColor: "from-fuchsia-700 to-pink-900", iconEmoji: "🛍️", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "Instagram", subtitle: "Conteúdo estético 📸", url: "", icon: "", gradientColor: "from-pink-700 to-fuchsia-900", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Spotify", subtitle: "Lo-fi & vaporwave 🎵", url: "", icon: "", gradientColor: "from-green-700 to-emerald-900", iconEmoji: "🎵", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "TikTok", subtitle: "Vídeos estéticos 🎬", url: "", icon: "", gradientColor: "from-zinc-700 to-black", iconEmoji: "🎬", linkType: "tiktok", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["🌊", "🌴", "💜", "🎶"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "1M+", label: "Seguidores" },
+          { id: "s2", value: "50K+", label: "Produtos vendidos" },
+          { id: "s3", value: "90s", label: "Vibes eternas" },
+        ]},
+        { id: "b2", type: "cta", order: 1, content: "🌊 Nova coleção chegou", subtitle: "Estética pura — edição limitada disponível agora" },
+      ],
+      pages: [],
+    },
+  },
+
+  // ══════════════════════ CATEGORIA: MINI SITES ══════════════════════
+
+  // ─── PORTFOLIO CRIATIVO ──────────────────────────────────────────
+  {
+    id: "tpl-portfolio-criativo",
+    category: "mini-sites",
+    categoryEmoji: "🎨",
+    name: "Portfólio Criativo",
+    description: "Mini site para designers, artistas e criativos — com seções de projetos, serviços e contato",
+    template: {
+      slug: "",
+      businessName: "Ana Costa — Design",
+      tagline: "Designer gráfica especializada em branding e identidade visual",
+      heroImage: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80",
+      logoUrl: "",
+      backgroundColor: "from-neutral-950 to-stone-900",
+      textColor: "text-white",
+      accentColor: "#f59e0b",
+      fontFamily: "DM Sans",
+      buttons: [
+        { id: "1", label: "Ver Portfólio Completo", subtitle: "Todos os projetos 🎨", url: "", icon: "", gradientColor: "from-amber-600 to-orange-700", iconEmoji: "🎨", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&q=80", imagePosition: "right" as const, imageOpacity: 75, imageSize: 45 },
+        { id: "2", label: "Behance", subtitle: "Case studies completos 🏆", url: "", icon: "", gradientColor: "from-blue-700 to-blue-900", iconEmoji: "🏆", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80", imagePosition: "right" as const, imageOpacity: 70, imageSize: 42 },
+        { id: "3", label: "Contratar Serviços", subtitle: "Projetos a partir de R$800 💼", url: "", icon: "", gradientColor: "from-stone-600 to-neutral-800", iconEmoji: "💼", linkType: "whatsapp", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 40 },
+        { id: "4", label: "Instagram", subtitle: "Bastidores do processo 📸", url: "", icon: "", gradientColor: "from-rose-600 to-pink-800", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+        { id: "5", label: "E-mail", subtitle: "Orçamento e parcerias ✉️", url: "", icon: "", gradientColor: "from-zinc-600 to-zinc-900", iconEmoji: "✉️", linkType: "email", linkValue: "", imagePosition: "right" as const, imageOpacity: 62, imageSize: 36 },
+      ],
+      badges: [],
+      floatingEmojis: ["🎨", "✏️", "🌟", "💡"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "120+", label: "Projetos entregues" },
+          { id: "s2", value: "6 anos", label: "De experiência" },
+          { id: "s3", value: "4.9★", label: "Avaliação média" },
+        ]},
+        { id: "b2", type: "badges", order: 1, badges: [
+          { id: "1", label: "Identidade Visual", emoji: "🎨", color: "bg-amber-700" },
+          { id: "2", label: "UI/UX Design", emoji: "✏️", color: "bg-stone-600" },
+          { id: "3", label: "Motion Graphics", emoji: "🎬", color: "bg-orange-700" },
+          { id: "4", label: "Social Media", emoji: "📱", color: "bg-neutral-600" },
+        ]},
+        { id: "b3", type: "testimonial", order: 2, content: "A Ana transformou completamente nossa identidade visual. Profissionalismo e criatividade raros.", testimonialName: "Startup Fintech XY", testimonialRole: "Cliente corporativo", testimonialRating: 5 },
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── LANDING PAGE PRODUTO ────────────────────────────────────────
+  {
+    id: "tpl-landing-produto",
+    category: "mini-sites",
+    categoryEmoji: "🚀",
+    name: "Landing Page — Produto Digital",
+    description: "Página de lançamento para produtos digitais, cursos e infoprodutos com alta conversão",
+    template: {
+      slug: "",
+      businessName: "MÉTODO RESULTADO PRO",
+      tagline: "O sistema que já ajudou mais de 3.000 pessoas a triplicarem seu faturamento em 90 dias",
+      heroImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+      logoUrl: "",
+      backgroundColor: "from-orange-950 to-amber-950",
+      textColor: "text-white",
+      accentColor: "#f97316",
+      fontFamily: "Montserrat",
+      buttons: [
+        { id: "1", label: "QUERO TRIPLICAR MEU FATURAMENTO →", subtitle: "Vagas limitadas — garante a sua! 🔥", url: "", icon: "", gradientColor: "from-orange-500 to-red-600", iconEmoji: "🔥", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80", imagePosition: "right" as const, imageOpacity: 80, imageSize: 48 },
+        { id: "2", label: "Assistir Aula Gratuita", subtitle: "45 min que vão mudar tudo ▶️", url: "", icon: "", gradientColor: "from-amber-600 to-amber-800", iconEmoji: "▶️", linkType: "youtube", linkValue: "", imagePosition: "right" as const, imageOpacity: 72, imageSize: 42 },
+        { id: "3", label: "Falar com a Equipe", subtitle: "Tire suas dúvidas agora 💬", url: "", icon: "", gradientColor: "from-green-600 to-green-800", iconEmoji: "💬", linkType: "whatsapp", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+      ],
+      badges: [],
+      floatingEmojis: ["🔥", "💰", "🚀", "🏆"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "3.000+", label: "Alunos transformados" },
+          { id: "s2", value: "R$50M+", label: "Gerados pelos alunos" },
+          { id: "s3", value: "90 dias", label: "Para ver resultado" },
+        ]},
+        { id: "b2", type: "cta", order: 1, content: "⏰ ÚLTIMAS VAGAS — Turma fecha em 48h", subtitle: "Não perca mais uma oportunidade. Sua transformação começa AGORA." },
+        { id: "b3", type: "testimonial", order: 2, content: "Em 60 dias faturei R$47.000 no digital. Esse método funciona de verdade!", testimonialName: "Rodrigo A.", testimonialRole: "Aluno turma 2024", testimonialRating: 5 },
+        { id: "b4", type: "badges", order: 3, badges: [
+          { id: "1", label: "7 dias de garantia", emoji: "✅", color: "bg-green-700" },
+          { id: "2", label: "Acesso vitalício", emoji: "♾️", color: "bg-orange-700" },
+          { id: "3", label: "Certificado incluso", emoji: "📜", color: "bg-amber-700" },
+          { id: "4", label: "Comunidade VIP", emoji: "👑", color: "bg-red-700" },
+        ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ─── CURRÍCULO ONLINE ────────────────────────────────────────────
+  {
+    id: "tpl-curriculo",
+    category: "mini-sites",
+    categoryEmoji: "👔",
+    name: "Currículo Online",
+    description: "Mini site profissional estilo LinkedIn para quem busca emprego, freelance ou oportunidades",
+    template: {
+      slug: "",
+      businessName: "Lucas Ferreira",
+      tagline: "Gerente de Projetos • PMP Certificado • 10 anos de experiência em tecnologia",
+      heroImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
+      logoUrl: "",
+      backgroundColor: "from-blue-950 to-slate-950",
+      textColor: "text-white",
+      accentColor: "#3b82f6",
+      fontFamily: "Inter",
+      buttons: [
+        { id: "1", label: "Baixar Currículo PDF", subtitle: "Versão completa atualizada 📄", url: "", icon: "", gradientColor: "from-blue-600 to-blue-800", iconEmoji: "📄", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", imagePosition: "right" as const, imageOpacity: 70, imageSize: 45 },
+        { id: "2", label: "LinkedIn", subtitle: "Histórico e recomendações 🔗", url: "", icon: "", gradientColor: "from-blue-700 to-indigo-800", iconEmoji: "🔗", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Agendar Entrevista", subtitle: "Calendly disponível 📅", url: "", icon: "", gradientColor: "from-green-600 to-emerald-800", iconEmoji: "📅", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
+        { id: "4", label: "E-mail Profissional", subtitle: "Resposta em até 2h ✉️", url: "", icon: "", gradientColor: "from-slate-600 to-slate-800", iconEmoji: "✉️", linkType: "email", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+        { id: "5", label: "GitHub", subtitle: "Projetos e código 💻", url: "", icon: "", gradientColor: "from-zinc-600 to-zinc-900", iconEmoji: "💻", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 62, imageSize: 36 },
+      ],
+      badges: [],
+      floatingEmojis: ["💼", "🏆", "⭐", "🎯"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "10 anos", label: "De experiência" },
+          { id: "s2", value: "40+", label: "Projetos entregues" },
+          { id: "s3", value: "PMP", label: "Certificado PMI" },
+        ]},
+        { id: "b2", type: "badges", order: 1, badges: [
+          { id: "1", label: "Gestão de Projetos", emoji: "📊", color: "bg-blue-700" },
+          { id: "2", label: "Scrum Master", emoji: "⚡", color: "bg-indigo-700" },
+          { id: "3", label: "Liderança Técnica", emoji: "👥", color: "bg-slate-600" },
+          { id: "4", label: "Product Owner", emoji: "🎯", color: "bg-cyan-700" },
+        ]},
+      ],
+      pages: [],
+    },
+  },
+
+  // ══════════════════════ CATEGORIA: ENTRETENIMENTO ══════════════════
+
+  // ─── STREAMER / GAMER ────────────────────────────────────────────
+  {
+    id: "tpl-streamer",
+    category: "entretenimento",
+    categoryEmoji: "🎮",
+    name: "Streamer & Gamer",
+    description: "Visual gamer neon para streamers de Twitch, YouTube Gaming e criadores de conteúdo de games",
+    template: {
+      slug: "",
+      businessName: "xKingStream",
+      tagline: "GG WP • Full Time Streamer • Top 0.1%",
+      heroImage: "",
+      logoUrl: "",
+      backgroundColor: "from-violet-950 to-cyan-950",
+      textColor: "text-white",
+      accentColor: "#06b6d4",
+      fontFamily: "Space Grotesk",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#020612;overflow:hidden}.hex{position:absolute;width:50px;height:50px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);animation:hexPulse ease-in-out infinite}.scan{position:absolute;width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(6,182,212,.8),rgba(139,92,246,.8),transparent);animation:scanDown 6s ease-in-out infinite;box-shadow:0 0 10px rgba(6,182,212,.5)}.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(6,182,212,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(6,182,212,.05) 1px,transparent 1px);background-size:35px 35px}.corner{position:absolute;width:20px;height:20px;border-color:rgba(6,182,212,.6);border-style:solid}.tl{top:10px;left:10px;border-width:2px 0 0 2px}.tr{top:10px;right:10px;border-width:2px 2px 0 0}.bl{bottom:10px;left:10px;border-width:0 0 2px 2px}.br{bottom:10px;right:10px;border-width:0 2px 2px 0}@keyframes hexPulse{0%,100%{opacity:.1;transform:scale(.8)}50%{opacity:.3;transform:scale(1)}}@keyframes scanDown{0%{top:-2px}100%{top:100%}}</style><div class="grid"></div><div class="scan"></div><div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div><div id="hexes"></div><script>(function(){var h=document.getElementById('hexes');var colors=['rgba(6,182,212,.15)','rgba(139,92,246,.12)','rgba(236,72,153,.1)'];for(var i=0;i<12;i++){var d=document.createElement('div');d.className='hex';d.style.cssText='left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;background:'+colors[Math.floor(Math.random()*colors.length)]+';animation-duration:'+(3+Math.random()*4)+'s;animation-delay:'+Math.random()*4+'s;width:'+(30+Math.random()*40)+'px;height:'+(30+Math.random()*40)+'px';h.appendChild(d)}})()</script>`,
+        overlay: 30,
+      },
+      buttons: [
+        { id: "1", label: "Twitch", subtitle: "Live todo dia às 21h 🎮", url: "", icon: "", gradientColor: "from-violet-700 to-purple-900", iconEmoji: "🎮", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
+        { id: "2", label: "YouTube Gaming", subtitle: "Highlights e clips ▶️", url: "", icon: "", gradientColor: "from-red-700 to-red-900", iconEmoji: "▶️", linkType: "youtube", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "3", label: "Discord", subtitle: "Comunidade de gamers 🎧", url: "", icon: "", gradientColor: "from-indigo-700 to-indigo-900", iconEmoji: "🎧", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
+        { id: "4", label: "Loja — Merch", subtitle: "Camisa, moletom e mais 🛍️", url: "", icon: "", gradientColor: "from-cyan-700 to-cyan-900", iconEmoji: "🛍️", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
+        { id: "5", label: "Instagram", subtitle: "Lifestyle e bastidores 📸", url: "", icon: "", gradientColor: "from-pink-700 to-fuchsia-900", iconEmoji: "📸", linkType: "instagram", linkValue: "", imagePosition: "right" as const, imageOpacity: 62, imageSize: 36 },
+      ],
+      badges: [],
+      floatingEmojis: ["🎮", "🏆", "⚡", "💜"],
+      blocks: [
+        { id: "b1", type: "stats", order: 0, statItems: [
+          { id: "s1", value: "50K+", label: "Seguidores Twitch" },
+          { id: "s2", value: "200+", label: "Horas ao vivo/mês" },
+          { id: "s3", value: "Top 500", label: "Ranking nacional" },
+        ]},
+        { id: "b2", type: "cta", order: 1, content: "🎮 LIVE AGORA — Entre na stream!", subtitle: "Sub e siga para não perder nenhuma live" },
       ],
       pages: [],
     },
