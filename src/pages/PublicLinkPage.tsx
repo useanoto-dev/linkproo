@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { extractBgColor, getCustomBgGradient } from "@/lib/color-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SubPageModal } from "@/components/SubPageModal";
+import { initProtection } from "@/lib/protect";
 
 export default function PublicLinkPage() {
   const { slug, pageSlug } = useParams<{ slug: string; pageSlug?: string }>();
@@ -29,6 +30,12 @@ export default function PublicLinkPage() {
       }
     }
   }, [link, pageSlug]);
+
+  // Content protection — only on public pages (per D-02)
+  useEffect(() => {
+    const cleanup = initProtection();
+    return cleanup;
+  }, []);
 
   // Dynamic SEO meta tags with proper cleanup
   useEffect(() => {

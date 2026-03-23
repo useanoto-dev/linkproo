@@ -1,6 +1,7 @@
 /**
  * Content protection — blocks devtools shortcuts, right-click and image saving.
  * Shows a branded toast when triggered.
+ * Scoped to PublicLinkPage only (per D-02).
  */
 
 let toastTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -61,43 +62,50 @@ function showProtectToast() {
   }, 2500);
 }
 
-export function initProtection() {
-  // Block right-click
-  document.addEventListener("contextmenu", (e) => {
+export function initProtection(): () => void {
+  function onContextMenu(e: MouseEvent) {
     e.preventDefault();
     showProtectToast();
-  });
+  }
 
-  // Block keyboard shortcuts
-  document.addEventListener("keydown", (e) => {
+  function onKeyDown(e: KeyboardEvent) {
     const ctrl = e.ctrlKey || e.metaKey;
-
     const blocked =
-      e.key === "F12" ||                              // DevTools
-      (ctrl && e.shiftKey && ["I","J","C"].includes(e.key.toUpperCase())) || // DevTools panels
-      (ctrl && e.key.toUpperCase() === "U") ||        // View source
-      (ctrl && e.key.toUpperCase() === "S") ||        // Save page
-      (ctrl && e.shiftKey && e.key.toUpperCase() === "S") || // Save as
-      e.key === "F5" && ctrl ||                       // Hard refresh (optional)
-      e.key === "PrintScreen";                        // Screenshot key
+      e.key === "F12" ||
+      (ctrl && e.shiftKey && ["I","J","C"].includes(e.key.toUpperCase())) ||
+      (ctrl && e.key.toUpperCase() === "U") ||
+      (ctrl && e.key.toUpperCase() === "S") ||
+      (ctrl && e.shiftKey && e.key.toUpperCase() === "S") ||
+      (e.key === "F5" && ctrl) ||
+      e.key === "PrintScreen";
 
     if (blocked) {
       e.preventDefault();
       e.stopImmediatePropagation();
       showProtectToast();
     }
-  }, true);
+  }
 
-  // Block drag-to-save on images
-  document.addEventListener("dragstart", (e) => {
+  function onDragStart(e: DragEvent) {
     if ((e.target as HTMLElement).tagName === "IMG") {
       e.preventDefault();
     }
-  });
+  }
 
-  // Disable text selection on images only (not input/textarea)
-  document.addEventListener("selectstart", (e) => {
+  function onSelectStart(e: Event) {
     const tag = (e.target as HTMLElement).tagName;
     if (tag === "IMG") e.preventDefault();
-  });
+  }
+
+  document.addEventListener("contextmenu", onContextMenu);
+  document.addEventListener("keydown", onKeyDown, true);
+  document.addEventListener("dragstart", onDragStart);
+  document.addEventListener("selectstart", onSelectStart);
+
+  return () => {
+    document.removeEventListener("contextmenu", onContextMenu);
+    document.removeEventListener("keydown", onKeyDown, true);
+    document.removeEventListener("dragstart", onDragStart);
+    document.removeEventListener("selectstart", onSelectStart);
+  };
 }
