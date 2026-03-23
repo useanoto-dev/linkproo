@@ -12,12 +12,62 @@ function toJsonb<T>(value: T): Json {
 }
 
 /**
+ * Manual type representing the superset of all DB columns accessed by rowToSmartLink.
+ * NOT derived from Supabase generated types — those are stale (missing bg_effects,
+ * business_name_align, business_name_font_size, business_name_html).
+ * @see D-07, D-08, D-09 in 1-CONTEXT.md
+ */
+export interface SmartLinkRow {
+  id: string;
+  slug: string;
+  business_name: string;
+  business_name_html?: boolean | null;
+  tagline?: string | null;
+  hero_image?: string | null;
+  hero_image_height_px?: number | null;
+  hero_object_fit?: string | null;
+  hero_focal_point?: unknown;
+  hero_image_opacity?: number | null;
+  hero_overlay_opacity?: number | null;
+  hero_overlay_color?: string | null;
+  logo_url?: string | null;
+  logo_size_px?: number | null;
+  logo_shape?: string | null;
+  logo_shadow?: boolean | null;
+  background_color?: string | null;
+  text_color?: string | null;
+  accent_color?: string | null;
+  font_family?: string | null;
+  title_size?: number | null;
+  business_name_font_size?: number | string | null;
+  business_name_align?: string | null;
+  hide_business_name?: boolean | null;
+  hide_tagline?: boolean | null;
+  entry_animation?: string | null;
+  snow_effect?: unknown;
+  bg_effects?: {
+    bubbles?: unknown;
+    fireflies?: unknown;
+    matrix?: unknown;
+    stars?: unknown;
+    bgHtml?: unknown;
+  } | null;
+  buttons?: unknown;
+  pages?: unknown;
+  badges?: unknown;
+  floating_emojis?: unknown;
+  blocks?: unknown;
+  is_active?: boolean | null;
+  created_at?: string;
+}
+
+/**
  * Single source of truth for DB row ↔ SmartLink conversion.
  * Used by use-links.ts hooks AND the autosave logic in LinkEditor.
  */
 
 /** Convert a DB row (any shape) to a SmartLink domain object */
-export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0, ownerPlan?: string): SmartLink {
+export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickCount = 0, ownerPlan?: string): SmartLink {
   return {
     id: row.id,
     slug: row.slug,
