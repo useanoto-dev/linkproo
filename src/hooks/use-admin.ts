@@ -10,6 +10,8 @@ export interface AdminUser {
   company: string | null;
   plan: string | null;
   created_at: string;
+  last_sign_in_at?: string | null;
+  duplicate_device_count?: number;
 }
 
 export function useAdminUsers() {
@@ -63,6 +65,22 @@ export function useUpdateUserPlan() {
         .from("profiles")
         .update({ plan })
         .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const { error } = await supabase.rpc("admin_delete_user", {
+        target_user_id: targetUserId,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

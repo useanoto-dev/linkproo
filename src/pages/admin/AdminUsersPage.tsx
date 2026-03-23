@@ -1,9 +1,9 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useAdminUsers, useUpdateUserPlan } from "@/hooks/use-admin";
-import { Users, Loader2, Search, Mail, Clock } from "lucide-react";
+import { useAdminUsers, useUpdateUserPlan, useDeleteUser } from "@/hooks/use-admin";
+import { Users, Loader2, Search, Mail, Clock, Trash2, Smartphone, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   Select,
@@ -39,8 +39,10 @@ function getOnlineStatus(lastSignIn: string | null | undefined): {
 export default function AdminUsersPage() {
   const { data: users = [], isLoading } = useAdminUsers();
   const updatePlan = useUpdateUserPlan();
+  const deleteUser = useDeleteUser();
   const [inputValue, setInputValue] = useState("");
   const [search, setSearch] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(inputValue), 300);
@@ -56,9 +58,11 @@ export default function AdminUsersPage() {
 
   // Count active in last 24h
   const activeToday = users.filter((u) => {
-    if (!(u as any).last_sign_in_at) return false;
-    return Date.now() - new Date((u as any).last_sign_in_at).getTime() < 86400000;
+    if (!u.last_sign_in_at) return false;
+    return Date.now() - new Date(u.last_sign_in_at).getTime() < 86400000;
   }).length;
+
+  const duplicateCount = users.filter((u) => (u.duplicate_device_count ?? 0) > 0).length;
 
   const handlePlanChange = (userId: string, plan: string) => {
     updatePlan.mutate(
@@ -70,12 +74,29 @@ export default function AdminUsersPage() {
     );
   };
 
+  const handleDelete = (userId: string, email: string) => {
+    if (confirmDeleteId !== userId) {
+      setConfirmDeleteId(userId);
+      return;
+    }
+    deleteUser.mutate(userId, {
+      onSuccess: () => {
+        toast.success(`Usuário ${email} removido.`);
+        setConfirmDeleteId(null);
+      },
+      onError: (err: Error) => {
+        toast.error("Erro ao deletar: " + err.message);
+        setConfirmDeleteId(null);
+      },
+    });
+  };
+
   return (
     <DashboardLayout title="Gerenciar Usuários">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Users className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-bold text-foreground">
               Usuários ({users.length})
@@ -84,6 +105,12 @@ export default function AdminUsersPage() {
               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 text-[11px] font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 {activeToday} ativo{activeToday > 1 ? "s" : ""} hoje
+              </span>
+            )}
+            {duplicateCount > 0 && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 text-[11px] font-semibold">
+                <Smartphone className="h-3 w-3" />
+                {duplicateCount} multi-conta
               </span>
             )}
           </div>
@@ -123,13 +150,17 @@ export default function AdminUsersPage() {
                     <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Cadastro
                     </th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Dispositivo
+                    </th>
+                    <th className="px-5 py-3" />
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={7}
                         className="text-center py-8 text-muted-foreground"
                       >
                         Nenhum usuário encontrado
@@ -137,14 +168,21 @@ export default function AdminUsersPage() {
                     </tr>
                   ) : (
                     filtered.map((u, i) => {
-                      const status = getOnlineStatus((u as any).last_sign_in_at);
+                      const status = getOnlineStatus(u.last_sign_in_at);
+                      const hasDuplicate = (u.duplicate_device_count ?? 0) > 0;
+                      const isConfirming = confirmDeleteId === u.user_id;
+
                       return (
                         <motion.tr
                           key={u.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: Math.min(i, 20) * 0.02 }}
-                          className="border-b border-border/30 last:border-b-0 hover:bg-secondary/10 transition-colors"
+                          className={`border-b border-border/30 last:border-b-0 transition-colors ${
+                            hasDuplicate
+                              ? "bg-orange-500/5 hover:bg-orange-500/10"
+                              : "hover:bg-secondary/10"
+                          }`}
                         >
                           {/* Avatar + name */}
                           <td className="px-5 py-3">
@@ -233,6 +271,72 @@ export default function AdminUsersPage() {
                           {/* Registered */}
                           <td className="px-5 py-3 text-muted-foreground text-xs">
                             {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                          </td>
+
+                          {/* Device duplicate indicator */}
+                          <td className="px-5 py-3">
+                            {hasDuplicate ? (
+                              <span
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-600 text-[10px] font-semibold"
+                                title={`Este dispositivo tem ${u.duplicate_device_count} outra(s) conta(s)`}
+                              >
+                                <AlertTriangle className="h-3 w-3" />
+                                +{u.duplicate_device_count} conta{(u.duplicate_device_count ?? 0) > 1 ? "s" : ""}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/40">—</span>
+                            )}
+                          </td>
+
+                          {/* Delete */}
+                          <td className="px-4 py-3">
+                            <AnimatePresence mode="wait">
+                              {isConfirming ? (
+                                <motion.div
+                                  key="confirm"
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.9 }}
+                                  className="flex items-center gap-1.5"
+                                >
+                                  <span className="text-[10px] text-destructive font-medium whitespace-nowrap">
+                                    Confirmar?
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDelete(u.user_id, u.email)}
+                                    disabled={deleteUser.isPending}
+                                    className="px-2 py-1 rounded-md bg-destructive text-destructive-foreground text-[10px] font-semibold hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-50"
+                                  >
+                                    {deleteUser.isPending ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      "Sim"
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteId(null)}
+                                    className="px-2 py-1 rounded-md bg-secondary text-foreground text-[10px] font-semibold hover:opacity-80 transition-opacity cursor-pointer"
+                                  >
+                                    Não
+                                  </button>
+                                </motion.div>
+                              ) : (
+                                <motion.button
+                                  key="delete-btn"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  type="button"
+                                  onClick={() => handleDelete(u.user_id, u.email)}
+                                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all cursor-pointer"
+                                  title="Deletar usuário"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </motion.button>
+                              )}
+                            </AnimatePresence>
                           </td>
                         </motion.tr>
                       );

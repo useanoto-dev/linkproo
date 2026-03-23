@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { useDeviceFingerprint } from "@/hooks/use-device-fingerprint";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -8,6 +9,8 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children, title, noPadding }: DashboardLayoutProps) {
+  useDeviceFingerprint(); // silently tracks device on every authenticated page
+
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
