@@ -22,8 +22,20 @@ export function DashboardLayout({ children, title, noPadding }: DashboardLayoutP
               <h1 className="font-display text-base sm:text-lg font-semibold text-foreground truncate">{title}</h1>
             )}
           </header>
-          <main className={noPadding ? "flex-1 min-h-0" : "flex-1 p-4 sm:p-6"}>
-            {children}
+          <main className={noPadding ? "flex-1 flex flex-col min-h-0" : "flex-1 flex flex-col p-4 sm:p-6"}>
+            <div className={noPadding ? "flex-1 min-h-0" : "flex-1"}>
+              {children}
+            </div>
+            <footer className="mt-auto pt-6 pb-2 px-4 text-center">
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Política de Privacidade
+              </a>
+            </footer>
           </main>
         </div>
       </div>

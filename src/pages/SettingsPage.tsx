@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { User, Building2, Save, Loader2, Camera } from "lucide-react";
+import { User, Building2, Save, Loader2, Camera, Shield } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -228,12 +228,41 @@ export default function SettingsPage() {
           )}
         </motion.div>
 
+        {/* Privacy & Security — LGPD disclosure (per D-18) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-xl border border-border bg-card p-5 space-y-3"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Shield className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Privacidade e Segurança</h2>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Para proteger sua conta contra acesso não autorizado, coletamos um identificador
+            técnico do dispositivo que inclui informações do navegador (userAgent, idioma,
+            fuso horário), resolução de tela e características gráficas (canvas, WebGL).
+            Esses dados são usados exclusivamente para segurança da conta (base legal:
+            legítimo interesse, Art. 7º, IX da LGPD) e não são compartilhados com terceiros
+            para fins publicitários.
+          </p>
+          <a
+            href="/privacy"
+            className="text-xs text-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Consultar Política de Privacidade →
+          </a>
+        </motion.div>
+
         {/* Save */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.2 }}
           onClick={handleSave}
           disabled={saving || loading}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 cursor-pointer select-none disabled:cursor-not-allowed"
