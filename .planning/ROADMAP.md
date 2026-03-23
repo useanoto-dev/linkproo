@@ -15,7 +15,7 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Design tokens: backdropBlur, --glass-bg/--glass-border tokens, glass-subtle utility
+- [x] 01-01-PLAN.md -- Design tokens: backdropBlur, --glass-bg/--glass-border tokens, glass-subtle utility
 - [ ] 01-02-PLAN.md -- TypeScript strict:true, SmartLinkRow type, rowToSmartLink/LinkEditor typing
 - [ ] 01-03-PLAN.md -- Eliminate remaining 10 as-any across 5 files, resolve strictNullChecks
 
