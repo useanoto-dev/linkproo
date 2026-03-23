@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, ArrowRight, Layout } from "lucide-react";
+import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, ArrowRight, Layout, ChevronRight } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -16,17 +16,10 @@ function getTemplateBgStyle(tpl: LinkTemplate): React.CSSProperties {
   const { heroImage, backgroundColor, accentColor } = tpl.template;
 
   if (heroImage) {
-    // heroImage is handled via <img> tag — no inline style needed for it
     return {};
   }
 
-  // bgHtml with enabled: derive solid from accentColor
-  if (tpl.template.bgHtml?.enabled) {
-    return { background: accentColor ?? "#6366f1" };
-  }
-
-  // Parse first Tailwind gradient class like "from-red-950 to-orange-950"
-  // Map a handful of common Tailwind from-* colours to hex approximations
+  // Map Tailwind gradient classes to hex colours
   const tailwindToHex: Record<string, string> = {
     "red-950": "#450a0a",
     "red-900": "#7f1d1d",
@@ -35,27 +28,33 @@ function getTemplateBgStyle(tpl: LinkTemplate): React.CSSProperties {
     "orange-900": "#7c2d12",
     "amber-950": "#431407",
     "amber-900": "#78350f",
+    "yellow-950": "#422006",
     "yellow-900": "#713f12",
     "green-950": "#052e16",
     "green-900": "#14532d",
     "emerald-950": "#022c22",
     "teal-950": "#042f2e",
     "cyan-950": "#083344",
+    "sky-950": "#082f49",
     "blue-950": "#172554",
     "blue-900": "#1e3a5f",
     "indigo-950": "#1e1b4b",
     "violet-950": "#2e1065",
     "purple-950": "#3b0764",
+    "fuchsia-950": "#2d0a30",
     "pink-950": "#500724",
     "rose-950": "#4c0519",
+    "slate-950": "#020617",
     "slate-900": "#0f172a",
     "slate-800": "#1e293b",
-    "zinc-900": "#18181b",
     "zinc-950": "#09090b",
-    "gray-900": "#111827",
+    "zinc-900": "#18181b",
     "gray-950": "#030712",
+    "gray-900": "#111827",
     "stone-950": "#0c0a09",
+    "stone-900": "#1c1917",
     "neutral-950": "#0a0a0a",
+    "neutral-900": "#171717",
   };
 
   const fromMatch = backgroundColor?.match(/from-([\w]+-\d+)/);
@@ -76,6 +75,75 @@ function getTemplateBgStyle(tpl: LinkTemplate): React.CSSProperties {
       ? `linear-gradient(135deg, ${accentColor}cc, ${accentColor}66)`
       : "linear-gradient(135deg, #6366f1, #8b5cf6)",
   };
+}
+
+interface TemplateCardProps {
+  tpl: LinkTemplate;
+  i: number;
+  onUse: (id: string) => void;
+}
+
+function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
+  const bgStyle = getTemplateBgStyle(tpl);
+  const hasHeroImage = !!tpl.template.heroImage;
+  const hasBgHtml = !!tpl.template.bgHtml?.enabled;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(i * 0.04, 0.35), duration: 0.22 }}
+      onClick={() => onUse(tpl.id)}
+      className="group shrink-0 w-44 rounded-xl border border-border bg-card overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-black/10 hover:-translate-y-0.5"
+    >
+      {/* Preview area — 3:2 aspect */}
+      <div
+        className="relative overflow-hidden"
+        style={{ aspectRatio: "3 / 2", ...bgStyle }}
+      >
+        {hasHeroImage && (
+          <img
+            src={tpl.template.heroImage}
+            alt={tpl.name}
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          />
+        )}
+
+        {/* Animated bg indicator */}
+        {hasBgHtml && !hasHeroImage && (
+          <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-black/40 backdrop-blur-sm text-white text-[9px] font-semibold tracking-wide flex items-center gap-0.5 z-10">
+            ✨ Animado
+          </div>
+        )}
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+        {/* Template name */}
+        <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2">
+          <p className="text-white text-[12px] font-semibold leading-snug drop-shadow-sm truncate">
+            {tpl.name}
+          </p>
+          <p className="text-white/60 text-[10px] truncate">{tpl.categoryEmoji}</p>
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div className="px-2.5 pt-2 pb-2.5">
+        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed mb-2">
+          {tpl.description}
+        </p>
+        <button
+          onClick={(e) => { e.stopPropagation(); onUse(tpl.id); }}
+          className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/8 hover:bg-primary/15 text-primary text-[10px] font-medium transition-colors duration-200 cursor-pointer"
+        >
+          Usar modelo
+          <ArrowRight className="h-2.5 w-2.5" />
+        </button>
+      </div>
+    </motion.div>
+  );
 }
 
 const Dashboard = () => {
@@ -100,6 +168,11 @@ const Dashboard = () => {
   const filteredTemplates = selectedCategory
     ? templates.filter(t => t.category === selectedCategory)
     : templates;
+
+  // Categories that have at least one template
+  const activeCategories = templateCategories.filter(cat =>
+    templates.some(t => t.category === cat.id)
+  );
 
   const handleUseTemplate = (templateId: string) => {
     navigate(`/links/new?template=${templateId}`);
@@ -183,6 +256,9 @@ const Dashboard = () => {
             <h2 className="font-display text-xl font-semibold text-foreground tracking-tight">
               Biblioteca de Modelos
             </h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {templates.length} modelos
+            </span>
           </div>
           <p className="text-sm text-muted-foreground pl-6">
             Escolha um modelo para começar em segundos
@@ -201,7 +277,7 @@ const Dashboard = () => {
           >
             Todos
           </button>
-          {templateCategories.map((cat) => (
+          {activeCategories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
@@ -216,7 +292,7 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Template grid */}
+        {/* Template sections */}
         {filteredTemplates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -225,61 +301,51 @@ const Dashboard = () => {
             <p className="text-sm font-medium text-foreground mb-1">Nenhum modelo nesta categoria</p>
             <p className="text-xs text-muted-foreground">Tente selecionar outra categoria ou ver todos os modelos.</p>
           </div>
+        ) : selectedCategory ? (
+          /* Single category: horizontal scroll */
+          <div
+            className="flex gap-3 overflow-x-auto pb-3"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {filteredTemplates.map((tpl, i) => (
+              <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
+            ))}
+          </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredTemplates.map((tpl, i) => {
-              const bgStyle = getTemplateBgStyle(tpl);
-              const hasHeroImage = !!tpl.template.heroImage;
-
+          /* All: grouped by category with horizontal rows */
+          <div className="space-y-8">
+            {activeCategories.map((cat) => {
+              const catTemplates = templates.filter(t => t.category === cat.id);
+              if (catTemplates.length === 0) return null;
               return (
-                <motion.div
-                  key={tpl.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.22 }}
-                  onClick={() => handleUseTemplate(tpl.id)}
-                  className="group rounded-xl border border-border bg-card overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-black/8 hover:-translate-y-0.5"
-                >
-                  {/* Preview image area — 3:2 aspect ratio */}
-                  <div
-                    className="relative overflow-hidden"
-                    style={{ aspectRatio: "3 / 2", ...bgStyle }}
-                  >
-                    {hasHeroImage && (
-                      <img
-                        src={tpl.template.heroImage}
-                        alt={tpl.name}
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
-                      />
-                    )}
-                    {/* Gradient overlay — shows template name */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    {/* Template name on image */}
-                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5">
-                      <p className="text-white text-[13px] font-semibold leading-snug drop-shadow-sm truncate">
-                        {tpl.name}
-                      </p>
+                <div key={cat.id}>
+                  {/* Category header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base leading-none">{cat.emoji}</span>
+                      <h3 className="text-sm font-semibold text-foreground">{cat.label}</h3>
+                      <span className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        {catTemplates.length}
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Card body */}
-                  <div className="px-3 pt-2.5 pb-3">
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-3">
-                      {tpl.description}
-                    </p>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUseTemplate(tpl.id);
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/8 hover:bg-primary/15 text-primary text-[11px] font-medium transition-colors duration-200 cursor-pointer"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors cursor-pointer"
                     >
-                      Usar este modelo
-                      <ArrowRight className="h-3 w-3" />
+                      Ver todos
+                      <ChevronRight className="h-3 w-3" />
                     </button>
                   </div>
-                </motion.div>
+                  {/* Horizontal scroll row */}
+                  <div
+                    className="flex gap-3 overflow-x-auto pb-2"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {catTemplates.map((tpl, i) => (
+                      <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
+                    ))}
+                  </div>
+                </div>
               );
             })}
           </div>
