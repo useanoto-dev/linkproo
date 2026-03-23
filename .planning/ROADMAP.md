@@ -34,6 +34,12 @@ Plans:
 ### Phase 2: Security Hardening
 **Directory:** `phases/02-security/`
 **Goal:** Fechar todas as brechas de seguranca e conformidade identificadas no mapeamento -- plan limits atomicos, slugs reservados, CSP no iframe e disclosure LGPD do fingerprint.
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- protect.ts scoped to PublicLinkPage with cleanup + CSP sandbox on all 5 iframes
+- [ ] 02-02-PLAN.md -- DB migrations: plan limit trigger message update + slug format/reserved constraints
+- [ ] 02-03-PLAN.md -- LGPD fingerprint disclosure in SettingsPage + privacy footer link
 
 **Deliverables:**
 - Postgres trigger para enforcar plan limits atomicamente (sem race condition)
@@ -183,4 +189,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-03-23 -- Phase 1 planned (3 plans, 2 waves)*
+*Last updated: 2026-03-23 -- Phase 2 planned (3 plans, 1 wave)*
