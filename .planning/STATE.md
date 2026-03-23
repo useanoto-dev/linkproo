@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-23T23:35:11.733Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-23T23:35:24.913Z"
 progress:
   total_phases: 10
   completed_phases: 1
@@ -35,10 +35,12 @@ Plan: Not started
 - [Phase 01-03]: Pick<Tables<>> for Supabase result typing — matches only .select() columns; as unknown as ReturnType<> for test mocks; no ts-expect-error suppressions needed
 - [Phase 02-03]: No consent pop-up for fingerprint data — LGPD Art. 7, IX legitimate interest basis does not require opt-in consent
 - [Phase 02-03]: Privacy footer placed inside DashboardLayout main with flex-col so it appears on every dashboard page
+- [Phase 02-security]: Using Faca without cedilla in RAISE EXCEPTION to avoid encoding issues in Supabase environments
+- [Phase 02-security]: Slug reserved list is 43 entries (not 38 as documented in plan) - all entries from slug-utils.ts RESERVED_SLUGS included
 
 ## Last Session
 
-- **Stopped at:** Completed 02-03-PLAN.md
+- **Stopped at:** Completed 02-02-PLAN.md
 - **Timestamp:** 2026-03-23T23:06:23Z
 
 ## Accumulated Context
