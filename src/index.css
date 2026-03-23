@@ -54,6 +54,8 @@
     --editor-border: 240 6% 88%;
     --editor-text: 240 6% 10%;
     --editor-text-muted: 240 4% 46%;
+    --glass-bg: rgba(255, 255, 255, 0.80);
+    --glass-border: rgba(0, 0, 0, 0.06);
   }
 
   /* ─── DARK MODE ──────────────────────────────────────────────────────────── */
@@ -101,6 +103,8 @@
     --editor-border: 255 15% 16%;
     --editor-text: 0 0% 93%;
     --editor-text-muted: 250 10% 52%;
+    --glass-bg: hsl(var(--card) / 0.80);
+    --glass-border: hsl(var(--border) / 0.50);
   }
 }
 
@@ -135,15 +139,10 @@
 @layer utilities {
   /* ─── Glass utilities — context-aware ──────────────────────────────────── */
   .glass {
-    background: rgba(255, 255, 255, 0.80);
+    background: var(--glass-bg);
     backdrop-filter: blur(12px) saturate(160%);
     -webkit-backdrop-filter: blur(12px) saturate(160%);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-  }
-
-  .dark .glass {
-    background: hsl(var(--card) / 0.80);
-    border-color: hsl(var(--border) / 0.50);
+    border: 1px solid var(--glass-border);
   }
 
   .glass-strong {
@@ -158,6 +157,18 @@
     background: hsl(var(--card) / 0.90);
     border-color: hsl(var(--border) / 0.60);
     box-shadow: none;
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.60);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .glass-subtle {
+    background: hsl(var(--card) / 0.60);
+    border-color: hsl(var(--border) / 0.30);
   }
 
   /* ─── Nexus card — the Apple-style frosted glass card ───────────────────── */
