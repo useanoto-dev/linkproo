@@ -11,7 +11,7 @@ export function useUserRole() {
       if (!user) return false;
       // Query specifically for admin role — avoids returning 'user' when both rows exist
       const { data } = await supabase
-        .from("user_roles" as any)
+        .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")

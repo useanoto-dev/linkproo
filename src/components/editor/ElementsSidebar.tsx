@@ -6,12 +6,26 @@ import {
 } from "lucide-react";
 import { BlockType } from "@/types/smart-link";
 import { useState, useEffect, useMemo } from "react";
+import React from "react";
 
 interface ElementsSidebarProps {
   onAddBlock: (type: BlockType, defaults?: Record<string, unknown>) => void;
 }
 
-const categories = [
+interface CatalogItem {
+  type: BlockType;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  defaults?: Record<string, unknown>;
+}
+
+interface Category {
+  label: string;
+  color: string;
+  items: CatalogItem[];
+}
+
+const categories: Category[] = [
   {
     label: "Botões Animados",
     color: "text-pink-400",
@@ -133,7 +147,7 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
                     e.dataTransfer.setData("application/x-block-type", el.type);
                     e.dataTransfer.setData(
                       "application/x-block-defaults",
-                      JSON.stringify((el as any).defaults || {})
+                      JSON.stringify(el.defaults || {})
                     );
                     e.dataTransfer.effectAllowed = "copy";
                     window.dispatchEvent(new CustomEvent("block-drag-start", { detail: { type: el.type } }));
@@ -141,7 +155,7 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
                   onDragEnd={() => {
                     window.dispatchEvent(new CustomEvent("block-drag-end"));
                   }}
-                  onClick={() => onAddBlock(el.type, (el as any).defaults)}
+                  onClick={() => onAddBlock(el.type, el.defaults)}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 active:scale-[0.97] transition-all duration-150 group cursor-grab active:cursor-grabbing"
                 >
                   <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">

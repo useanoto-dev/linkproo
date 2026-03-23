@@ -224,7 +224,7 @@ describe("checkSlugAvailability", () => {
     const neqSpy = vi.fn().mockResolvedValue({ count: 0, error: null });
     const eqSpy = vi.fn().mockReturnValue({ neq: neqSpy });
     const selectSpy = vi.fn().mockReturnValue({ eq: eqSpy });
-    vi.mocked(supabase.from).mockReturnValue({ select: selectSpy } as any);
+    vi.mocked(supabase.from).mockReturnValue({ select: selectSpy } as unknown as ReturnType<typeof supabase.from>);
 
     await checkSlugAvailability("meu-link", "some-id-123");
 
@@ -241,7 +241,7 @@ describe("checkSlugAvailability", () => {
     const eqChain = { neq: neqSpy };
     const eqDirectSpy = vi.fn().mockReturnValue(eqChain);
     const selectSpy = vi.fn().mockReturnValue({ eq: eqDirectSpy });
-    vi.mocked(supabase.from).mockReturnValue({ select: selectSpy } as any);
+    vi.mocked(supabase.from).mockReturnValue({ select: selectSpy } as unknown as ReturnType<typeof supabase.from>);
 
     await checkSlugAvailability("meu-link-sem-exclude");
     // neq não deve ser chamado quando não há excludeId
