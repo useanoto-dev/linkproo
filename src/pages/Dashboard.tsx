@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, ArrowRight, Layout, ChevronRight } from "lucide-react";
+import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, Layout } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -90,17 +90,14 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(i * 0.04, 0.35), duration: 0.22 }}
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.2 }}
       onClick={() => onUse(tpl.id)}
-      className="group shrink-0 w-48 rounded-2xl border border-white/8 dark:border-white/8 bg-card overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/20 hover:-translate-y-1"
+      className="group relative rounded-xl border border-border bg-card overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-black/10 hover:-translate-y-0.5 hover:border-primary/30"
     >
-      {/* Preview area — 4:3 aspect */}
-      <div
-        className="relative overflow-hidden"
-        style={{ aspectRatio: "4 / 3", ...bgStyle }}
-      >
+      {/* Preview area - portrait */}
+      <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", ...bgStyle }}>
         {hasHeroImage && (
           <img
             src={tpl.template.heroImage}
@@ -110,58 +107,58 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
           />
         )}
 
-        {/* Shimmer overlay for bgHtml animated templates */}
+        {/* Animated shimmer for bgHtml templates without hero */}
         {hasBgHtml && !hasHeroImage && (
-          <div className="absolute inset-0 animate-pulse bg-white/5 pointer-events-none" />
+          <div className="absolute inset-0 animate-pulse bg-white/5" />
         )}
+
+        {/* Hover overlay with "Usar" button */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white text-black text-[11px] font-semibold px-3 py-1.5 rounded-full shadow-lg">
+            Usar modelo
+          </span>
+        </div>
+
+        {/* Bottom gradient + name */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-8 pb-2 px-2.5">
+          <p className="text-white text-[11px] font-semibold leading-tight truncate">{tpl.name}</p>
+        </div>
 
         {/* Animated badge */}
         {hasBgHtml && (
-          <div className="absolute top-2 right-2 z-10">
-            <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full shadow-lg">
-              ✨ Animado
-            </span>
+          <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-[8px] font-bold tracking-wider uppercase">
+            ✦ Animado
           </div>
         )}
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-        {/* Template name inside image */}
-        <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5">
-          <p className="text-white text-[13px] font-bold leading-snug drop-shadow-sm truncate">
-            {tpl.name}
-          </p>
+        {/* Category emoji */}
+        <div className="absolute top-1.5 left-1.5 text-lg leading-none drop-shadow-md">
+          {tpl.categoryEmoji}
         </div>
-      </div>
-
-      {/* Card body */}
-      <div className="px-2.5 pt-2 pb-2.5">
-        <p className="text-[10px] text-muted-foreground line-clamp-1 leading-relaxed mb-2">
-          {tpl.description}
-        </p>
-        <button
-          onClick={(e) => { e.stopPropagation(); onUse(tpl.id); }}
-          className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/8 hover:bg-primary/15 text-primary text-[10px] font-medium transition-colors duration-200 cursor-pointer"
-        >
-          Usar
-          <ArrowRight className="h-2.5 w-2.5" />
-        </button>
       </div>
     </motion.div>
   );
 }
 
-const FEATURED_IDS = [
-  'tpl-hacker',
-  'tpl-cosmos',
-  'tpl-neon-city',
-  'tpl-vaporwave',
-  'tpl-golden-luxury',
-  'tpl-landing-produto',
-  'tpl-streamer',
-  'tpl-aurora',
-];
+function EmptyState({ onReset }: { onReset: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4 text-3xl">
+        🔍
+      </div>
+      <p className="text-base font-semibold text-foreground mb-2">Nenhum modelo nesta categoria</p>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        Tente selecionar outra categoria ou visualize todos os modelos disponíveis.
+      </p>
+      <button
+        onClick={onReset}
+        className="mt-4 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-sm font-medium transition-colors cursor-pointer"
+      >
+        Ver todos os modelos
+      </button>
+    </div>
+  );
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -185,16 +182,6 @@ const Dashboard = () => {
   const filteredTemplates = selectedCategory
     ? templates.filter(t => t.category === selectedCategory)
     : templates;
-
-  // Categories that have at least one template
-  const activeCategories = templateCategories.filter(cat =>
-    templates.some(t => t.category === cat.id)
-  );
-
-  // Featured templates (resolved, skipping any missing ids)
-  const featuredTemplates = FEATURED_IDS
-    .map(id => templates.find(t => t.id === id))
-    .filter((t): t is LinkTemplate => !!t);
 
   const handleUseTemplate = (templateId: string) => {
     navigate(`/links/new?template=${templateId}`);
@@ -269,148 +256,75 @@ const Dashboard = () => {
         </span>
       </div>
 
-      {/* ── Templates Library ── */}
+      {/* ── Template Library ── */}
       <section className="py-2">
-        {/* Section header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-1">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
             <Layout className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-display text-xl font-semibold text-foreground tracking-tight">
-              Biblioteca de Modelos
-            </h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+            <h2 className="font-semibold text-foreground tracking-tight">Biblioteca de Modelos</h2>
+            <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
               {templates.length} modelos
             </span>
           </div>
-          <p className="text-sm text-muted-foreground pl-6">
-            Escolha um modelo para começar em segundos
-          </p>
         </div>
 
-        {/* Category filter pills — horizontal scrollable */}
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-6 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
-              !selectedCategory
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "border border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-            }`}
-          >
-            Todos
-          </button>
-          {activeCategories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${
-                selectedCategory === cat.id
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-              }`}
-            >
-              {cat.emoji} {cat.label}
-            </button>
-          ))}
-        </div>
+        {/* Two-column layout */}
+        <div className="flex gap-6">
 
-        {/* Template sections */}
-        {filteredTemplates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4 text-3xl">
-              🔍
-            </div>
-            <p className="text-base font-semibold text-foreground mb-2">Nenhum modelo nesta categoria</p>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Tente selecionar outra categoria ou visualize todos os modelos disponíveis.
-            </p>
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="mt-4 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-sm font-medium transition-colors cursor-pointer"
-            >
-              Ver todos os modelos
-            </button>
-          </div>
-        ) : selectedCategory ? (
-          /* Single category: horizontal scroll */
-          <div className="relative -mx-4 px-4">
-            <div
-              className="flex gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden"
-              style={{ scrollbarWidth: "none" }}
-            >
-              {filteredTemplates.map((tpl, i) => (
-                <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
-              ))}
-            </div>
-            <div className="absolute right-0 top-0 bottom-3 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-          </div>
-        ) : (
-          /* All: featured section + grouped by category */
-          <div className="space-y-8">
+          {/* LEFT: Category filter - vertical list, sticky */}
+          <div className="w-48 shrink-0">
+            <div className="sticky top-4 space-y-0.5">
+              {/* "Todos" button */}
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer text-left ${
+                  !selectedCategory
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                }`}
+              >
+                <span className="text-base leading-none">🎨</span>
+                <span>Todos</span>
+                <span className="ml-auto text-[10px] opacity-60">{templates.length}</span>
+              </button>
 
-            {/* ── Featured "Em Destaque" section ── */}
-            {featuredTemplates.length > 0 && (
-              <div className="mb-8 p-4 rounded-2xl border border-primary/20 bg-primary/5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base">⭐</span>
-                  <h3 className="text-sm font-semibold">Em Destaque</h3>
-                  <span className="text-[10px] bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">Novos</span>
-                </div>
-                <div className="relative -mx-1 px-1">
-                  <div
-                    className="flex gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden"
-                    style={{ scrollbarWidth: "none" }}
+              {/* Category buttons */}
+              {templateCategories.map(cat => {
+                const count = templates.filter(t => t.category === cat.id).length;
+                if (count === 0) return null;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 cursor-pointer text-left ${
+                      selectedCategory === cat.id
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    }`}
                   >
-                    {featuredTemplates.map((tpl, i) => (
-                      <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
-                    ))}
-                  </div>
-                  <div className="absolute right-0 top-0 bottom-3 w-12 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
-                </div>
+                    <span className="text-base leading-none">{cat.emoji}</span>
+                    <span className="truncate">{cat.label}</span>
+                    <span className="ml-auto text-[10px] opacity-60">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT: Template grid */}
+          <div className="flex-1 min-w-0">
+            {filteredTemplates.length === 0 ? (
+              <EmptyState onReset={() => setSelectedCategory(null)} />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {filteredTemplates.map((tpl, i) => (
+                  <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
+                ))}
               </div>
             )}
-
-            {/* ── Category rows ── */}
-            {activeCategories.map((cat) => {
-              const catTemplates = templates.filter(t => t.category === cat.id);
-              if (catTemplates.length === 0) return null;
-              return (
-                <div key={cat.id}>
-                  {/* Category header */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {/* Colored dot */}
-                      <span className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${cat.color}`} />
-                      <span className="text-base leading-none">{cat.emoji}</span>
-                      <h3 className="text-sm font-semibold text-foreground">{cat.label}</h3>
-                      <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                        {catTemplates.length}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors cursor-pointer font-medium"
-                    >
-                      Ver todos →
-                    </button>
-                  </div>
-                  {/* Horizontal scroll row with fade */}
-                  <div className="relative -mx-4 px-4">
-                    <div
-                      className="flex gap-3 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden"
-                      style={{ scrollbarWidth: "none" }}
-                    >
-                      {catTemplates.map((tpl, i) => (
-                        <TemplateCard key={tpl.id} tpl={tpl} i={i} onUse={handleUseTemplate} />
-                      ))}
-                    </div>
-                    <div className="absolute right-0 top-0 bottom-3 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-                  </div>
-                </div>
-              );
-            })}
           </div>
-        )}
+        </div>
       </section>
     </DashboardLayout>
   );

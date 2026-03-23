@@ -122,7 +122,7 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
             <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${cat.color}`}>
               {cat.label}
             </p>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-2">
               {cat.items.map((el, _i) => (
                 <button
                   key={el.type}
@@ -137,12 +137,12 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
                     e.dataTransfer.effectAllowed = "copy";
                   }}
                   onClick={() => onAddBlock(el.type, (el as any).defaults)}
-                  className="flex items-center gap-2 p-2.5 rounded-xl bg-secondary/50 border border-border/50 hover:border-primary/40 hover:bg-secondary hover:scale-[1.02] hover:-translate-y-px active:scale-[0.98] transition-transform duration-150 group text-left cursor-grab active:cursor-grabbing"
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 active:scale-[0.97] transition-all duration-150 group cursor-grab active:cursor-grabbing"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
-                    <el.icon className="h-3.5 w-3.5 text-primary" />
+                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <el.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <span className="text-[11px] font-medium text-foreground leading-tight">{el.label}</span>
+                  <span className="text-[10px] text-muted-foreground group-hover:text-foreground font-medium text-center leading-tight line-clamp-2">{el.label}</span>
                 </button>
               ))}
             </div>

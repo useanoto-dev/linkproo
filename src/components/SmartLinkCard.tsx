@@ -162,8 +162,14 @@ export function SmartLinkCard({ link, onDelete, onDuplicate, onToggleActive, sel
         )}
         
         <div className={`absolute bottom-2 ${link.logoUrl ? "left-13" : "left-3"} right-3`}>
-          <h3 className="font-display font-bold text-foreground text-sm truncate">{link.businessName || "Sem nome"}</h3>
-          {link.tagline && <p className="text-[10px] text-muted-foreground truncate">{link.tagline}</p>}
+          <h3 className="font-display font-bold text-foreground text-sm truncate">
+            {(link.businessName || "Sem nome").replace(/<[^>]*>/g, "").trim() || "Sem nome"}
+          </h3>
+          {link.tagline && (
+            <p className="text-[10px] text-muted-foreground truncate">
+              {link.tagline.replace(/<[^>]*>/g, "").trim()}
+            </p>
+          )}
         </div>
 
         {/* Status badge */}
