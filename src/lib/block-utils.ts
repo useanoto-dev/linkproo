@@ -1,4 +1,4 @@
-import { BlockType, LinkBlock, StatItem } from "@/types/smart-link";
+import { BlockType, LinkBlock, StatItem, ContactItem } from "@/types/smart-link";
 
 export function createBlockDefaults(
   type: BlockType,
@@ -37,6 +37,19 @@ export function createBlockDefaults(
       case "product": return { productButtonLabel: "Comprar agora" };
       case "faq": return { faqItems: [] };
       case "gallery": return { galleryImages: [] };
+      case "contacts": return {
+        contactsMode: 1,
+        contactsList: [
+          {
+            id: `contact-${Date.now()}-1`,
+            name: "Nome do Contato",
+            role: "Cargo / Função",
+            photo: "",
+            whatsappNumber: "",
+            whatsappMessage: "Olá! Vim pelo seu link.",
+          } as ContactItem,
+        ],
+      };
       default: return {};
     }
   })();

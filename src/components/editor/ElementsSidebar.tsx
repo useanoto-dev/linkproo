@@ -2,7 +2,7 @@ import {
   MousePointerClick, Type, Award, Minus, MessageSquare, Image,
   Heading, Space, Video, Timer, HelpCircle, Images, ImagePlus,
   Star, BarChart3, ShoppingBag, Mail, Music, MapPin, GalleryHorizontal,
-  Megaphone, Search, Code, Zap, Calendar, Instagram, Youtube, Phone, Send
+  Megaphone, Search, Code, Zap, Calendar, Instagram, Youtube, Phone, Send, Users
 } from "lucide-react";
 import { BlockType } from "@/types/smart-link";
 import { useState, useEffect, useMemo } from "react";
@@ -66,6 +66,7 @@ const categories = [
     label: "Mídia & Social",
     color: "text-orange-400",
     items: [
+      { type: "contacts" as BlockType, label: "Contatos", icon: Users },
       { type: "spotify" as BlockType, label: "Spotify", icon: Music },
       { type: "map" as BlockType, label: "Mapa", icon: MapPin },
       { type: "faq" as BlockType, label: "FAQ", icon: HelpCircle },

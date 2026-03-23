@@ -31,7 +31,7 @@ export type BlockType =
   | 'spacer' | 'video' | 'countdown' | 'faq' | 'gallery'
   | 'testimonial' | 'stats' | 'product' | 'email-capture'
   | 'spotify' | 'map' | 'carousel' | 'banner' | 'html'
-  | 'animated-button';
+  | 'animated-button' | 'contacts';
 
 export interface FaqItem {
   id: string;
@@ -129,6 +129,18 @@ export interface LinkBlock {
   animButtonHeight?: number;
   // Sub-page linking (for image-button and animated-button blocks)
   blockPageId?: string;  // if set, clicking this block opens the sub-page with this id
+  // Contacts block
+  contactsList?: ContactItem[];
+  contactsMode?: 1 | 2;  // 1 = single contact centered, 2 = two contacts side by side
+}
+
+export interface ContactItem {
+  id: string;
+  name: string;
+  role?: string;       // optional job title / description
+  photo?: string;      // URL
+  whatsappNumber?: string;
+  whatsappMessage?: string;
 }
 
 export interface BadgeItem {

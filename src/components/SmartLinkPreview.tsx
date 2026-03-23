@@ -96,6 +96,7 @@ const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   carousel: "Carrossel de imagens",
   "animated-button": "Botão animado",
   product: "Card de produto",
+  contacts: "Bloco de contatos",
   faq: "Perguntas frequentes",
   gallery: "Galeria de fotos",
   html: "Bloco HTML",

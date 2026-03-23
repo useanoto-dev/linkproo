@@ -1,5 +1,5 @@
 import React from "react";
-import { SmartLink, SmartLinkButton, LinkBlock, BlockType, FaqItem, GalleryImage, SubPage, CarouselSlide, StatItem } from "@/types/smart-link";
+import { SmartLink, SmartLinkButton, LinkBlock, BlockType, FaqItem, GalleryImage, SubPage, CarouselSlide, StatItem, ContactItem } from "@/types/smart-link";
 import { PUBLISHED_DOMAIN } from "@/hooks/use-links";
 import { ButtonBlockEditor } from "./ButtonBlockEditor";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   banner: "Banner Promo",
   html: "HTML Customizado",
   "animated-button": "Botão Animado",
+  contacts: "Contatos",
 };
 
 const ANIM_STYLE_OPTIONS = [
@@ -1315,6 +1316,147 @@ const SortableBlock = memo(function SortableBlock({
             </div>
           </div>
         )}
+
+        {/* Contacts Block */}
+        {block.type === "contacts" && (() => {
+          const contacts: ContactItem[] = block.contactsList || [];
+          const mode = block.contactsMode || 1;
+
+          const updateContact = (idx: number, updates: Partial<ContactItem>) => {
+            const updated = contacts.map((c, i) => i === idx ? { ...c, ...updates } : c);
+            onUpdate(block.id, { contactsList: updated });
+          };
+
+          const addContact = () => {
+            if (contacts.length >= 2) return;
+            const newContact: ContactItem = {
+              id: `contact-${Date.now()}`,
+              name: "Novo Contato",
+              role: "",
+              photo: "",
+              whatsappNumber: "",
+              whatsappMessage: "Olá! Vim pelo seu link.",
+            };
+            onUpdate(block.id, { contactsList: [...contacts, newContact], contactsMode: 2 });
+          };
+
+          const removeContact = (idx: number) => {
+            const updated = contacts.filter((_, i) => i !== idx);
+            onUpdate(block.id, { contactsList: updated, contactsMode: updated.length === 1 ? 1 : mode });
+          };
+
+          return (
+            <div className="space-y-4">
+              {/* Mode toggle */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Modo</Label>
+                <div className="flex gap-1 p-0.5 rounded-lg bg-secondary/50">
+                  {([1, 2] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        if (m === 2 && contacts.length < 2) addContact();
+                        else onUpdate(block.id, { contactsMode: m });
+                      }}
+                      className={`flex-1 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                        mode === m ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {m === 1 ? '1 Contato' : '2 Contatos'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact cards */}
+              {contacts.slice(0, mode).map((contact, idx) => (
+                <div key={contact.id} className="space-y-3 p-3 rounded-xl border border-border/60 bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground">Contato {idx + 1}</span>
+                    {contacts.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeContact(idx)}
+                        className="text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Photo */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Foto</Label>
+                    <ImageUploader
+                      value={contact.photo || ""}
+                      onChange={(url) => updateContact(idx, { photo: url })}
+                      compact
+                      aspectRatio={1}
+                      label="Foto do contato"
+                    />
+                  </div>
+
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Nome</Label>
+                    <Input
+                      value={contact.name}
+                      onChange={e => updateContact(idx, { name: e.target.value })}
+                      placeholder="Nome do contato"
+                      className="text-sm h-9"
+                    />
+                  </div>
+
+                  {/* Role */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Cargo / Função (opcional)</Label>
+                    <Input
+                      value={contact.role || ""}
+                      onChange={e => updateContact(idx, { role: e.target.value })}
+                      placeholder="Ex: Atendimento, Vendas..."
+                      className="text-sm h-9"
+                    />
+                  </div>
+
+                  {/* WhatsApp number */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Número WhatsApp</Label>
+                    <Input
+                      value={contact.whatsappNumber || ""}
+                      onChange={e => updateContact(idx, { whatsappNumber: e.target.value })}
+                      placeholder="5511999999999"
+                      className="text-sm h-9 font-mono"
+                    />
+                    <p className="text-[10px] text-muted-foreground">DDI + DDD + número, sem espaços (ex: 5511999999999)</p>
+                  </div>
+
+                  {/* WhatsApp message */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Mensagem inicial do WhatsApp</Label>
+                    <Input
+                      value={contact.whatsappMessage || ""}
+                      onChange={e => updateContact(idx, { whatsappMessage: e.target.value })}
+                      placeholder="Olá! Vim pelo seu link."
+                      className="text-sm h-9"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {/* Add second contact */}
+              {mode === 1 && contacts.length < 2 && (
+                <button
+                  type="button"
+                  onClick={addContact}
+                  className="w-full py-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all cursor-pointer"
+                >
+                  + Adicionar 2º contato
+                </button>
+              )}
+            </div>
+          );
+        })()}
             </div>
           </motion.div>
         )}

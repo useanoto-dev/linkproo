@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, Layout } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import React, { useState } from "react";
 import { templates, templateCategories } from "@/data/templates";
 import { useLinks, useLinkStats } from "@/hooks/use-links";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -12,10 +12,10 @@ import { toast } from "sonner";
 import type { LinkTemplate } from "@/data/templates";
 
 /** Derives a CSS background style for the template card preview area. */
-function getTemplateBgStyle(tpl: LinkTemplate): React.CSSProperties {
+function getTemplateBgStyle(tpl: LinkTemplate, skipHeroImage = false): React.CSSProperties {
   const { heroImage, backgroundColor, accentColor } = tpl.template;
 
-  if (heroImage) {
+  if (heroImage && !skipHeroImage) {
     return {};
   }
 
@@ -84,8 +84,9 @@ interface TemplateCardProps {
 }
 
 function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
-  const bgStyle = getTemplateBgStyle(tpl);
-  const hasHeroImage = !!tpl.template.heroImage;
+  const [imgFailed, setImgFailed] = React.useState(false);
+  const bgStyle = getTemplateBgStyle(tpl, imgFailed);
+  const hasHeroImage = !!tpl.template.heroImage && !imgFailed;
   const hasBgHtml = !!tpl.template.bgHtml?.enabled;
 
   return (
@@ -102,7 +103,9 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
           <img
             src={tpl.template.heroImage}
             alt={tpl.name}
-            loading="lazy"
+            loading="eager"
+            decoding="async"
+            onError={() => setImgFailed(true)}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           />
         )}
