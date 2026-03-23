@@ -79,8 +79,6 @@ const App = () => (
                   {/* Public routes */}
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  <Route path="/l/:slug/:pageSlug" element={<PublicLinkPage />} />
-                  <Route path="/l/:slug" element={<PublicLinkPage />} />
 
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -99,6 +97,10 @@ const App = () => (
                   <Route path="/admin/analytics" element={<AdminRoute><AdminAnalyticsPage /></AdminRoute>} />
                   <Route path="/admin/videoaulas" element={<AdminRoute><AdminVideoaulasPage /></AdminRoute>} />
                   <Route path="/admin/suporte" element={<AdminRoute><AdminSupportPage /></AdminRoute>} />
+
+                  {/* Public link pages — must be last so app routes take priority */}
+                  <Route path="/:slug/:pageSlug" element={<PublicLinkPage />} />
+                  <Route path="/:slug" element={<PublicLinkPage />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>

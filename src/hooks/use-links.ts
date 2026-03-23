@@ -8,7 +8,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 /** Returns the full public URL for a published link slug — always uses current origin */
 export function getPublicLinkUrl(slug: string): string {
-  return `${window.location.origin}/l/${slug}`;
+  return `${window.location.origin}/${slug}`;
 }
 
 /** The current host, for display purposes */
