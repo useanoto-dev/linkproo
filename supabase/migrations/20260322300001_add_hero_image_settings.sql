@@ -13,15 +13,23 @@ ALTER TABLE public.links
   ADD COLUMN IF NOT EXISTS hero_focal_point     jsonb   DEFAULT NULL;
 
 -- Migra dados legados de hero_image_height (TEXT) → hero_image_height_px (INTEGER)
--- apenas para linhas que ainda não têm o novo valor preenchido.
-UPDATE public.links
-SET hero_image_height_px = CASE hero_image_height
-  WHEN 'sm'   THEN 128
-  WHEN 'md'   THEN 192
-  WHEN 'lg'   THEN 256
-  WHEN 'xl'   THEN 320
-  WHEN 'auto' THEN NULL
-  ELSE NULL
-END
-WHERE hero_image_height IS NOT NULL
-  AND hero_image_height_px IS NULL;
+-- Executa apenas se a coluna legada ainda existir (pode já ter sido removida).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'links' AND column_name = 'hero_image_height'
+  ) THEN
+    UPDATE public.links
+    SET hero_image_height_px = CASE hero_image_height
+      WHEN 'sm'   THEN 128
+      WHEN 'md'   THEN 192
+      WHEN 'lg'   THEN 256
+      WHEN 'xl'   THEN 320
+      WHEN 'auto' THEN NULL
+      ELSE NULL
+    END
+    WHERE hero_image_height IS NOT NULL
+      AND hero_image_height_px IS NULL;
+  END IF;
+END $$;

@@ -1,4 +1,7 @@
 -- Add last_sign_in_at to get_admin_users RPC so admin can see recently active users
+-- Must DROP first — PostgreSQL doesn't allow changing return type with CREATE OR REPLACE
+
+DROP FUNCTION IF EXISTS public.get_admin_users();
 
 CREATE OR REPLACE FUNCTION public.get_admin_users()
 RETURNS TABLE(

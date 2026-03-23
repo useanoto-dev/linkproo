@@ -3,11 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
 export async function saveEmailCapture(linkId: string, email: string, blockId: string): Promise<void> {
-  const { error } = await supabase.from("email_captures").insert({
-    link_id: linkId,
-    email: email.toLowerCase().trim(),
-    source_block_id: blockId,
-  });
+  const { error } = await supabase.from("email_captures").upsert(
+    {
+      link_id: linkId,
+      email: email.toLowerCase().trim(),
+      source_block_id: blockId,
+    },
+    { onConflict: "link_id,email", ignoreDuplicates: true }
+  );
   if (error) throw error;
 }
 

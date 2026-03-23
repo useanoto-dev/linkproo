@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": Deno.env.get("PUBLIC_DOMAIN") ?? "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -36,7 +36,10 @@ Deno.serve(async (req) => {
   const title = link.business_name || "LinkPro";
   const description = link.tagline || `${title} - Página de links inteligente`;
   const image = link.hero_image || link.logo_url || "";
-  const baseDomain = Deno.env.get("PUBLIC_DOMAIN") || "https://liinkpro.lovable.app";
+  const baseDomain = Deno.env.get("PUBLIC_DOMAIN");
+  if (!baseDomain) {
+    return new Response("PUBLIC_DOMAIN not configured", { status: 500 });
+  }
   const pageUrl = `${baseDomain}/l/${encodeURIComponent(link.slug)}`;
   const pageUrlEscaped = escapeHtml(pageUrl);
 
