@@ -60,7 +60,7 @@ export async function uploadImage(
       .from(BUCKET)
       .upload(fileName, blob, {
         contentType: blob.type,
-        upsert: false,
+        upsert: true,
       });
     if (!error) {
       // success — get public URL and return
