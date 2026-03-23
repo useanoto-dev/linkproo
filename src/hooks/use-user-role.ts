@@ -5,24 +5,26 @@ import { supabase } from "@/integrations/supabase/client";
 export function useUserRole() {
   const { user, loading: isAuthLoading } = useAuth();
 
-  const { data: role = null, isLoading: isRoleLoading } = useQuery({
+  const { data: isAdmin = false, isLoading: isRoleLoading } = useQuery({
     queryKey: ["user-role-check", user?.id],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user) return false;
+      // Query specifically for admin role — avoids returning 'user' when both rows exist
       const { data } = await supabase
         .from("user_roles" as any)
         .select("role")
         .eq("user_id", user.id)
+        .eq("role", "admin")
         .maybeSingle();
-      return (data as any)?.role as string | null;
+      return !!data;
     },
     enabled: !!user && !isAuthLoading,
     staleTime: 1000 * 60 * 5,
   });
 
   return {
-    role,
-    isAdmin: role === "admin",
+    role: isAdmin ? "admin" : "user",
+    isAdmin,
     isLoading: isAuthLoading || isRoleLoading,
   };
 }
