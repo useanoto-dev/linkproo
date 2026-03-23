@@ -2,6 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
+import type { Tables } from "@/integrations/supabase/types";
 import { motion } from "framer-motion";
 import {
   LineChart,
@@ -27,6 +28,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+type LinkView = Pick<Tables<"link_views">, "viewed_at" | "device" | "link_id">;
+type LinkClick = Pick<Tables<"link_clicks">, "clicked_at" | "link_id">;
+type Profile = Pick<Tables<"profiles">, "plan" | "created_at">;
+type AdminLink = Pick<Tables<"links">, "id" | "business_name" | "slug">;
 
 type Period = "7d" | "30d" | "90d";
 
@@ -75,10 +81,10 @@ export default function AdminAnalyticsPage() {
       ]);
 
       return {
-        views: (allViews as any[]) || [],
-        clicks: (allClicks as any[]) || [],
-        profiles: (allProfiles as any[]) || [],
-        links: (allLinks as any[]) || [],
+        views: (allViews ?? []) as LinkView[],
+        clicks: (allClicks ?? []) as LinkClick[],
+        profiles: (allProfiles ?? []) as Profile[],
+        links: (allLinks ?? []) as AdminLink[],
       };
     },
   });
@@ -89,7 +95,7 @@ export default function AdminAnalyticsPage() {
   const newUsers = useMemo(() => {
     if (!data) return 0;
     return data.profiles.filter(
-      (p: any) => new Date(p.created_at) >= startDate
+      (p: Profile) => new Date(p.created_at) >= startDate
     ).length;
   }, [data, startDate]);
   const conversionRate =
@@ -101,14 +107,14 @@ export default function AdminAnalyticsPage() {
     const days = eachDayOfInterval({ start: startDate, end: new Date() });
     return days.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
-      const dayViews = data.views.filter((v: any) =>
-        (v.viewed_at as string)?.startsWith(dayStr)
+      const dayViews = data.views.filter((v: LinkView) =>
+        v.viewed_at?.startsWith(dayStr)
       ).length;
-      const dayClicks = data.clicks.filter((c: any) =>
-        (c.clicked_at as string)?.startsWith(dayStr)
+      const dayClicks = data.clicks.filter((c: LinkClick) =>
+        c.clicked_at?.startsWith(dayStr)
       ).length;
-      const dayUsers = data.profiles.filter((p: any) =>
-        (p.created_at as string)?.startsWith(dayStr)
+      const dayUsers = data.profiles.filter((p: Profile) =>
+        p.created_at?.startsWith(dayStr)
       ).length;
       return {
         date: format(day, "dd/MM", { locale: ptBR }),
@@ -124,7 +130,7 @@ export default function AdminAnalyticsPage() {
     if (!data) return [];
     const counts: Record<string, number> = {};
     for (const p of data.profiles) {
-      const plan: string = (p.plan as string) || "free";
+      const plan: string = p.plan ?? "free";
       counts[plan] = (counts[plan] || 0) + 1;
     }
     return Object.entries(counts).map(([plan, value]) => ({
@@ -139,14 +145,14 @@ export default function AdminAnalyticsPage() {
     if (!data) return [];
     const counts: Record<string, number> = {};
     for (const v of data.views) {
-      const id: string = v.link_id as string;
+      const id: string = v.link_id;
       if (id) counts[id] = (counts[id] || 0) + 1;
     }
     return Object.entries(counts)
       .map(([linkId, views]) => {
-        const link = data.links.find((l: any) => l.id === linkId);
+        const link = data.links.find((l: AdminLink) => l.id === linkId);
         return {
-          name: (link?.business_name as string) || (link?.slug as string) || linkId,
+          name: link?.business_name ?? link?.slug ?? linkId,
           views,
         };
       })

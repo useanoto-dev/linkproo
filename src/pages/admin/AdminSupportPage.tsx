@@ -70,20 +70,20 @@ export default function AdminSupportPage() {
   // ── handlers ────────────────────────────────────────────────────────────
 
   function handleSaveFaq(data: { question: string; answer: string }) {
-    const payload = faqDialog.editing
+    const payload: Partial<SupportFaq> & { question: string; answer: string } = faqDialog.editing
       ? { ...faqDialog.editing, ...data }
-      : { question: data.question, answer: data.answer };
-    upsertFaq.mutate(payload as any, {
+      : data;
+    upsertFaq.mutate(payload, {
       onSuccess: () => toast.success(faqDialog.editing ? "FAQ atualizada!" : "FAQ criada!"),
       onError: () => toast.error("Erro ao salvar FAQ"),
     });
   }
 
   function handleSaveContact(data: { channel_type: string; title: string; description: string; url: string }) {
-    const payload = contactDialog.editing
+    const payload: Partial<SupportContact> & { channel_type: string; title: string; url: string } = contactDialog.editing
       ? { ...contactDialog.editing, ...data }
       : data;
-    upsertContact.mutate(payload as any, {
+    upsertContact.mutate(payload, {
       onSuccess: () => toast.success(contactDialog.editing ? "Canal atualizado!" : "Canal criado!"),
       onError: () => toast.error("Erro ao salvar canal"),
     });
