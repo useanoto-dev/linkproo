@@ -100,6 +100,8 @@ export default function LinkEditor() {
   const [editingSubPageId, setEditingSubPageId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(!isEditing);
   const [isDraggingOverPreview, setIsDraggingOverPreview] = useState(false);
+  const [ghostBlockType, setGhostBlockType] = useState<BlockType | null>(null);
+  const dragTypeRef = useRef<BlockType | null>(null);
 
   // Autosave using shared mapper
   const isExistingLink = isEditing || !link.id.startsWith("new-");
@@ -162,6 +164,24 @@ export default function LinkEditor() {
   useEffect(() => {
     if (isMobile) setShowPreview(false);
   }, [isMobile]);
+
+  // Track which block type is being dragged from the sidebar
+  useEffect(() => {
+    const onStart = (e: Event) => {
+      const type = (e as CustomEvent).detail?.type as BlockType;
+      dragTypeRef.current = type || null;
+    };
+    const onEnd = () => {
+      dragTypeRef.current = null;
+      setGhostBlockType(null);
+    };
+    window.addEventListener("block-drag-start", onStart);
+    window.addEventListener("block-drag-end", onEnd);
+    return () => {
+      window.removeEventListener("block-drag-start", onStart);
+      window.removeEventListener("block-drag-end", onEnd);
+    };
+  }, []);
 
   const updateLink = useCallback((updates: Partial<SmartLink>) => {
     setLink((prev) => ({ ...prev, ...updates }));
@@ -261,18 +281,21 @@ export default function LinkEditor() {
   const handlePreviewDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     if (e.dataTransfer.types.includes("application/x-block-type")) {
       setIsDraggingOverPreview(true);
+      if (dragTypeRef.current) setGhostBlockType(dragTypeRef.current);
     }
   }, []);
 
   const handlePreviewDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
       setIsDraggingOverPreview(false);
+      setGhostBlockType(null);
     }
   }, []);
 
   const handlePreviewDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDraggingOverPreview(false);
+    setGhostBlockType(null);
     const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
     if (!type) return;
     const defaultsRaw = e.dataTransfer.getData("application/x-block-defaults");
@@ -674,6 +697,7 @@ export default function LinkEditor() {
                     <SmartLinkPreview
                       link={previewLink}
                       selectedId={selectedElementId ?? undefined}
+                      ghostBlockType={ghostBlockType ?? undefined}
                       onSelectElement={(id) => {
                         setSelectedElementId(id);
                         if (openDrawer) setOpenDrawer(null);

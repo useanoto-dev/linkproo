@@ -135,6 +135,10 @@ export function ElementsSidebar({ onAddBlock }: ElementsSidebarProps) {
                       JSON.stringify((el as any).defaults || {})
                     );
                     e.dataTransfer.effectAllowed = "copy";
+                    window.dispatchEvent(new CustomEvent("block-drag-start", { detail: { type: el.type } }));
+                  }}
+                  onDragEnd={() => {
+                    window.dispatchEvent(new CustomEvent("block-drag-end"));
                   }}
                   onClick={() => onAddBlock(el.type, (el as any).defaults)}
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 active:scale-[0.97] transition-all duration-150 group cursor-grab active:cursor-grabbing"
