@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-23T23:35:24.913Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-23T23:32:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 1
@@ -37,11 +37,14 @@ Plan: Not started
 - [Phase 02-03]: Privacy footer placed inside DashboardLayout main with flex-col so it appears on every dashboard page
 - [Phase 02-security]: Using Faca without cedilla in RAISE EXCEPTION to avoid encoding issues in Supabase environments
 - [Phase 02-security]: Slug reserved list is 43 entries (not 38 as documented in plan) - all entries from slug-utils.ts RESERVED_SLUGS included
+- [02-01]: initProtection scoped to PublicLinkPage only — admins and editors no longer blocked from DevTools
+- [02-01]: BgHtmlEffect sandbox without allow-same-origin — HTML background script cannot access parent origin
+- [02-01]: Video/Spotify/LessonPlayer iframes get allow-same-origin — required for external video player APIs
 
 ## Last Session
 
-- **Stopped at:** Completed 02-02-PLAN.md
-- **Timestamp:** 2026-03-23T23:06:23Z
+- **Stopped at:** Completed 02-01-PLAN.md
+- **Timestamp:** 2026-03-23T23:32:00Z
 
 ## Accumulated Context
 
