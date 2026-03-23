@@ -110,7 +110,8 @@ export default function LinkEditor() {
     const row = smartLinkToRow(l, user.id);
     const { error } = await supabase
       .from("links")
-      .update(row as any)
+      // @ts-expect-error smartLinkToRow includes fields (bg_effects, business_name_font_size, business_name_align, business_name_html) not yet in generated Supabase types
+      .update(row)
       .eq("id", l.id)
       .eq("user_id", user.id);
     if (error) throw error;
