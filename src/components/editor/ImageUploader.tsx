@@ -130,17 +130,20 @@ export function ImageUploader({
 
   // ── Upload & save ───────────────────────────────────────────────────────────
 
-  const uploadAndSave = useCallback(async (dataUrl: string) => {
+  const uploadAndSave = useCallback(async (dataUrl: string): Promise<boolean> => {
     if (user) {
       try {
         const publicUrl = await uploadImage(dataUrl, user.id, "links", value || undefined);
         onChange(publicUrl);
+        return true;
       } catch (err) {
         console.error("Upload error:", err);
         toast.error("Erro no upload da imagem. Tente novamente.");
+        return false;
       }
     } else {
       onChange(dataUrl);
+      return true;
     }
   }, [user, onChange, value]);
 
@@ -150,8 +153,8 @@ export function ImageUploader({
     if (!rawImage) return;
     try {
       setUploading(true);
-      await uploadAndSave(rawImage);
-      closeModal();
+      const success = await uploadAndSave(rawImage);
+      if (success) closeModal();
     } catch (err) {
       console.error(err);
     } finally {
@@ -187,8 +190,8 @@ export function ImageUploader({
     if (!croppedPreview) return;
     try {
       setUploading(true);
-      await uploadAndSave(croppedPreview);
-      closeModal();
+      const success = await uploadAndSave(croppedPreview);
+      if (success) closeModal();
     } catch (err) {
       console.error(err);
     } finally {

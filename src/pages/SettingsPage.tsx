@@ -73,11 +73,12 @@ export default function SettingsPage() {
         reader.onload = () => resolve(reader.result as string);
         reader.readAsDataURL(file);
       });
-      const url = await uploadImage(dataUrl, user.id, "avatars");
+      const url = await uploadImage(dataUrl, user.id, "avatars", profile.avatar_url || undefined);
       update("avatar_url", url);
       toast.success("Avatar atualizado!");
-    } catch {
-      toast.error("Erro ao enviar avatar");
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      toast.error("Erro ao enviar avatar. Tente novamente.");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
