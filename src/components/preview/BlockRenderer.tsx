@@ -254,7 +254,10 @@ export const BlockRenderer = memo(function BlockRenderer({
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
         <div className="relative w-full rounded-2xl overflow-hidden shadow-md" style={{ paddingBottom: "56.25%" }}>
           <iframe src={embedUrl} className="absolute inset-0 w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen />
         </div>
       </motion.div>
     );
@@ -485,7 +488,9 @@ export const BlockRenderer = memo(function BlockRenderer({
           width="100%"
           height={height}
           style={{ borderRadius: 16 }}
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="no-referrer-when-downgrade"
           loading="lazy"
         />
       </motion.div>
@@ -517,6 +522,7 @@ export const BlockRenderer = memo(function BlockRenderer({
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
+                sandbox="allow-scripts allow-same-origin allow-popups"
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

@@ -30,7 +30,9 @@ export const LessonPlayer = memo(function LessonPlayer({
             src={lesson.video_url}
             title={lesson.title}
             className="absolute inset-0 w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen
           />
         ) : (

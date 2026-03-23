@@ -45,6 +45,8 @@ export function BgHtmlEffect({ html }: Props) {
       ref={iframeRef}
       srcDoc={srcDoc}
       sandbox="allow-scripts"
+      allow=""
+      referrerPolicy="no-referrer"
       scrolling="no"
       title="background-html"
       className="absolute inset-0 w-full h-full pointer-events-none z-0 border-none"
