@@ -12,11 +12,11 @@
 ### Phase 1: Design System & TypeScript Foundation
 **Directory:** `phases/01-design-system/`
 **Goal:** Estabelecer o alicerce visual e de codigo -- design tokens consistentes, glassmorphism, dark mode real e TypeScript strict sem `as any`. Tudo o que vem depois depende disso.
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md -- Design tokens: backdropBlur, --glass-bg/--glass-border tokens, glass-subtle utility
-- [ ] 01-02-PLAN.md -- TypeScript strict:true, SmartLinkRow type, rowToSmartLink/LinkEditor typing
+- [x] 01-02-PLAN.md -- TypeScript strict:true, SmartLinkRow type, rowToSmartLink/LinkEditor typing
 - [ ] 01-03-PLAN.md -- Eliminate remaining 10 as-any across 5 files, resolve strictNullChecks
 
 **Deliverables:**
@@ -170,7 +170,7 @@ Plans:
 
 | # | Phase | Priority | Depends On |
 |---|-------|----------|-----------|
-| 1 | Design System & TypeScript | Critical | -- |
+| 1 | 2/3 | In Progress|  |
 | 2 | Security Hardening | Critical | 1 |
 | 3 | BlockEditor Refactor | High | 1 |
 | 4 | Analytics RPC | High | 2 |

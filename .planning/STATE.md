@@ -3,12 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-last_updated: "2026-03-23T23:07:05.053Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-23T23:08:10.099Z"
 progress:
   total_phases: 10
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # State: Sistema Link PRO
@@ -23,16 +24,18 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 01 (design-system) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Decisions
 
 - [01-01] Glass tokens as CSS custom properties in :root/.dark for runtime theme switching
 - [01-01] Removed .dark .glass override block — dark mode handled by CSS variable token switch
+- [Phase 01]: SmartLinkRow is a manual type (not from generated Supabase types) because generated types are stale — missing 4 columns
+- [Phase 01]: tsc --noEmit: 0 errors with strict:true — codebase was already defensively written, no suppressions backlog for Plan 03
 
 ## Last Session
 
-- **Stopped at:** Completed 01-01-PLAN.md
+- **Stopped at:** Completed 01-02-PLAN.md
 - **Timestamp:** 2026-03-23T23:06:23Z
 
 ## Accumulated Context
