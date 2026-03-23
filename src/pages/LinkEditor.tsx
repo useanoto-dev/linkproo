@@ -635,7 +635,7 @@ export default function LinkEditor() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              style={{ width: isMobile ? "100%" : 380 }}
+              style={{ width: isMobile ? "100%" : 450 }}
               className={`shrink-0 border-l border-border bg-secondary/20 flex flex-col items-center justify-center overflow-hidden ${
                 isMobile ? "fixed inset-0 z-50 bg-background" : ""
               }`}

@@ -26,14 +26,14 @@ interface DeviceSpec {
 
 const SPECS: Record<DeviceType, DeviceSpec> = {
   iphone15: {
-    screenW: 320,
-    screenH: 640,
+    screenW: 390,  // real iPhone 15 CSS width (390px logical)
+    screenH: 680,
     frameColor: "#2C2C2E",
     frameHighlight: "rgba(255,255,255,0.16)",
     frameShadow: "rgba(0,0,0,0.65)",
     frameBorder: 10,
-    frameRadius: 50,
-    screenRadius: 42,
+    frameRadius: 54,
+    screenRadius: 46,
     notch: "dynamic-island",
     homeBar: true,
     leftButtons: [
@@ -47,14 +47,14 @@ const SPECS: Record<DeviceType, DeviceSpec> = {
     buttonW: 4,
   },
   pixel8: {
-    screenW: 308,
-    screenH: 640,
+    screenW: 360,  // real Pixel 8 CSS width (360px logical)
+    screenH: 680,
     frameColor: "#1E1E1E",
     frameHighlight: "rgba(255,255,255,0.10)",
     frameShadow: "rgba(0,0,0,0.75)",
     frameBorder: 8,
-    frameRadius: 40,
-    screenRadius: 34,
+    frameRadius: 44,
+    screenRadius: 38,
     notch: "punch-hole",
     homeBar: false,
     leftButtons: [],
@@ -65,14 +65,14 @@ const SPECS: Record<DeviceType, DeviceSpec> = {
     buttonW: 4,
   },
   galaxy: {
-    screenW: 312,
-    screenH: 640,
+    screenW: 360,  // real Galaxy S24 CSS width (360px logical)
+    screenH: 680,
     frameColor: "#0D0D0D",
     frameHighlight: "rgba(255,255,255,0.08)",
     frameShadow: "rgba(0,0,0,0.85)",
     frameBorder: 6,
-    frameRadius: 46,
-    screenRadius: 42,
+    frameRadius: 50,
+    screenRadius: 46,
     notch: "punch-hole",
     homeBar: false,
     leftButtons: [],

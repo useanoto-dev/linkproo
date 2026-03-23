@@ -17,7 +17,7 @@ function toJsonb<T>(value: T): Json {
  */
 
 /** Convert a DB row (any shape) to a SmartLink domain object */
-export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0): SmartLink {
+export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0, ownerPlan?: string): SmartLink {
   return {
     id: row.id,
     slug: row.slug,
@@ -60,6 +60,7 @@ export function rowToSmartLink(row: any, viewCount = 0, clickCount = 0): SmartLi
     clicks: clickCount,
     isActive: row.is_active ?? true,
     createdAt: row.created_at || new Date().toISOString(),
+    ownerPlan: ownerPlan ?? undefined,
   };
 }
 

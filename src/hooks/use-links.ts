@@ -70,7 +70,19 @@ export function usePublicLink(slug?: string) {
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
-      return data ? rowToSmartLink(data) : null;
+      if (!data) return null;
+
+      // Busca o plano do dono via RPC (SECURITY DEFINER — contorna RLS de profiles)
+      let ownerPlan = "free";
+      try {
+        const { data: plan, error: planError } = await supabase
+          .rpc("get_link_owner_plan", { _user_id: data.user_id });
+        if (!planError && plan) ownerPlan = plan as string;
+      } catch {
+        // Erro de rede — padrão é "free" (exibe marca d'água)
+      }
+
+      return rowToSmartLink(data, 0, 0, ownerPlan);
     },
     enabled: !!slug,
   });

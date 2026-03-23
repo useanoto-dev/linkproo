@@ -256,4 +256,6 @@ export interface SmartLink {
   isActive: boolean;
   createdAt: string;
   customDomain?: string;
+  /** Plan do dono do link — usado para decidir se exibe marca d'água */
+  ownerPlan?: string;
 }

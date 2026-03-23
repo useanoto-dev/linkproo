@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useAdminUsers, useUpdateUserPlan, useDeleteUser } from "@/hooks/use-admin";
-import { Users, Loader2, Search, Mail, Clock, Trash2, Smartphone, AlertTriangle } from "lucide-react";
+import { useAdminUsers, useUpdateUserPlan, useDeleteUser, useAdminUserLinks, AdminUserLink } from "@/hooks/use-admin";
+import { Users, Loader2, Search, Mail, Clock, Trash2, Smartphone, AlertTriangle, Link2, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +36,78 @@ function getOnlineStatus(lastSignIn: string | null | undefined): {
   };
 }
 
+/** Sub-row que carrega e exibe os links de um usuário */
+function UserLinksRow({ userId, colSpan }: { userId: string; colSpan: number }) {
+  const { data: links = [], isLoading } = useAdminUserLinks(userId);
+
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-5 py-0">
+        <div className="border border-border/40 rounded-xl mb-3 overflow-hidden bg-secondary/30">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          ) : links.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Nenhum link cadastrado</p>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border/30 bg-secondary/40">
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Nome</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Slug</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Botões</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2 font-medium text-muted-foreground">Criado em</th>
+                  <th className="px-4 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {links.map((link: AdminUserLink) => (
+                  <tr key={link.id} className="border-b border-border/20 last:border-b-0 hover:bg-secondary/20 transition-colors">
+                    <td className="px-4 py-2 font-medium text-foreground truncate max-w-[160px]">
+                      {link.business_name || "—"}
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground font-mono">
+                      /{link.slug}
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">
+                      {link.button_count}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        link.is_active
+                          ? "bg-green-500/10 text-green-600"
+                          : "bg-secondary text-muted-foreground"
+                      }`}>
+                        {link.is_active ? "Ativo" : "Inativo"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">
+                      {new Date(link.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-2">
+                      <a
+                        href={`/${link.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors inline-flex cursor-pointer"
+                        title="Abrir link"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function AdminUsersPage() {
   const { data: users = [], isLoading } = useAdminUsers();
   const updatePlan = useUpdateUserPlan();
@@ -43,6 +115,7 @@ export default function AdminUsersPage() {
   const [inputValue, setInputValue] = useState("");
   const [search, setSearch] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(inputValue), 300);
@@ -153,6 +226,9 @@ export default function AdminUsersPage() {
                     <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Dispositivo
                     </th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Links
+                    </th>
                     <th className="px-5 py-3" />
                   </tr>
                 </thead>
@@ -160,7 +236,7 @@ export default function AdminUsersPage() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="text-center py-8 text-muted-foreground"
                       >
                         Nenhum usuário encontrado
@@ -173,6 +249,7 @@ export default function AdminUsersPage() {
                       const isConfirming = confirmDeleteId === u.user_id;
 
                       return (
+                        <>
                         <motion.tr
                           key={u.id}
                           initial={{ opacity: 0 }}
@@ -288,6 +365,23 @@ export default function AdminUsersPage() {
                             )}
                           </td>
 
+                          {/* Link count + expand */}
+                          <td className="px-5 py-3">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedUserId(expandedUserId === u.user_id ? null : u.user_id)}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground transition-colors cursor-pointer text-[11px] font-semibold"
+                              title="Ver links do usuário"
+                            >
+                              <Link2 className="h-3 w-3 text-primary" />
+                              {u.link_count ?? 0}
+                              {expandedUserId === u.user_id
+                                ? <ChevronUp className="h-3 w-3" />
+                                : <ChevronDown className="h-3 w-3" />
+                              }
+                            </button>
+                          </td>
+
                           {/* Delete */}
                           <td className="px-4 py-3">
                             <AnimatePresence mode="wait">
@@ -339,6 +433,12 @@ export default function AdminUsersPage() {
                             </AnimatePresence>
                           </td>
                         </motion.tr>
+
+                        {/* Sub-row com links do usuário */}
+                        {expandedUserId === u.user_id && (
+                          <UserLinksRow userId={u.user_id} colSpan={8} />
+                        )}
+                        </>
                       );
                     })
                   )}

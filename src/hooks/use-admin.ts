@@ -12,6 +12,16 @@ export interface AdminUser {
   created_at: string;
   last_sign_in_at?: string | null;
   duplicate_device_count?: number;
+  link_count?: number;
+}
+
+export interface AdminUserLink {
+  id: string;
+  slug: string;
+  business_name: string;
+  is_active: boolean;
+  created_at: string;
+  button_count: number;
 }
 
 export function useAdminUsers() {
@@ -81,11 +91,26 @@ export function useDeleteUser() {
       const { error } = await supabase.rpc("admin_delete_user", {
         target_user_id: targetUserId,
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-users"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
     },
+  });
+}
+
+export function useAdminUserLinks(userId: string | null) {
+  return useQuery({
+    queryKey: ["admin-user-links", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase.rpc("get_user_links_admin", {
+        _user_id: userId,
+      });
+      if (error) throw error;
+      return (data ?? []) as AdminUserLink[];
+    },
+    enabled: !!userId,
   });
 }
