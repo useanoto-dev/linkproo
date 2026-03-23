@@ -98,36 +98,6 @@ export function ImageUploader({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // ── File intake ─────────────────────────────────────────────────────────────
-
-  const handleFileReady = useCallback(async (file: File) => {
-    const accepted = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-    if (!accepted.includes(file.type)) {
-      toast.error("Formato não suportado. Use PNG, JPG ou WebP.");
-      return;
-    }
-    const dataUrl = await readFileAsDataURL(file);
-    setRawImage(dataUrl);
-    setRawFile(file);
-    setCropRect(null);
-    setSelectedAspect(aspectRatio ?? null);
-    setMode(allowOriginal ? "choosing" : "cropping");
-  }, [aspectRatio, allowOriginal]);
-
-  const onFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await handleFileReady(file);
-    if (inputRef.current) inputRef.current.value = "";
-  }, [handleFileReady]);
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    await handleFileReady(file);
-  }, [handleFileReady]);
-
   // ── Upload & save ───────────────────────────────────────────────────────────
 
   const uploadAndSave = useCallback(async (dataUrl: string): Promise<boolean> => {
@@ -146,6 +116,49 @@ export function ImageUploader({
       return true;
     }
   }, [user, onChange, value]);
+
+  // ── File intake ─────────────────────────────────────────────────────────────
+
+  const handleFileReady = useCallback(async (file: File) => {
+    const accepted = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!accepted.includes(file.type)) {
+      toast.error("Formato não suportado. Use PNG, JPG ou WebP.");
+      return;
+    }
+    const dataUrl = await readFileAsDataURL(file);
+
+    // Compact mode: skip the modal and upload directly (simpler UX)
+    if (compact) {
+      setUploading(true);
+      try {
+        await uploadAndSave(dataUrl);
+      } finally {
+        setUploading(false);
+        if (inputRef.current) inputRef.current.value = "";
+      }
+      return;
+    }
+
+    setRawImage(dataUrl);
+    setRawFile(file);
+    setCropRect(null);
+    setSelectedAspect(aspectRatio ?? null);
+    setMode(allowOriginal ? "choosing" : "cropping");
+  }, [aspectRatio, allowOriginal, compact, uploadAndSave]);
+
+  const onFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await handleFileReady(file);
+    if (inputRef.current) inputRef.current.value = "";
+  }, [handleFileReady]);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    await handleFileReady(file);
+  }, [handleFileReady]);
 
   // ── Use original ────────────────────────────────────────────────────────────
 
