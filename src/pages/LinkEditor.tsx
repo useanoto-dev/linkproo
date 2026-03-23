@@ -99,6 +99,7 @@ export default function LinkEditor() {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [editingSubPageId, setEditingSubPageId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(!isEditing);
+  const [isDraggingOverPreview, setIsDraggingOverPreview] = useState(false);
 
   // Autosave using shared mapper
   const isExistingLink = isEditing || !link.id.startsWith("new-");
@@ -249,6 +250,35 @@ export default function LinkEditor() {
     }
     toast.success(`${names[type] || "Bloco"} adicionado!`);
   };
+
+  const handlePreviewDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes("application/x-block-type")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  }, []);
+
+  const handlePreviewDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes("application/x-block-type")) {
+      setIsDraggingOverPreview(true);
+    }
+  }, []);
+
+  const handlePreviewDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setIsDraggingOverPreview(false);
+    }
+  }, []);
+
+  const handlePreviewDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOverPreview(false);
+    const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
+    if (!type) return;
+    const defaultsRaw = e.dataTransfer.getData("application/x-block-defaults");
+    const defaults: Record<string, unknown> = defaultsRaw ? JSON.parse(defaultsRaw) : {};
+    addBlock(type, defaults);
+  }, [addBlock]);
 
   const updateSubPage = useCallback((pageId: string, updates: Partial<SubPage>) => {
     setLink((prev) => ({
@@ -623,23 +653,43 @@ export default function LinkEditor() {
                 </div>
               </div>
 
-              <DeviceFrame device={device}>
-                {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
-                  <SubPagePreview
-                    page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
-                    link={previewLink}
-                  />
-                ) : (
-                  <SmartLinkPreview
-                    link={previewLink}
-                    selectedId={selectedElementId ?? undefined}
-                    onSelectElement={(id) => {
-                      setSelectedElementId(id);
-                      if (openDrawer) setOpenDrawer(null);
-                    }}
-                  />
+              <div
+                onDragOver={handlePreviewDragOver}
+                onDragEnter={handlePreviewDragEnter}
+                onDragLeave={handlePreviewDragLeave}
+                onDrop={handlePreviewDrop}
+                className={`relative rounded-[2.5rem] transition-all duration-150 ${
+                  isDraggingOverPreview
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    : ""
+                }`}
+              >
+                <DeviceFrame device={device}>
+                  {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
+                    <SubPagePreview
+                      page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
+                      link={previewLink}
+                    />
+                  ) : (
+                    <SmartLinkPreview
+                      link={previewLink}
+                      selectedId={selectedElementId ?? undefined}
+                      onSelectElement={(id) => {
+                        setSelectedElementId(id);
+                        if (openDrawer) setOpenDrawer(null);
+                      }}
+                    />
+                  )}
+                </DeviceFrame>
+
+                {isDraggingOverPreview && (
+                  <div className="absolute inset-x-0 -bottom-8 flex items-center justify-center pointer-events-none">
+                    <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg animate-bounce">
+                      ⬇ Solte aqui para adicionar
+                    </span>
+                  </div>
                 )}
-              </DeviceFrame>
+              </div>
 
               {link.slug && !editingSubPageId && (
                 <div className="mt-3 px-3 py-1 rounded-full bg-secondary border border-border text-[10px] text-muted-foreground font-mono">
