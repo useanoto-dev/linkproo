@@ -72,9 +72,11 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     business_name_html: link.businessNameHtml || false,
     tagline: link.tagline,
     hero_image: link.heroImage,
-    hero_image_height_px: link.heroImageHeightPx ?? null,
-    hero_object_fit: link.heroObjectFit ?? null,
-    hero_focal_point: toJsonb(link.heroFocalPoint ?? null),
+    // hero_image_height_px / hero_object_fit / hero_focal_point:
+    // Colunas criadas pela migration 20260322300001 — descomentar após aplicar no Supabase.
+    // hero_image_height_px: link.heroImageHeightPx ?? null,
+    // hero_object_fit: link.heroObjectFit ?? null,
+    // hero_focal_point: toJsonb(link.heroFocalPoint ?? null),
     hero_image_opacity: link.heroImageOpacity ?? null,
     hero_overlay_opacity: link.heroOverlayOpacity ?? null,
     hero_overlay_color: link.heroOverlayColor ?? null,
