@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-24T07:24:55.440Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-24T04:47:00Z"
 progress:
   total_phases: 10
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 9
+  completed_plans: 7
 ---
 
 # State: Sistema Link PRO
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 3
-Plan: Not started
+Plan: 1 of 3 complete
 
 ## Decisions
 
@@ -40,11 +40,13 @@ Plan: Not started
 - [02-01]: initProtection scoped to PublicLinkPage only — admins and editors no longer blocked from DevTools
 - [02-01]: BgHtmlEffect sandbox without allow-same-origin — HTML background script cannot access parent origin
 - [02-01]: Video/Spotify/LessonPlayer iframes get allow-same-origin — required for external video player APIs
+- [03-01]: Preserved ref={block.type === 'text' ? textareaRef : undefined} pattern — cta type does not attach the textarea ref, matching original BlockEditor.tsx behavior
+- [03-01]: No Lucide align icons needed in TextBlockEditor — alignment rendered with emoji strings (⬅/↔/➡)
 
 ## Last Session
 
-- **Stopped at:** Completed 02-01-PLAN.md
-- **Timestamp:** 2026-03-23T23:32:00Z
+- **Stopped at:** Completed 03-01-PLAN.md
+- **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
 
