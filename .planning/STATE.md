@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-24T07:48:38.299Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-24T08:00:17.927Z"
 progress:
   total_phases: 10
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # State: Sistema Link PRO
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 3
-Plan: 2 of 3 complete
+Plan: 3 of 3 complete
 
 ## Decisions
 
@@ -42,10 +42,12 @@ Plan: 2 of 3 complete
 - [02-01]: Video/Spotify/LessonPlayer iframes get allow-same-origin — required for external video player APIs
 - [03-01]: Preserved ref={block.type === 'text' ? textareaRef : undefined} pattern — cta type does not attach the textarea ref, matching original BlockEditor.tsx behavior
 - [03-01]: No Lucide align icons needed in TextBlockEditor — alignment rendered with emoji strings (⬅/↔/➡)
+- [Phase 03]: BusinessInfoPanel extracted from BlockEditor.tsx to meet <=300 line target — slug state collocated with its UI
+- [Phase 03]: SortableList receives lazy editors via GroupEditorComponents props — avoids circular imports, keeps React.lazy in BlockEditor.tsx per D-07
 
 ## Last Session
 
-- **Stopped at:** Completed 03-02-PLAN.md
+- **Stopped at:** Completed 03-03-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
