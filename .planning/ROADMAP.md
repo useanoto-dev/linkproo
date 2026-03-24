@@ -55,6 +55,12 @@ Plans:
 ### Phase 3: BlockEditor Refactor
 **Directory:** `phases/03-block-editor-refactor/`
 **Goal:** Quebrar o monolito de 1944 linhas do BlockEditor.tsx em editores por tipo de bloco -- performance, manutenibilidade e bundle splitting.
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md -- Extract constants, utilities, TextBlockEditor, LayoutBlockEditor
+- [ ] 03-02-PLAN.md -- Extract MediaBlockEditor, InteractiveBlockEditor, ListBlockEditor
+- [ ] 03-03-PLAN.md -- Rewrite BlockEditor.tsx as orchestrator with lazy loading
 
 **Deliverables:**
 - `BlockEditor.tsx` <= 300 linhas (orquestrador apenas)
@@ -189,4 +195,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-03-23 -- Phase 2 planned (3 plans, 1 wave)*
+*Last updated: 2026-03-24 -- Phase 3 planned (3 plans, 2 waves)*
