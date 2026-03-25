@@ -94,6 +94,13 @@ Plans:
 ### Phase 5: Animations & Motion System
 **Directory:** `phases/05-animations/`
 **Goal:** Implementar micro-animacoes e transicoes com Framer Motion em todo o sistema -- editor, dashboard e paginas publicas ganham vida.
+**Plans:** 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md -- Route transitions: PageTransition component + AnimatePresence in App.tsx
+- [ ] 05-02-PLAN.md -- Skeleton loaders: AdminDashboardPage, VideoaulasPage, SupportPage
+- [ ] 05-03-PLAN.md -- Empty states animated: LinksPage, AnalyticsPage, Dashboard
+- [ ] 05-04-PLAN.md -- DragOverlay for SortableList + SmartLinkCard hover micro-animation
 
 **Deliverables:**
 - Transicoes de rota com `AnimatePresence` (fade + slide)
@@ -200,4 +207,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-03-24 -- Phase 4 planned (2 plans, 2 waves)*
+*Last updated: 2026-03-25 -- Phase 5 planned (4 plans, 2 waves)*
