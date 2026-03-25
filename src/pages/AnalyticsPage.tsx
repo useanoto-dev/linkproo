@@ -2,75 +2,68 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid,
 } from "recharts";
 import { Eye, MousePointerClick, TrendingUp, Monitor, Smartphone, Calendar } from "lucide-react";
-import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Period = "7d" | "30d" | "90d";
+
+interface DayStatUser { date: string; views: number; clicks: number; }
+interface DeviceStat { device: string; count: number; }
+interface ButtonClick { button_id: string; count: number; }
+interface LinkViewStat { link_id: string; slug: string; business_name: string; views: number; }
+interface ReferrerStat { referrer: string; count: number; }
+interface UserAnalyticsData {
+  total_views: number;
+  total_clicks: number;
+  views_by_day: DayStatUser[];
+  views_by_device: DeviceStat[];
+  clicks_by_button: ButtonClick[];
+  views_by_link: LinkViewStat[];
+  referrer_top5: ReferrerStat[];
+}
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>("30d");
 
   const periodDays = period === "7d" ? 7 : period === "30d" ? 30 : 90;
-  const startDate = useMemo(() => startOfDay(subDays(new Date(), periodDays)), [periodDays]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics", user?.id, period],
     queryFn: async () => {
       if (!user) return null;
 
+      // Keep: links fetch for button label mapping (per D-11)
       const { data: links } = await supabase
         .from("links")
         .select("id, business_name, slug, blocks, buttons")
         .eq("user_id", user.id);
 
-      if (!links || links.length === 0) return { views: [], clicks: [], links: [], totalViews: 0, totalClicks: 0, buttonLabels: {} as Record<string, string>, buttonLink: {} as Record<string, string> };
+      if (!links || links.length === 0) {
+        return {
+          analytics: null as UserAnalyticsData | null,
+          links: [] as typeof links,
+          buttonLabels: {} as Record<string, string>,
+          buttonLink: {} as Record<string, string>,
+        };
+      }
 
-      const linkIds = links.map((l) => l.id);
+      // Replace all 4 event queries with single RPC (per D-10)
+      const { data: analytics, error } = await supabase.rpc("get_user_analytics", {
+        user_uuid: user.id,
+        period_days: periodDays,
+      });
+      if (error) throw error;
 
-      // Fetch detailed events (capped at 5000 for chart/device breakdown)
-      // and separate exact counts via head queries
-      const [
-        { data: views },
-        { data: clicks },
-        { count: totalViews },
-        { count: totalClicks },
-      ] = await Promise.all([
-        supabase
-          .from("link_views")
-          .select("viewed_at, device, referrer, link_id")
-          .in("link_id", linkIds)
-          .gte("viewed_at", startDate.toISOString())
-          .order("viewed_at", { ascending: false })
-          .limit(5000),
-        supabase
-          .from("link_clicks")
-          .select("clicked_at, device, link_id, button_id")
-          .in("link_id", linkIds)
-          .gte("clicked_at", startDate.toISOString())
-          .order("clicked_at", { ascending: false })
-          .limit(5000),
-        supabase
-          .from("link_views")
-          .select("*", { count: "exact", head: true })
-          .in("link_id", linkIds)
-          .gte("viewed_at", startDate.toISOString()),
-        supabase
-          .from("link_clicks")
-          .select("*", { count: "exact", head: true })
-          .in("link_id", linkIds)
-          .gte("clicked_at", startDate.toISOString()),
-      ]);
-
-      // Build button/block label maps
+      // Build button/block label maps (unchanged logic)
       const buttonLabels: Record<string, string> = {};
       const buttonLink: Record<string, string> = {};
       for (const link of links) {
@@ -94,11 +87,8 @@ export default function AnalyticsPage() {
       }
 
       return {
-        views: views || [],
-        clicks: clicks || [],
+        analytics: analytics as UserAnalyticsData,
         links,
-        totalViews: totalViews || 0,
-        totalClicks: totalClicks || 0,
         buttonLabels,
         buttonLink,
       };
@@ -106,84 +96,49 @@ export default function AnalyticsPage() {
     enabled: !!user,
   });
 
-  const chartData = useMemo(() => {
-    if (!data) return [];
-    const days = eachDayOfInterval({ start: startDate, end: new Date() });
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayViews = data.views.filter((v) => v.viewed_at?.startsWith(dayStr)).length;
-      const dayClicks = data.clicks.filter((c) => c.clicked_at?.startsWith(dayStr)).length;
-      return {
-        date: format(day, "dd/MM", { locale: ptBR }),
-        views: dayViews,
-        clicks: dayClicks,
-      };
-    });
-  }, [data, startDate]);
+  // Views/clicks line chart
+  const chartData = (data?.analytics?.views_by_day ?? []).map((d: DayStatUser) => ({
+    date: format(parseISO(d.date), "dd/MM", { locale: ptBR }),
+    views: d.views,
+    clicks: d.clicks,
+  }));
 
-  const deviceData = useMemo(() => {
-    if (!data) return [];
-    const mobile = data.views.filter((v) => v.device === "mobile").length;
-    const desktop = data.views.filter((v) => v.device === "desktop").length;
-    const other = data.totalViews - mobile - desktop;
-    return [
-      { name: "Mobile", value: mobile, color: "hsl(262, 83%, 58%)" },
-      { name: "Desktop", value: desktop, color: "hsl(292, 84%, 61%)" },
-      ...(other > 0 ? [{ name: "Outro", value: other, color: "hsl(250, 10%, 50%)" }] : []),
-    ].filter((d) => d.value > 0);
-  }, [data]);
+  // Device breakdown
+  const deviceData = (data?.analytics?.views_by_device ?? []).map((d: DeviceStat) => ({
+    name: d.device === "mobile" ? "Mobile" : d.device === "desktop" ? "Desktop" : "Outro",
+    value: d.count,
+    color: d.device === "mobile" ? "hsl(262, 83%, 58%)"
+         : d.device === "desktop" ? "hsl(292, 84%, 61%)"
+         : "hsl(250, 10%, 50%)",
+  })).filter((d) => d.value > 0);
 
-  const topLinks = useMemo(() => {
-    if (!data) return [];
-    return data.links
-      .map((link) => ({
-        name: link.business_name || link.slug,
-        views: data.views.filter((v) => v.link_id === link.id).length,
-        clicks: data.clicks.filter((c) => c.link_id === link.id).length,
-      }))
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5);
-  }, [data]);
+  // Top links
+  const topLinks = (data?.analytics?.views_by_link ?? []).slice(0, 5).map((d: LinkViewStat) => ({
+    name: d.business_name || d.slug,
+    views: d.views,
+  }));
 
-  const referrerData = useMemo(() => {
-    if (!data) return [];
-    const refs: Record<string, number> = {};
-    data.views.forEach((v) => {
-      let ref = "Direto";
-      if (v.referrer) {
-        try { ref = new URL(v.referrer).hostname; } catch { ref = v.referrer || "Direto"; }
-      }
-      refs[ref] = (refs[ref] || 0) + 1;
-    });
-    return Object.entries(refs)
-      .map(([name, value]) => ({ name: name || "Direto", value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [data]);
+  // Referrer data from RPC — client parses hostname like before
+  const referrerData = (data?.analytics?.referrer_top5 ?? []).map((d: ReferrerStat) => {
+    let name = d.referrer;
+    if (name && name !== "Direto") {
+      try { name = new URL(name).hostname; } catch { /* keep raw string */ }
+    }
+    return { name: name || "Direto", value: d.count };
+  });
 
-  const topCTAs = useMemo(() => {
-    if (!data) return [];
-    const ctaClicks = data.clicks
-      .filter((c) => c.button_id)
-      .reduce((acc: Record<string, number>, c) => {
-        acc[c.button_id!] = (acc[c.button_id!] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+  // Top CTAs
+  const topCTAs = (data?.analytics?.clicks_by_button ?? []).map((d: ButtonClick) => ({
+    id: d.button_id,
+    label: data?.buttonLabels?.[d.button_id] || d.button_id,
+    linkName: data?.buttonLink?.[d.button_id] || "\u2014",
+    count: d.count,
+  }));
 
-    return Object.entries(ctaClicks)
-      .map(([id, count]) => ({
-        id,
-        label: data.buttonLabels?.[id] || id,
-        linkName: data.buttonLink?.[id] || "—",
-        count: count as number,
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  }, [data]);
-
-  const conversionRate = data && data.totalViews > 0
-    ? Math.round((data.totalClicks / data.totalViews) * 100)
-    : 0;
+  // KPIs
+  const totalViews = data?.analytics?.total_views ?? 0;
+  const totalClicks = data?.analytics?.total_clicks ?? 0;
+  const conversionRate = totalViews > 0 ? Math.round((totalClicks / totalViews) * 100) : 0;
 
   return (
     <DashboardLayout title="Analytics">
@@ -224,10 +179,10 @@ export default function AnalyticsPage() {
             {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { label: "Visualizações", value: data?.totalViews || 0, icon: Eye },
-                { label: "Cliques", value: data?.totalClicks || 0, icon: MousePointerClick },
+                { label: "Visualizações", value: totalViews, icon: Eye },
+                { label: "Cliques", value: totalClicks, icon: MousePointerClick },
                 { label: "Conversão", value: `${conversionRate}%`, icon: TrendingUp },
-                { label: "Links", value: data?.links?.length || 0, icon: Monitor },
+                { label: "Links", value: data?.links?.length ?? 0, icon: Monitor },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
