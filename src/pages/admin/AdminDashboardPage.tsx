@@ -2,8 +2,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
 import { Users, Link, Eye, MousePointerClick, ArrowRight } from "lucide-react";
 import { useAdminStats, useAdminUsers } from "@/hooks/use-admin";
-import { Loader2 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboardPage() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
@@ -19,8 +19,33 @@ export default function AdminDashboardPage() {
   if (statsLoading) {
     return (
       <DashboardLayout title="Painel Admin">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="space-y-8">
+          {/* Stat cards skeleton — 4 cards matching grid-cols-2 lg:grid-cols-4 gap-4 */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="p-5 rounded-2xl border border-border/50 bg-card">
+                <Skeleton className="h-10 w-10 rounded-xl mb-3" />
+                <Skeleton className="h-7 w-20 mb-1" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+          {/* Recent users table skeleton — 5 rows */}
+          <div>
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+              <div className="space-y-0">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3 border-b border-border/30 last:border-b-0">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-20 ml-auto" />
+                    <Skeleton className="h-5 w-14 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );
