@@ -256,10 +256,19 @@ export default function LinksPage() {
           ))}
         </div>
       ) : links.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="flex flex-col items-center justify-center py-20 text-center"
+        >
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4"
+          >
             <Inbox className="h-8 w-8 text-muted-foreground" />
-          </div>
+          </motion.div>
           <h3 className="font-display font-semibold text-foreground mb-1">Nenhum link criado</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-sm">
             Crie seu primeiro link usando um modelo ou comece do zero
@@ -280,7 +289,7 @@ export default function LinksPage() {
               Criar do Zero
             </button>
           </div>
-        </div>
+        </motion.div>
       ) : displayedLinks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
           <Search className="h-8 w-8 mb-3 opacity-30" />
