@@ -2,13 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { AnimatePresence } from "framer-motion";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { PageTransition } from "./components/PageTransition";
 import { Loader2 } from "lucide-react";
 
 // Lazy-loaded pages
@@ -63,6 +65,46 @@ function HomeRoute() {
   return <HomeContent />;
 }
 
+function AppRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<HomeRoute />} />
+
+        {/* Public routes */}
+        <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
+
+        {/* Protected routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><PageTransition><Dashboard /></PageTransition></ProtectedRoute>} />
+        <Route path="/links" element={<ProtectedRoute><PageTransition><LinksPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/links/new" element={<ProtectedRoute><PageTransition><LinkEditor /></PageTransition></ProtectedRoute>} />
+        <Route path="/links/:id/edit" element={<ProtectedRoute><PageTransition><LinkEditor /></PageTransition></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><PageTransition><SettingsPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><PageTransition><AnalyticsPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/plans" element={<ProtectedRoute><PageTransition><PlansPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/videoaulas" element={<ProtectedRoute><PageTransition><VideoaulasPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/suporte" element={<ProtectedRoute><PageTransition><SupportPage /></PageTransition></ProtectedRoute>} />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={<AdminRoute><PageTransition><AdminDashboardPage /></PageTransition></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><PageTransition><AdminUsersPage /></PageTransition></AdminRoute>} />
+        <Route path="/admin/analytics" element={<AdminRoute><PageTransition><AdminAnalyticsPage /></PageTransition></AdminRoute>} />
+        <Route path="/admin/videoaulas" element={<AdminRoute><PageTransition><AdminVideoaulasPage /></PageTransition></AdminRoute>} />
+        <Route path="/admin/suporte" element={<AdminRoute><PageTransition><AdminSupportPage /></PageTransition></AdminRoute>} />
+
+        {/* Public link pages — must be last so app routes take priority */}
+        {/* No PageTransition here — these use getEntryVariants stagger per D-03 */}
+        <Route path="/:slug/:pageSlug" element={<PublicLinkPage />} />
+        <Route path="/:slug" element={<PublicLinkPage />} />
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -73,37 +115,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<HomeRoute />} />
-
-                  {/* Public routes */}
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-                  {/* Protected routes */}
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/links" element={<ProtectedRoute><LinksPage /></ProtectedRoute>} />
-                  <Route path="/links/new" element={<ProtectedRoute><LinkEditor /></ProtectedRoute>} />
-                  <Route path="/links/:id/edit" element={<ProtectedRoute><LinkEditor /></ProtectedRoute>} />
-                  <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                  <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-                  <Route path="/plans" element={<ProtectedRoute><PlansPage /></ProtectedRoute>} />
-                  <Route path="/videoaulas" element={<ProtectedRoute><VideoaulasPage /></ProtectedRoute>} />
-                  <Route path="/suporte" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
-
-                  {/* Admin routes */}
-                  <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-                  <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-                  <Route path="/admin/analytics" element={<AdminRoute><AdminAnalyticsPage /></AdminRoute>} />
-                  <Route path="/admin/videoaulas" element={<AdminRoute><AdminVideoaulasPage /></AdminRoute>} />
-                  <Route path="/admin/suporte" element={<AdminRoute><AdminSupportPage /></AdminRoute>} />
-
-                  {/* Public link pages — must be last so app routes take priority */}
-                  <Route path="/:slug/:pageSlug" element={<PublicLinkPage />} />
-                  <Route path="/:slug" element={<PublicLinkPage />} />
-
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AppRoutes />
               </Suspense>
             </BrowserRouter>
           </TooltipProvider>
