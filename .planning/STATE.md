@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-25T23:55:45.325Z"
+stopped_at: Completed 05-animations-02-PLAN.md
+last_updated: "2026-03-25T23:56:15.744Z"
 progress:
   total_phases: 10
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 15
 ---
 
 # State: Sistema Link PRO
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 05 (animations) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 
 ## Decisions
 
@@ -50,10 +50,13 @@ Plan: 3 of 4
 - [Phase 05]: AppRoutes extracted as child component so useLocation works inside Router context
 - [Phase 05]: PublicLinkPage excluded from PageTransition — uses getEntryVariants stagger animations per D-03
 - [Phase 05-animations]: Used existing imported icons (Eye, Layout, Inbox) for empty states — no new icon imports needed
+- [Phase 05-animations]: Display-only motion.div in DragOverlay — avoids useSortable hook violation in overlay context
+- [Phase 05-animations]: Dashboard inline Skeleton adequate per D-05/D-06 — stat card structure always visible, only values use skeleton
+- [Phase 05-animations]: LinkEditor retains Loader2 for save state indicator in toolbar — only page-level loading replaced with skeleton
 
 ## Last Session
 
-- **Stopped at:** Completed 05-01-PLAN.md
+- **Stopped at:** Completed 05-animations-02-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
