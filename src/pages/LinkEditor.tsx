@@ -8,6 +8,7 @@ import { BlockEditor } from "@/components/editor/BlockEditor";
 import { ThemePanel } from "@/components/editor/ThemePanel";
 import { SmartLink, BlockType, SubPage } from "@/types/smart-link";
 import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EffectsPanel } from "@/components/editor/EffectsPanel";
 import { SubPageEditor } from "@/components/editor/SubPageEditor";
 import { DeviceFrame, DeviceType, DEVICE_LABELS } from "@/components/editor/DeviceFrame";
@@ -388,8 +389,35 @@ export default function LinkEditor() {
   if (isEditing && isLoading) {
     return (
       <DashboardLayout title="Editor de Link" noPadding>
-        <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
+          {/* Left panel skeleton */}
+          <div className="w-80 shrink-0 border-r border-border bg-card p-4 space-y-4 overflow-hidden">
+            <Skeleton className="h-8 w-full rounded-lg" />
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Preview area skeleton */}
+          <div className="flex-1 flex items-center justify-center bg-muted/30">
+            <div className="w-[375px] space-y-4">
+              <Skeleton className="w-full h-40 rounded-xl" />
+              <Skeleton className="h-6 w-32 mx-auto" />
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-11 w-full rounded-xl" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );
