@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState, useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { CourseSidebar } from "@/components/course/CourseSidebar";
 import { LessonPlayer } from "@/components/course/LessonPlayer";
@@ -57,8 +57,23 @@ export default function VideoaulasPage() {
   if (isLoading) {
     return (
       <DashboardLayout title="Videoaulas">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar skeleton */}
+          <div className="w-full lg:w-72 shrink-0 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-3 space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ))}
+          </div>
+          {/* Player area skeleton */}
+          <div className="flex-1 space-y-4">
+            <Skeleton className="w-full aspect-video rounded-xl" />
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-full" />
+          </div>
         </div>
       </DashboardLayout>
     );

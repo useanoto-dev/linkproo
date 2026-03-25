@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   MessageCircle, Mail, FileText, ChevronDown, ChevronUp,
-  ExternalLink, Search, HelpCircle, BookOpen, Zap, Plus, Pencil, Trash2, Loader2,
+  ExternalLink, Search, HelpCircle, BookOpen, Zap, Plus, Pencil, Trash2,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useUserRole } from "@/hooks/use-user-role";
 import {
@@ -56,8 +57,31 @@ export default function SupportPage() {
   if (faqsLoading || contactsLoading) {
     return (
       <DashboardLayout title="Suporte">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Hero skeleton */}
+          <div className="flex flex-col items-center py-8">
+            <Skeleton className="w-14 h-14 rounded-2xl mb-4" />
+            <Skeleton className="h-7 w-52 mb-2" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          {/* Search skeleton */}
+          <Skeleton className="h-11 w-full max-w-lg mx-auto rounded-lg" />
+          {/* Contact cards skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            ))}
+          </div>
+          {/* FAQ skeleton */}
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-xl" />
+            ))}
+          </div>
         </div>
       </DashboardLayout>
     );
