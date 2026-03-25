@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-25T23:23:58.854Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-25T23:55:45.325Z"
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # State: Sistema Link PRO
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Qualquer negócio brasileiro deve conseguir criar uma página de link profissional e bonita em menos de 5 minutos.
-**Current focus:** Phase 04 — analytics-rpc
+**Current focus:** Phase 05 — animations
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (animations) — EXECUTING
+Plan: 3 of 4
 
 ## Decisions
 
@@ -47,10 +47,13 @@ Plan: Not started
 - [Phase 04-analytics-rpc]: Admin guard uses has_role(auth.uid(), 'admin'::app_role) for get_admin_analytics; user guard uses auth.uid() <> user_uuid direct comparison for get_user_analytics
 - [Phase 04-analytics-rpc]: referrer_top5 null/empty normalized to Direto server-side; URL hostname parsing stays client-side
 - [Phase 04-analytics-rpc]: parseISO used for date formatting in analytics pages because RPC returns YYYY-MM-DD strings from Postgres
+- [Phase 05]: AppRoutes extracted as child component so useLocation works inside Router context
+- [Phase 05]: PublicLinkPage excluded from PageTransition — uses getEntryVariants stagger animations per D-03
+- [Phase 05-animations]: Used existing imported icons (Eye, Layout, Inbox) for empty states — no new icon imports needed
 
 ## Last Session
 
-- **Stopped at:** Completed 04-02-PLAN.md
+- **Stopped at:** Completed 05-01-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
