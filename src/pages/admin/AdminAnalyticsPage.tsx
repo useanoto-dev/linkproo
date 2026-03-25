@@ -1,8 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import type { Tables } from "@/integrations/supabase/types";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   LineChart,
@@ -26,13 +25,27 @@ import {
   Calendar,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type LinkView = Pick<Tables<"link_views">, "viewed_at" | "device" | "link_id">;
-type LinkClick = Pick<Tables<"link_clicks">, "clicked_at" | "link_id">;
-type Profile = Pick<Tables<"profiles">, "plan" | "created_at">;
-type AdminLink = Pick<Tables<"links">, "id" | "business_name" | "slug">;
+interface DayStatAdmin {
+  date: string;
+  views: number;
+  clicks: number;
+  new_users: number;
+}
+interface DeviceStat { device: string; count: number; }
+interface TopLinkStat { link_id: string; business_name: string; slug: string; views: number; clicks: number; }
+interface PlanDist { plan: string; count: number; }
+interface AdminAnalyticsData {
+  total_views: number;
+  total_clicks: number;
+  new_users: number;
+  views_by_day: DayStatAdmin[];
+  views_by_device: DeviceStat[];
+  top_links: TopLinkStat[];
+  plans_distribution: PlanDist[];
+}
 
 type Period = "7d" | "30d" | "90d";
 
@@ -52,113 +65,44 @@ export default function AdminAnalyticsPage() {
   const [period, setPeriod] = useState<Period>("30d");
 
   const periodDays = period === "7d" ? 7 : period === "30d" ? 30 : 90;
-  const startDate = useMemo(
-    () => startOfDay(subDays(new Date(), periodDays)),
-    [periodDays]
-  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-analytics", period],
     queryFn: async () => {
-      const [
-        { data: allViews },
-        { data: allClicks },
-        { data: allProfiles },
-        { data: allLinks },
-      ] = await Promise.all([
-        supabase
-          .from("link_views")
-          .select("viewed_at, device, link_id")
-          .gte("viewed_at", startDate.toISOString())
-          .limit(10000),
-        supabase
-          .from("link_clicks")
-          .select("clicked_at, link_id")
-          .gte("clicked_at", startDate.toISOString())
-          .limit(10000),
-        supabase.from("profiles").select("plan, created_at"),
-        supabase.from("links").select("id, business_name, slug"),
-      ]);
-
-      return {
-        views: (allViews ?? []) as LinkView[],
-        clicks: (allClicks ?? []) as LinkClick[],
-        profiles: (allProfiles ?? []) as Profile[],
-        links: (allLinks ?? []) as AdminLink[],
-      };
+      const { data, error } = await supabase.rpc("get_admin_analytics", {
+        period_days: periodDays,
+      });
+      if (error) throw error;
+      return data as AdminAnalyticsData;
     },
   });
 
-  // --- KPIs ---
-  const totalViews = data?.views.length ?? 0;
-  const totalClicks = data?.clicks.length ?? 0;
-  const newUsers = useMemo(() => {
-    if (!data) return 0;
-    return data.profiles.filter(
-      (p: Profile) => new Date(p.created_at) >= startDate
-    ).length;
-  }, [data, startDate]);
-  const conversionRate =
-    totalViews > 0 ? Math.round((totalClicks / totalViews) * 100) : 0;
+  // KPIs
+  const totalViews = data?.total_views ?? 0;
+  const totalClicks = data?.total_clicks ?? 0;
+  const newUsers = data?.new_users ?? 0;
+  const conversionRate = totalViews > 0 ? Math.round((totalClicks / totalViews) * 100) : 0;
 
-  // --- Growth chart (views + clicks + new users per day) ---
-  const growthChartData = useMemo(() => {
-    if (!data) return [];
-    const days = eachDayOfInterval({ start: startDate, end: new Date() });
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayViews = data.views.filter((v: LinkView) =>
-        v.viewed_at?.startsWith(dayStr)
-      ).length;
-      const dayClicks = data.clicks.filter((c: LinkClick) =>
-        c.clicked_at?.startsWith(dayStr)
-      ).length;
-      const dayUsers = data.profiles.filter((p: Profile) =>
-        p.created_at?.startsWith(dayStr)
-      ).length;
-      return {
-        date: format(day, "dd/MM", { locale: ptBR }),
-        views: dayViews,
-        cliques: dayClicks,
-        usuarios: dayUsers,
-      };
-    });
-  }, [data, startDate]);
+  // Growth chart
+  const growthChartData = (data?.views_by_day ?? []).map((d: DayStatAdmin) => ({
+    date: format(parseISO(d.date), "dd/MM", { locale: ptBR }),
+    views: d.views,
+    cliques: d.clicks,
+    usuarios: d.new_users,
+  }));
 
-  // --- Plan distribution ---
-  const planData = useMemo(() => {
-    if (!data) return [];
-    const counts: Record<string, number> = {};
-    for (const p of data.profiles) {
-      const plan: string = p.plan ?? "free";
-      counts[plan] = (counts[plan] || 0) + 1;
-    }
-    return Object.entries(counts).map(([plan, value]) => ({
-      name: PLAN_LABELS[plan] ?? plan,
-      value,
-      color: PLAN_COLORS[plan] ?? "hsl(250,10%,60%)",
-    }));
-  }, [data]);
+  // Plan distribution
+  const planData = (data?.plans_distribution ?? []).map((d: PlanDist) => ({
+    name: PLAN_LABELS[d.plan] ?? d.plan,
+    value: d.count,
+    color: PLAN_COLORS[d.plan] ?? "hsl(250,10%,60%)",
+  }));
 
-  // --- Top 5 links by views ---
-  const topLinks = useMemo(() => {
-    if (!data) return [];
-    const counts: Record<string, number> = {};
-    for (const v of data.views) {
-      const id: string = v.link_id;
-      if (id) counts[id] = (counts[id] || 0) + 1;
-    }
-    return Object.entries(counts)
-      .map(([linkId, views]) => {
-        const link = data.links.find((l: AdminLink) => l.id === linkId);
-        return {
-          name: link?.business_name ?? link?.slug ?? linkId,
-          views,
-        };
-      })
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5);
-  }, [data]);
+  // Top 5 links by views
+  const topLinks = (data?.top_links ?? []).slice(0, 5).map((d: TopLinkStat) => ({
+    name: d.business_name || d.slug,
+    views: d.views,
+  }));
 
   const kpiCards = [
     {
