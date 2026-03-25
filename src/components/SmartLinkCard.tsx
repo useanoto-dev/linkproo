@@ -43,7 +43,10 @@ export function SmartLinkCard({ link, onDelete, onDuplicate, onToggleActive, sel
   const conversionRate = link.views > 0 ? Math.round((link.clicks / link.views) * 100) : 0;
 
   return (
-    <div className={`rounded-xl overflow-hidden group hover:glow-border transition-all duration-300 relative bg-card border ${selected ? "border-primary ring-2 ring-primary" : "border-border"}`}>
+    <motion.div
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      className={`rounded-xl overflow-hidden group hover:glow-border transition-all duration-300 relative bg-card border ${selected ? "border-primary ring-2 ring-primary" : "border-border"}`}
+    >
       {/* Overlay */}
       <AnimatePresence>
         {overlay && (
@@ -245,6 +248,6 @@ export function SmartLinkCard({ link, onDelete, onDuplicate, onToggleActive, sel
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
