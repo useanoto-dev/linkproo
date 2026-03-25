@@ -8,6 +8,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -175,6 +177,7 @@ export const SortableList = memo(function SortableList({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const unifiedItems = useMemo(() => getUnifiedItemsForMode(link, subPageMode),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [link.buttons, link.blocks, subPageMode?.page.blocks]);
@@ -224,7 +227,12 @@ export const SortableList = memo(function SortableList({
     updateBlocks([...blocks, { ...blk, id: `blk-${Date.now()}`, order: maxOrder + 1 }]);
   }, [isSubPage, updateBlocks]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = unifiedItems.findIndex((item) => item.id === String(active.id));
@@ -278,7 +286,7 @@ export const SortableList = memo(function SortableList({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Elementos</h3>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext items={unifiedItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5">
             {unifiedItems.map((item, itemIndex) => {
@@ -288,6 +296,7 @@ export const SortableList = memo(function SortableList({
                 <div
                   key={item.id}
                   ref={(el) => { itemRefs.current[item.id] = el; }}
+                  style={{ opacity: activeId === item.id ? 0.4 : 1 }}
                   className={`rounded-xl transition-all duration-200 ${isSelectedItem ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}
                   onClick={!isSubPage && onElementSelected ? () => onElementSelected(item.id) : undefined}
                   onDragOver={(e) => { if (!e.dataTransfer.types.includes("application/x-block-type")) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setDragOverIndex(itemIndex); }}
@@ -305,7 +314,9 @@ export const SortableList = memo(function SortableList({
                 </div>
               );
             })}
-            <div
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               className={`transition-all duration-100 rounded-xl border-2 border-dashed ${dragOverIndex === unifiedItems.length ? "border-primary/70 bg-primary/5 py-3" : "border-border/25 py-2"}`}
               onDragOver={(e) => { if (!e.dataTransfer.types.includes("application/x-block-type")) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setDragOverIndex(unifiedItems.length); }}
               onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverIndex(null); }}
@@ -314,9 +325,31 @@ export const SortableList = memo(function SortableList({
               <p className={`text-center text-xs font-medium pointer-events-none transition-opacity duration-100 ${dragOverIndex === unifiedItems.length ? "text-primary opacity-100" : "text-muted-foreground/40 opacity-100"}`}>
                 {dragOverIndex === unifiedItems.length ? "Solte aqui para adicionar ao final" : "↓ solte aqui"}
               </p>
-            </div>
+            </motion.div>
           </div>
         </SortableContext>
+        <DragOverlay>
+          {activeId ? (() => {
+            const activeItem = unifiedItems.find(item => item.id === activeId);
+            if (!activeItem) return null;
+            const label = activeItem.kind === "button"
+              ? (activeItem.data as SmartLinkButton).label || "Botão"
+              : BLOCK_LABELS[(activeItem.data as LinkBlock).type] || "Bloco";
+            return (
+              <motion.div
+                initial={{ scale: 1 }}
+                animate={{ scale: 1.02 }}
+                className="rounded-xl bg-card border border-border shadow-2xl"
+                style={{ boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+              >
+                <div className="flex items-center gap-1.5 px-3 py-2.5">
+                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-foreground truncate">{label}</span>
+                </div>
+              </motion.div>
+            );
+          })() : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
