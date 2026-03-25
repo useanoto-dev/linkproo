@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-25T23:17:20.363Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-25T23:21:32.874Z"
 progress:
   total_phases: 10
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # State: Sistema Link PRO
@@ -46,10 +46,11 @@ Plan: 2 of 2
 - [Phase 03]: SortableList receives lazy editors via GroupEditorComponents props — avoids circular imports, keeps React.lazy in BlockEditor.tsx per D-07
 - [Phase 04-analytics-rpc]: Admin guard uses has_role(auth.uid(), 'admin'::app_role) for get_admin_analytics; user guard uses auth.uid() <> user_uuid direct comparison for get_user_analytics
 - [Phase 04-analytics-rpc]: referrer_top5 null/empty normalized to Direto server-side; URL hostname parsing stays client-side
+- [Phase 04-analytics-rpc]: parseISO used for date formatting in analytics pages because RPC returns YYYY-MM-DD strings from Postgres
 
 ## Last Session
 
-- **Stopped at:** Completed 04-01-PLAN.md
+- **Stopped at:** Completed 04-02-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context

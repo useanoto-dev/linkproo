@@ -75,11 +75,11 @@ Plans:
 ### Phase 4: Analytics RPC Migration
 **Directory:** `phases/04-analytics-rpc/`
 **Goal:** Migrar analytics de fetch client-side de 5000 linhas para RPC server-side no Supabase -- performance, seguranca e escalabilidade.
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 04-01-PLAN.md -- SQL migrations: get_admin_analytics + get_user_analytics RPC functions
-- [ ] 04-02-PLAN.md -- Client rewrite: AdminAnalyticsPage + AnalyticsPage consume RPCs, remove useMemos
+- [x] 04-02-PLAN.md -- Client rewrite: AdminAnalyticsPage + AnalyticsPage consume RPCs, remove useMemos
 
 **Deliverables:**
 - Supabase RPC functions para agregacao de analytics (views, clicks, por dispositivo, por periodo)
@@ -190,7 +190,7 @@ Plans:
 | 1 | 3/3 | Complete   | 2026-03-23 |
 | 2 | 2/3 | In Progress|  |
 | 3 | 3/3 | Complete   | 2026-03-24 |
-| 4 | 1/2 | In Progress|  |
+| 4 | 2/2 | Complete   | 2026-03-25 |
 | 5 | Animations & Motion | High | 1, 3 |
 | 6 | Landing Page | High | 1, 5 |
 | 7 | Payments | High | 2, 4 |
