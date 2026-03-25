@@ -42,7 +42,7 @@ Qualquer negócio brasileiro deve conseguir criar uma página de link profission
 - [ ] Landing page com demo animada do produto e social proof
 - [ ] Páginas públicas com animações de entrada staggered por bloco
 - [ ] BlockEditor.tsx refatorado em editores por tipo de bloco (performance)
-- [ ] Analytics server-side via RPC (remover fetch de 5000 linhas client-side)
+- ✓ Analytics server-side via RPC (remover fetch de 5000 linhas client-side) — Phase 04
 - [ ] Integração de pagamento (Stripe ou Pagar.me) para upgrade de planos
 - [ ] Custom domains implementado para Pro/Business
 - [ ] A/B testing de botões com métricas de conversão
@@ -114,4 +114,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-23 — brownfield initialization + milestone v1.0 start*
+*Last updated: 2026-03-25 — Phase 04 complete: analytics RPC migration*
