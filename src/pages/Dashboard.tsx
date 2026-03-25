@@ -145,10 +145,19 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
 
 function EmptyState({ onReset }: { onReset: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4 text-3xl">
-        🔍
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col items-center justify-center py-24 text-center"
+    >
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4"
+      >
+        <Layout className="h-8 w-8 text-muted-foreground" />
+      </motion.div>
       <p className="text-base font-semibold text-foreground mb-2">Nenhum modelo nesta categoria</p>
       <p className="text-sm text-muted-foreground max-w-xs">
         Tente selecionar outra categoria ou visualize todos os modelos disponíveis.
@@ -159,7 +168,7 @@ function EmptyState({ onReset }: { onReset: () => void }) {
       >
         Ver todos os modelos
       </button>
-    </div>
+    </motion.div>
   );
 }
 

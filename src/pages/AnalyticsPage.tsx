@@ -174,6 +174,25 @@ export default function AnalyticsPage() {
               <Skeleton className="h-52 rounded-xl" />
             </div>
           </div>
+        ) : !data?.analytics ? (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col items-center justify-center py-20 text-center"
+          >
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4"
+            >
+              <Eye className="h-8 w-8 text-muted-foreground" />
+            </motion.div>
+            <h3 className="font-semibold text-foreground mb-1">Ainda sem visitas</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              Crie e compartilhe seu primeiro link para começar a ver analytics aqui
+            </p>
+          </motion.div>
         ) : (
           <>
             {/* Stat cards */}
