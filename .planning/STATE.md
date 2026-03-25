@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-03-24T08:02:25.075Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-25T23:17:20.363Z"
 progress:
   total_phases: 10
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # State: Sistema Link PRO
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Qualquer negócio brasileiro deve conseguir criar uma página de link profissional e bonita em menos de 5 minutos.
-**Current focus:** Phase 01 — design-system
+**Current focus:** Phase 04 — analytics-rpc
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (analytics-rpc) — EXECUTING
+Plan: 2 of 2
 
 ## Decisions
 
@@ -44,10 +44,12 @@ Plan: Not started
 - [03-01]: No Lucide align icons needed in TextBlockEditor — alignment rendered with emoji strings (⬅/↔/➡)
 - [Phase 03]: BusinessInfoPanel extracted from BlockEditor.tsx to meet <=300 line target — slug state collocated with its UI
 - [Phase 03]: SortableList receives lazy editors via GroupEditorComponents props — avoids circular imports, keeps React.lazy in BlockEditor.tsx per D-07
+- [Phase 04-analytics-rpc]: Admin guard uses has_role(auth.uid(), 'admin'::app_role) for get_admin_analytics; user guard uses auth.uid() <> user_uuid direct comparison for get_user_analytics
+- [Phase 04-analytics-rpc]: referrer_top5 null/empty normalized to Direto server-side; URL hostname parsing stays client-side
 
 ## Last Session
 
-- **Stopped at:** Completed 03-03-PLAN.md
+- **Stopped at:** Completed 04-01-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
