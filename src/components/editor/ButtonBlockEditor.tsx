@@ -33,12 +33,17 @@ const linkTypeOptions: { value: LinkType; label: string; placeholder: string; pr
   { value: "page", label: "Sub-página", placeholder: "", prefix: "", helper: "Abre uma sub-página interna ao clicar" },
 ];
 
-function generateUrl(type: LinkType, value: string): string {
+function generateUrl(type: LinkType, value: string, whatsappMessage?: string): string {
   if (type === "external") return value;
   const opt = linkTypeOptions.find((o) => o.value === type);
   if (!opt) return value;
   const clean = value.replace(/^[@+\s]+/, "").trim();
-  if (type === "whatsapp" || type === "phone") {
+  if (type === "whatsapp") {
+    const number = clean.replace(/\D/g, "");
+    const base = opt.prefix + number;
+    return whatsappMessage?.trim() ? `${base}?text=${encodeURIComponent(whatsappMessage.trim())}` : base;
+  }
+  if (type === "phone") {
     return opt.prefix + clean.replace(/\D/g, "");
   }
   return opt.prefix + clean;
@@ -293,7 +298,7 @@ export const ButtonBlockEditor = React.memo(function ButtonBlockEditor({ button,
                 <Select
                   value={button.linkType || "external"}
                   onValueChange={(val: LinkType) => {
-                    const newUrl = button.linkValue ? generateUrl(val, button.linkValue) : "";
+                    const newUrl = button.linkValue ? generateUrl(val, button.linkValue, button.whatsappMessage) : "";
                     onUpdate(button.id, { linkType: val, url: newUrl });
                   }}
                 >
@@ -364,7 +369,7 @@ export const ButtonBlockEditor = React.memo(function ButtonBlockEditor({ button,
                           value={button.linkValue ?? button.url ?? ""}
                           onChange={(e) => {
                             const val = e.target.value;
-                            const url = generateUrl(currentType, val);
+                            const url = generateUrl(currentType, val, button.whatsappMessage);
                             onUpdate(button.id, { linkValue: val, url });
                           }}
                           placeholder={opt.placeholder}
@@ -372,6 +377,23 @@ export const ButtonBlockEditor = React.memo(function ButtonBlockEditor({ button,
                         />
                       </div>
                       <p className="text-[10px] text-muted-foreground">{opt.helper}</p>
+                      {currentType === "whatsapp" && (
+                        <div className="space-y-1.5 pt-1">
+                          <Label className="text-[11px] text-muted-foreground">Mensagem pré-preenchida (opcional)</Label>
+                          <Input
+                            value={button.whatsappMessage ?? ""}
+                            onChange={(e) => {
+                              const msg = e.target.value;
+                              const linkVal = button.linkValue ?? "";
+                              const url = generateUrl("whatsapp", linkVal, msg);
+                              onUpdate(button.id, { whatsappMessage: msg, url });
+                            }}
+                            placeholder="Ex: Olá! Gostaria de saber mais sobre..."
+                            className="text-sm h-9"
+                          />
+                          <p className="text-[10px] text-muted-foreground">O visitante vai ver essa mensagem pronta no WhatsApp ao clicar</p>
+                        </div>
+                      )}
                       {button.url && (
                         <p className="text-[10px] text-primary font-mono truncate">
                           → {button.url}

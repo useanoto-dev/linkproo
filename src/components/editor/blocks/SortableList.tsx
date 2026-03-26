@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, CopyPlus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { GripVertical, CopyPlus, Trash2, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import React, { Suspense, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BLOCK_LABELS } from "./constants";
@@ -120,6 +120,50 @@ const SortableBlock = memo(function SortableBlock({
               <Suspense fallback={<div className="p-3 animate-pulse h-20 bg-muted/30 rounded" />}>
                 {renderGroupEditor(block, onUpdate, pages, textareaRef, applyTextFormat, editors)}
               </Suspense>
+              {/* Scheduling */}
+              <div className="pt-2 border-t border-border/20 space-y-2">
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => {
+                    const hasSchedule = block.visibleFrom || block.visibleUntil;
+                    if (hasSchedule) {
+                      onUpdate(block.id, { visibleFrom: undefined, visibleUntil: undefined });
+                    }
+                  }}
+                >
+                  <Clock className="h-3 w-3" />
+                  Agendamento
+                  {(block.visibleFrom || block.visibleUntil) && (
+                    <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-semibold">ATIVO</span>
+                  )}
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-muted-foreground">Mostrar a partir de</label>
+                    <input
+                      type="datetime-local"
+                      value={block.visibleFrom ?? ""}
+                      onChange={(e) => onUpdate(block.id, { visibleFrom: e.target.value || undefined })}
+                      className="w-full h-8 px-2 text-[11px] rounded-lg border border-border bg-background text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-muted-foreground">Ocultar a partir de</label>
+                    <input
+                      type="datetime-local"
+                      value={block.visibleUntil ?? ""}
+                      onChange={(e) => onUpdate(block.id, { visibleUntil: e.target.value || undefined })}
+                      className="w-full h-8 px-2 text-[11px] rounded-lg border border-border bg-background text-foreground"
+                    />
+                  </div>
+                </div>
+                {(block.visibleFrom || block.visibleUntil) && (
+                  <p className="text-[10px] text-amber-500">
+                    No preview do editor o bloco fica sempre visível. Na página pública ele segue o agendamento.
+                  </p>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

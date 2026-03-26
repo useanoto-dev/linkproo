@@ -64,7 +64,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
   // ── PILL style ──────────────────────────────────────────────────────────────
   if (style === "pill") {
     return (
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-3">
         <motion.a
           href={isPageLink ? "#" : (btn.url || "#")}
           target={isPageLink ? undefined : "_blank"}
@@ -76,7 +76,8 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
           className={`flex items-center justify-center w-full rounded-full cursor-pointer ${customGrad ? "" : `bg-gradient-to-r ${btn.gradientColor || "from-blue-600 to-blue-800"}`}`}
           style={{
-            height: "52px",
+            height: "60px",
+            boxShadow: `0 4px 16px ${primaryColor}45, 0 2px 6px rgba(0,0,0,0.15)`,
             ...(customGrad ? { background: customGrad } : {}),
           }}
         >
@@ -85,7 +86,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           )}
           <span
             className="font-bold text-white drop-shadow-sm"
-            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+            style={{ fontSize: `${btn.titleSize ?? 15}px` }}
           >
             {btn.label || "Botão"}
           </span>
@@ -105,7 +106,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
   // ── OUTLINE style ────────────────────────────────────────────────────────────
   if (style === "outline") {
     return (
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-3">
         <motion.a
           href={isPageLink ? "#" : (btn.url || "#")}
           target={isPageLink ? undefined : "_blank"}
@@ -117,7 +118,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
           className="flex items-center justify-center w-full rounded-2xl border-2 cursor-pointer transition-colors duration-200 relative overflow-hidden group"
           style={{
-            height: "52px",
+            height: "60px",
             borderColor: primaryColor,
             color: primaryColor,
           }}
@@ -131,7 +132,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           )}
           <span
             className="font-bold relative z-10"
-            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+            style={{ fontSize: `${btn.titleSize ?? 15}px` }}
           >
             {btn.label || "Botão"}
           </span>
@@ -151,7 +152,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
   // ── GLASS style ──────────────────────────────────────────────────────────────
   if (style === "glass") {
     return (
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-3">
         <motion.a
           href={isPageLink ? "#" : (btn.url || "#")}
           target={isPageLink ? undefined : "_blank"}
@@ -168,6 +169,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
             border: "1px solid rgba(255,255,255,0.20)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.10)",
           }}
         >
           {/* shimmer on hover */}
@@ -182,7 +184,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           )}
           <span
             className="font-bold text-white drop-shadow relative z-10"
-            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+            style={{ fontSize: `${btn.titleSize ?? 15}px` }}
           >
             {btn.label || "Botão"}
           </span>
@@ -205,7 +207,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
   // ── MINIMAL style ────────────────────────────────────────────────────────────
   if (style === "minimal") {
     return (
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-3">
         <motion.a
           href={isPageLink ? "#" : (btn.url || "#")}
           target={isPageLink ? undefined : "_blank"}
@@ -216,14 +218,14 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           transition={ev.transition}
           whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
           className="flex items-center justify-center w-full cursor-pointer group"
-          style={{ height: "44px" }}
+          style={{ height: "52px" }}
         >
           {btn.iconEmoji && (
             <span className="mr-2 text-xl">{btn.iconEmoji}</span>
           )}
           <span
             className="font-bold group-hover:underline transition-all"
-            style={{ color: primaryColor, fontSize: `${btn.titleSize ?? 14}px` }}
+            style={{ color: primaryColor, fontSize: `${btn.titleSize ?? 15}px` }}
           >
             {btn.label || "Botão"}
           </span>
@@ -243,7 +245,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
 
   // ── CARD style (default) ─────────────────────────────────────────────────────
   return (
-    <div className="px-4 pb-2">
+    <div className="px-4 pb-3">
       <motion.a
         href={isPageLink ? "#" : (btn.url || "#")}
         target={isPageLink ? undefined : "_blank"}

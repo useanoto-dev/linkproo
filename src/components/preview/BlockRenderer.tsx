@@ -180,6 +180,13 @@ export const BlockRenderer = memo(function BlockRenderer({
   onOpenPage,
 }: BlockRendererProps) {
   const isNewLink = linkId.startsWith("new-");
+
+  // Scheduling visibility — hidden outside the configured window (skip in editor preview)
+  if (!isNewLink && (block.visibleFrom || block.visibleUntil)) {
+    const now = new Date();
+    if (block.visibleFrom && now < new Date(block.visibleFrom)) return null;
+    if (block.visibleUntil && now >= new Date(block.visibleUntil)) return null;
+  }
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   if (block.type === "image-button") {

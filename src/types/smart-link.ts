@@ -23,6 +23,7 @@ export interface SmartLinkButton {
   badgeColor?: string;
   buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal';
   buttonBorderRadius?: number;  // per-button border radius override, 0-24px
+  whatsappMessage?: string;     // pre-filled message for WhatsApp links
 }
 
 export type BlockType =
@@ -132,6 +133,9 @@ export interface LinkBlock {
   // Contacts block
   contactsList?: ContactItem[];
   contactsMode?: 1 | 2;  // 1 = single contact centered, 2 = two contacts side by side
+  // Scheduling — ISO datetime strings (e.g. "2025-06-01T09:00")
+  visibleFrom?: string;   // block hidden before this time
+  visibleUntil?: string;  // block hidden after this time
 }
 
 export interface ContactItem {

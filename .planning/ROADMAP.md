@@ -37,7 +37,7 @@ Plans:
 **Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md -- protect.ts scoped to PublicLinkPage with cleanup + CSP sandbox on all 5 iframes
+- [x] 02-01-PLAN.md -- protect.ts scoped to PublicLinkPage with cleanup + CSP sandbox on all 5 iframes
 - [x] 02-02-PLAN.md -- DB migrations: plan limit trigger message update + slug format/reserved constraints
 - [x] 02-03-PLAN.md -- LGPD fingerprint disclosure in SettingsPage + privacy footer link
 
@@ -163,15 +163,18 @@ Plans:
 
 ### Phase 9: Advanced Features
 **Directory:** `phases/09-advanced-features/`
-**Goal:** Implementar features avancadas de conversao -- A/B testing de botoes, agendamento de blocos e WhatsApp button configuravel.
+**Goal:** Implementar features avancadas de conversao -- agendamento de blocos e WhatsApp button com mensagem configuravel.
+**Plans:** 2/2 plans complete
+
+Plans:
+- [x] 09-01-SUMMARY.md -- WhatsApp message field: `whatsappMessage` in type + editor UI + generateUrl update
+- [x] 09-02-SUMMARY.md -- Block scheduling: `visibleFrom`/`visibleUntil` in type + editor UI + BlockRenderer visibility check
 
 **Deliverables:**
 - WhatsApp button com mensagem pre-preenchida configuravel no editor
 - Agendamento de blocos por data/hora de inicio e fim (visibilidade condicional)
-- A/B testing de variantes de botao com metricas de CTR no analytics
-- Interface de configuracao de agendamento no BlockEditor
 
-**Requires:** Phase 3 (editor refactor), Phase 4 (analytics RPC para metricas de A/B)
+**Requires:** Phase 3 (editor refactor), Phase 4 (analytics RPC)
 
 ---
 
@@ -195,14 +198,14 @@ Plans:
 | # | Phase | Priority | Depends On |
 |---|-------|----------|-----------|
 | 1 | 3/3 | Complete   | 2026-03-23 |
-| 2 | 2/3 | In Progress|  |
+| 2 | 3/3 | Complete   | 2026-03-26 |
 | 3 | 3/3 | Complete   | 2026-03-24 |
 | 4 | 2/2 | Complete   | 2026-03-25 |
 | 5 | 4/4 | Complete   | 2026-03-25 |
 | 6 | Landing Page | High | 1, 5 |
 | 7 | Payments | High | 2, 4 |
 | 8 | Custom Domains | Medium | 7 |
-| 9 | Advanced Features | Medium | 3, 4 |
+| 9 | 2/2 | Complete   | 2026-03-26 |
 | 10 | Test Coverage | Medium | 3, 9 |
 
 ---
