@@ -715,6 +715,7 @@ export default function LinkEditor() {
                     ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                     : ""
                 }`}
+                style={{ transform: "scale(0.76)", transformOrigin: "top center", marginBottom: "-168px" }}
               >
                 <DeviceFrame device={device}>
                   {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
