@@ -216,9 +216,9 @@ export const BlockRenderer = memo(function BlockRenderer({
           className="block w-full rounded-2xl shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
           style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.15))" }}
         >
-          <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: `${block.buttonHeight ?? 110}px` }}>
+          <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: `${block.buttonHeight ?? 148}px` }}>
             {/* alt usa o label do botão; se ausente a imagem é decorativa pois o link envolve toda a área */}
-            <img src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 110}px` }} />
+            <img src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 148}px` }} />
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ boxShadow: `inset 0 0 30px rgba(255,255,255,0.1), 0 0 20px ${accent}30` }}

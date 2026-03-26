@@ -76,7 +76,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
           className={`flex items-center justify-center w-full rounded-full cursor-pointer ${customGrad ? "" : `bg-gradient-to-r ${btn.gradientColor || "from-blue-600 to-blue-800"}`}`}
           style={{
-            height: "60px",
+            height: "80px",
             boxShadow: `0 4px 16px ${primaryColor}45, 0 2px 6px rgba(0,0,0,0.15)`,
             ...(customGrad ? { background: customGrad } : {}),
           }}
@@ -118,7 +118,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
           className="flex items-center justify-center w-full rounded-2xl border-2 cursor-pointer transition-colors duration-200 relative overflow-hidden group"
           style={{
-            height: "60px",
+            height: "80px",
             borderColor: primaryColor,
             color: primaryColor,
           }}
@@ -164,7 +164,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
           className="flex items-center justify-center w-full rounded-2xl cursor-pointer relative overflow-hidden group"
           style={{
-            height: "60px",
+            height: "80px",
             background: "rgba(255,255,255,0.10)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
@@ -218,7 +218,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           transition={ev.transition}
           whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
           className="flex items-center justify-center w-full cursor-pointer group"
-          style={{ height: "52px" }}
+          style={{ height: "64px" }}
         >
           {btn.iconEmoji && (
             <span className="mr-2 text-xl">{btn.iconEmoji}</span>
@@ -261,7 +261,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           className={`relative ${customGrad ? "" : `bg-gradient-to-r ${btn.gradientColor || "from-blue-600 to-blue-800"}`} px-5 py-6 flex items-center rounded-2xl overflow-hidden`}
           style={{
             ...(customGrad ? { background: customGrad } : {}),
-            minHeight: `${btn.buttonHeight ?? 110}px`,
+            minHeight: `${btn.buttonHeight ?? 148}px`,
           }}
         >
           <div

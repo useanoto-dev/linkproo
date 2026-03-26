@@ -153,7 +153,7 @@ function StyleIcon({ style, size }: { style: AnimStyle; size: number }) {
 export function AnimatedButtonBlock({ block, onClick, overrideUrl }: AnimatedButtonBlockProps) {
   const style: AnimStyle = isAnimStyle(block.animStyle) ? block.animStyle : "cta";
 
-  const minH = block.animButtonHeight || 130;
+  const minH = block.animButtonHeight || 140;
   const titleFontSize = block.animTitleSize || 17;
 
   // Scale icon size proportionally with button height
@@ -203,7 +203,7 @@ export function AnimatedButtonBlock({ block, onClick, overrideUrl }: AnimatedBut
   ];
 
   return (
-    <div className="px-4 pb-2">
+    <div className="px-4 pb-3">
       <motion.div
         role="button"
         tabIndex={0}
