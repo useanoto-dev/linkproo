@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
-import { SmartLink, EntryAnimation } from "@/types/smart-link";
+import { SmartLink, EntryAnimation, WhatsAppFloat } from "@/types/smart-link";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Snowflake, Wand2, Code2, FileCode2, Zap } from "lucide-react";
+import { Sparkles, Snowflake, Wand2, Code2, FileCode2, Zap, MessageCircle } from "lucide-react";
 
 interface EffectsPanelProps {
   link: SmartLink;
@@ -62,6 +62,17 @@ function EffectHeader({
   );
 }
 
+const WA_ANIM_OPTIONS: { value: WhatsAppFloat["animation"]; label: string }[] = [
+  { value: "pulse", label: "Pulso" },
+  { value: "bounce", label: "Quicar" },
+  { value: "none", label: "Nenhuma" },
+];
+
+const WA_POS_OPTIONS: { value: WhatsAppFloat["position"]; label: string }[] = [
+  { value: "bottom-right", label: "Direita" },
+  { value: "bottom-left", label: "Esquerda" },
+];
+
 export function EffectsPanel({ link, onUpdateLink }: EffectsPanelProps) {
   const snow = useMemo(
     () => link.snowEffect ?? { enabled: false, intensity: 40, color: "#ffffff" },
@@ -87,10 +98,122 @@ export function EffectsPanel({ link, onUpdateLink }: EffectsPanelProps) {
     () => link.bgHtml ?? { enabled: false, html: "" },
     [link.bgHtml]
   );
+  const wa = useMemo(
+    () =>
+      link.whatsappFloat ?? {
+        enabled: false,
+        phone: "",
+        message: "",
+        label: "Entre em contato",
+        showLabel: true,
+        position: "bottom-right" as const,
+        animation: "pulse" as const,
+      },
+    [link.whatsappFloat]
+  );
   const currentAnim = link.entryAnimation ?? "fade-up";
 
   return (
     <div className="space-y-5">
+      {/* WhatsApp Float */}
+      <section className="space-y-2.5">
+        <EffectHeader
+          icon={<MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />}
+          label="Botão WhatsApp"
+          enabled={wa.enabled}
+          onToggle={(v) => onUpdateLink({ whatsappFloat: { ...wa, enabled: v } })}
+        />
+        <p className="text-[9px] text-muted-foreground">Botão fixo para contato via WhatsApp</p>
+        {wa.enabled && (
+          <div className="space-y-3 pt-0.5">
+            {/* Phone */}
+            <div className="space-y-1">
+              <Label className="text-[10px] text-muted-foreground">Número (somente dígitos)</Label>
+              <Input
+                value={wa.phone}
+                onChange={(e) => onUpdateLink({ whatsappFloat: { ...wa, phone: e.target.value.replace(/\D/g, "") } })}
+                placeholder="5599981361794"
+                className="text-xs h-8 font-mono"
+                inputMode="tel"
+              />
+              <p className="text-[8.5px] text-muted-foreground">DDI + DDD + número, sem espaços ou símbolos</p>
+            </div>
+
+            {/* Pre-filled message */}
+            <div className="space-y-1">
+              <Label className="text-[10px] text-muted-foreground">Mensagem pré-preenchida</Label>
+              <Textarea
+                value={wa.message}
+                onChange={(e) => onUpdateLink({ whatsappFloat: { ...wa, message: e.target.value } })}
+                placeholder="Olá! Vim pelo site e gostaria de mais informações."
+                className="text-[10px] h-20 resize-none"
+              />
+            </div>
+
+            {/* Label bubble */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] text-muted-foreground">Balão de texto</Label>
+                <Switch
+                  checked={wa.showLabel}
+                  onCheckedChange={(v) => onUpdateLink({ whatsappFloat: { ...wa, showLabel: v } })}
+                />
+              </div>
+              {wa.showLabel && (
+                <Input
+                  value={wa.label}
+                  onChange={(e) => onUpdateLink({ whatsappFloat: { ...wa, label: e.target.value } })}
+                  placeholder="Entre em contato"
+                  className="text-xs h-8"
+                />
+              )}
+            </div>
+
+            {/* Position */}
+            <div className="space-y-1">
+              <Label className="text-[10px] text-muted-foreground">Posição</Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {WA_POS_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdateLink({ whatsappFloat: { ...wa, position: opt.value } })}
+                    className={`py-1.5 px-2 rounded-lg border text-[10px] font-medium transition-all cursor-pointer ${
+                      wa.position === opt.value
+                        ? "border-[#25D366] bg-[#25D366]/10 text-[#25D366]"
+                        : "border-border/50 bg-secondary/30 text-foreground hover:border-border"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Animation */}
+            <div className="space-y-1">
+              <Label className="text-[10px] text-muted-foreground">Animação</Label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {WA_ANIM_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdateLink({ whatsappFloat: { ...wa, animation: opt.value } })}
+                    className={`py-1.5 px-2 rounded-lg border text-[10px] font-medium transition-all cursor-pointer ${
+                      wa.animation === opt.value
+                        ? "border-[#25D366] bg-[#25D366]/10 text-[#25D366]"
+                        : "border-border/50 bg-secondary/30 text-foreground hover:border-border"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div className="h-px bg-border/50" />
+
       {/* Entry Animation */}
       <section className="space-y-2.5">
         <div className="flex items-center gap-2">

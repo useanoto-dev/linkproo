@@ -280,4 +280,22 @@ export interface SmartLink {
   watermarkEnabled?: boolean;
   /** URL personalizada do link da marca d'água */
   watermarkUrl?: string;
+  /** Botão flutuante do WhatsApp */
+  whatsappFloat?: WhatsAppFloat;
+}
+
+export interface WhatsAppFloat {
+  enabled: boolean;
+  /** Número no formato internacional sem símbolos: ex. 5599981361794 */
+  phone: string;
+  /** Mensagem pré-preenchida ao abrir o WhatsApp */
+  message: string;
+  /** Texto do balão que aparece ao lado do botão */
+  label: string;
+  /** Exibir o balão de texto */
+  showLabel: boolean;
+  /** Posição na tela */
+  position: 'bottom-right' | 'bottom-left';
+  /** Animação do botão */
+  animation: 'pulse' | 'bounce' | 'none';
 }

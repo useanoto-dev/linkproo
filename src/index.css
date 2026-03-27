@@ -302,3 +302,85 @@
     backface-visibility: hidden;
   }
 }
+
+/* ─── WhatsApp Floating Button ──────────────────────────────────────────────── */
+
+@keyframes wa-pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(1.9); opacity: 0;   }
+}
+
+@keyframes wa-bounce-float {
+  0%, 100% { transform: translateY(0);   }
+  50%       { transform: translateY(-7px); }
+}
+
+/* label: fades in, lingers, fades out — loops every 6s */
+@keyframes wa-label-anim {
+  0%, 100% { opacity: 0; transform: translateX(8px);  }
+  15%, 75%  { opacity: 1; transform: translateX(0);    }
+  90%       { opacity: 0; transform: translateX(8px);  }
+}
+
+@keyframes wa-label-anim-left {
+  0%, 100% { opacity: 0; transform: translateX(-8px); }
+  15%, 75%  { opacity: 1; transform: translateX(0);    }
+  90%       { opacity: 0; transform: translateX(-8px); }
+}
+
+.wa-float-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0,0,0,0.18);
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+}
+
+.wa-float-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 22px rgba(37, 211, 102, 0.55), 0 2px 8px rgba(0,0,0,0.22);
+}
+
+.wa-float-btn:active {
+  transform: scale(0.96);
+}
+
+/* Pulse ring (pseudo-element via sibling span) */
+.wa-float-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(37, 211, 102, 0.6);
+  animation: wa-pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.wa-float-pulse {
+  /* button itself stays still — only the ring animates */
+}
+
+.wa-float-bounce {
+  animation: wa-bounce-float 2.2s ease-in-out infinite;
+}
+
+/* Label bubble */
+.wa-float-label {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  animation: wa-label-anim 6s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+.wa-float-label-left {
+  animation-name: wa-label-anim-left;
+}

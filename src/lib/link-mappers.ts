@@ -1,4 +1,4 @@
-import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect } from "@/types/smart-link";
+import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect, WhatsAppFloat } from "@/types/smart-link";
 import type { Json } from "@/integrations/supabase/types";
 
 /**
@@ -58,6 +58,7 @@ export interface SmartLinkRow {
     matrix?: unknown;
     stars?: unknown;
     bgHtml?: unknown;
+    whatsappFloat?: unknown;
   } | null;
   buttons?: unknown;
   pages?: unknown;
@@ -115,6 +116,7 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     matrixEffect: row.bg_effects?.matrix as MatrixEffect | undefined,
     starsEffect: row.bg_effects?.stars as StarsEffect | undefined,
     bgHtml: row.bg_effects?.bgHtml as BgHtmlEffect | undefined,
+    whatsappFloat: row.bg_effects?.whatsappFloat as WhatsAppFloat | undefined,
     buttons: (row.buttons as SmartLink["buttons"]) || [],
     pages: (row.pages as SmartLink["pages"]) || [],
     badges: (row.badges as string[]) || [],
@@ -173,12 +175,13 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     entry_animation: link.entryAnimation || "fade-up",
     // SnowEffect is a structured object that maps to JSONB in the DB
     snow_effect: toJsonb(link.snowEffect ?? null),
-    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml) ? toJsonb({
+    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml || link.whatsappFloat) ? toJsonb({
       bubbles: link.bubblesEffect ?? null,
       fireflies: link.firefliesEffect ?? null,
       matrix: link.matrixEffect ?? null,
       stars: link.starsEffect ?? null,
       bgHtml: link.bgHtml ?? null,
+      whatsappFloat: link.whatsappFloat ?? null,
     }) : null,
   };
 }

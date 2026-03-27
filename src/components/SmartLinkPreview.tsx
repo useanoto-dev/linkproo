@@ -9,6 +9,7 @@ import { FirefliesEffect } from "@/components/FirefliesEffect";
 import { MatrixEffect } from "@/components/MatrixEffect";
 import { StarsEffect } from "@/components/StarsEffect";
 import { BgHtmlEffect } from "@/components/BgHtmlEffect";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { extractBgColor } from "@/lib/color-utils";
 import { SubPageModal } from "@/components/SubPageModal";
 import { FloatingEmoji } from "@/components/preview/FloatingEmoji";
@@ -490,6 +491,10 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           </motion.div>
         )}
       </div>{/* end unified content container */}
+
+      {link.whatsappFloat?.enabled && (
+        <WhatsAppFloat config={link.whatsappFloat} />
+      )}
 
       <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />
     </div>
