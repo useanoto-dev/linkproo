@@ -51,20 +51,36 @@ export function WhatsAppFloat({ config }: Props) {
 
   return (
     <div
-      className={`fixed z-[200] flex items-center gap-3 ${
-        isRight ? "right-4 flex-row-reverse" : "left-4 flex-row"
+      className={`fixed z-[200] flex items-center gap-3 flex-row ${
+        isRight ? "right-4" : "left-4"
       }`}
       style={{ bottom: "24px" }}
     >
-      {/* Label bubble */}
+      {/* Button on LEFT side: button first, then label */}
+      {!isRight && (
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir WhatsApp"
+          className={`wa-float-btn ${btnAnimation}`}
+        >
+          {animation === "pulse" && (
+            <span className="wa-float-ring" aria-hidden="true" />
+          )}
+          <WhatsAppIcon size={28} />
+        </a>
+      )}
+
+      {/* Label bubble — always between button and screen center */}
       {showLabel && label && (
         <div
-          className={`wa-float-label ${isRight ? "wa-float-label-right" : "wa-float-label-left"}`}
+          className={`wa-float-label ${isRight ? "" : "wa-float-label-left"}`}
         >
           <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap">
             {label}
           </span>
-          {/* Arrow tip */}
+          {/* Arrow tip points toward the button */}
           <span
             className={`absolute top-1/2 -translate-y-1/2 border-4 border-transparent ${
               isRight
@@ -75,20 +91,21 @@ export function WhatsAppFloat({ config }: Props) {
         </div>
       )}
 
-      {/* Button */}
-      <a
-        href={waUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Abrir WhatsApp"
-        className={`wa-float-btn ${btnAnimation}`}
-      >
-        {/* Pulse ring (only rendered when animation=pulse) */}
-        {animation === "pulse" && (
-          <span className="wa-float-ring" aria-hidden="true" />
-        )}
-        <WhatsAppIcon size={28} />
-      </a>
+      {/* Button on RIGHT side: label first, then button */}
+      {isRight && (
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Abrir WhatsApp"
+          className={`wa-float-btn ${btnAnimation}`}
+        >
+          {animation === "pulse" && (
+            <span className="wa-float-ring" aria-hidden="true" />
+          )}
+          <WhatsAppIcon size={28} />
+        </a>
+      )}
     </div>
   );
 }
