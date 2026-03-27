@@ -123,6 +123,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
     }
   }, [entryAnim]);
 
+  const isBioMode = link.headerStyle === 'bio' && !!link.heroImage;
   const textClass = dark ? "text-white" : "text-gray-900";
   const subtextClass = dark ? "text-white/60" : "text-gray-500";
   const fontFamily = FONT_LINKS[link.fontFamily || "Inter"] || "'Inter', sans-serif";
@@ -246,10 +247,22 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
                 />
               );
             })()}
-            <div
-              className="absolute inset-0"
-              style={{ background: `linear-gradient(to bottom, ${heroBgColor}80 0%, transparent 40%)` }}
-            />
+            {/* Classic mode: gradient fade at top edge */}
+            {!isBioMode && (
+              <div
+                className="absolute inset-0"
+                style={{ background: `linear-gradient(to bottom, ${heroBgColor}80 0%, transparent 40%)` }}
+              />
+            )}
+
+            {/* Bio mode: wave curve at banner bottom */}
+            {isBioMode && (link.bannerCurve ?? false) && (
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ height: 28, zIndex: 3 }}>
+                <svg viewBox="0 0 100 28" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                  <path d="M0,28 L0,14 Q50,0 100,14 L100,28 Z" fill={heroBgColor} />
+                </svg>
+              </div>
+            )}
           </motion.div>
         );
       })()}
@@ -257,14 +270,50 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       {/* ── Single unified content container ────────────────────────────────────
           Business info, items, and footer all live in ONE div so they share
           the exact same background layer with zero compositing seam.
-          When a hero image is present the div overlaps the banner's bottom
-          edge with rounded top corners and re-applies the background to cover
-          the image. Without a hero image the outer container already provides
-          the background and this div is transparent. */}
+          Classic mode: overlaps banner with rounded top + background re-apply.
+          Bio mode: no overlap — avatar floats up via negative margin instead. */}
       <div
-        className={`relative z-10 ${link.heroImage && !link.bgHtml?.enabled ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
-        style={link.heroImage && !link.bgHtml?.enabled ? bgStyle : undefined}
+        className={`relative z-10 ${!isBioMode && link.heroImage && !link.bgHtml?.enabled ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
+        style={!isBioMode && link.heroImage && !link.bgHtml?.enabled ? bgStyle : undefined}
       >
+        {/* Bio mode: avatar overlapping the banner bottom */}
+        {isBioMode && link.logoUrl && (() => {
+          const avatarSize = Math.max(80, link.logoSizePx ?? 80);
+          const borderColor = link.logoBorderColor ?? '#ffffff';
+          const borderPx = 4;
+          return (
+            <motion.div
+              className="flex justify-center"
+              style={{ marginTop: -(avatarSize / 2 + borderPx + 2) }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+            >
+              <div
+                style={{
+                  padding: borderPx,
+                  backgroundColor: borderColor,
+                  borderRadius: '50%',
+                  boxShadow: '0 2px 20px rgba(0,0,0,0.18)',
+                  display: 'inline-block',
+                }}
+              >
+                <img
+                  src={link.logoUrl}
+                  alt="Avatar"
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    display: 'block',
+                  }}
+                />
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {/* Business Info */}
         <motion.div
           className="px-5 py-4"
@@ -273,7 +322,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {link.logoUrl && (
+          {/* Classic logo — hidden in bio mode (avatar shown above) */}
+          {!isBioMode && link.logoUrl && (
             <motion.div
               className="relative inline-block mb-2"
               initial={{ scale: 0.8, opacity: 0 }}

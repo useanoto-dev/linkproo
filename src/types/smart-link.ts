@@ -262,4 +262,10 @@ export interface SmartLink {
   customDomain?: string;
   /** Plan do dono do link — usado para decidir se exibe marca d'água */
   ownerPlan?: string;
+  /** Header layout style: 'classic' = logo dentro do conteúdo (padrão), 'bio' = avatar sobreposto ao banner (estilo bio.site) */
+  headerStyle?: 'classic' | 'bio';
+  /** Em modo bio: curve SVG na borda inferior do banner */
+  bannerCurve?: boolean;
+  /** Em modo bio: cor da borda/anel do avatar (padrão: '#ffffff') */
+  logoBorderColor?: string;
 }

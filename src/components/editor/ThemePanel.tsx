@@ -370,6 +370,59 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
         />
       </div>
 
+      {/* Header Style */}
+      {link.logoUrl && (
+        <div className="space-y-2.5">
+          <label className="text-sm font-medium">Estilo do Header</label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {(['classic', 'bio'] as const).map((style) => (
+              <button
+                key={style}
+                onClick={() => onUpdateLink({ headerStyle: style })}
+                className={`py-2 px-3 rounded-lg border text-xs transition-all cursor-pointer ${
+                  (link.headerStyle ?? 'classic') === style
+                    ? 'border-primary bg-primary/10 text-primary font-medium'
+                    : 'border-border/50 bg-secondary/30 text-foreground hover:border-border hover:bg-secondary/60'
+                }`}
+              >
+                {style === 'classic' ? '🖼 Clássico' : '👤 Bio (Overlap)'}
+              </button>
+            ))}
+          </div>
+
+          {link.headerStyle === 'bio' && link.heroImage && (
+            <div className="space-y-2 pl-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Curva no banner</span>
+                <Switch
+                  checked={link.bannerCurve ?? false}
+                  onCheckedChange={(v) => onUpdateLink({ bannerCurve: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Cor da borda do avatar</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full border border-border cursor-pointer overflow-hidden relative">
+                    <input
+                      type="color"
+                      value={link.logoBorderColor ?? '#ffffff'}
+                      onChange={(e) => onUpdateLink({ logoBorderColor: e.target.value })}
+                      className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer border-0 p-0 opacity-0"
+                      style={{ width: '200%', height: '200%' }}
+                    />
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{ backgroundColor: link.logoBorderColor ?? '#ffffff' }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground">{link.logoBorderColor ?? '#ffffff'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Visibility toggles */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Visibilidade</label>

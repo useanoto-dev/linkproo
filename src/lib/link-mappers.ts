@@ -34,6 +34,9 @@ export interface SmartLinkRow {
   logo_size_px?: number | null;
   logo_shape?: string | null;
   logo_shadow?: boolean | null;
+  header_style?: string | null;
+  banner_curve?: boolean | null;
+  logo_border_color?: string | null;
   background_color?: string | null;
   text_color?: string | null;
   accent_color?: string | null;
@@ -85,6 +88,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     logoSizePx: row.logo_size_px ?? 80,
     logoShape: (row.logo_shape as SmartLink['logoShape']) ?? 'rounded',
     logoShadow: row.logo_shadow ?? true,
+    headerStyle: (row.header_style as SmartLink['headerStyle']) ?? undefined,
+    bannerCurve: row.banner_curve ?? undefined,
+    logoBorderColor: row.logo_border_color ?? undefined,
     backgroundColor: row.background_color || "from-gray-50 to-white",
     textColor: row.text_color || "text-white",
     accentColor: row.accent_color || "#f59e0b",
@@ -133,6 +139,9 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     logo_size_px: link.logoSizePx ?? 80,
     logo_shape: link.logoShape ?? 'rounded',
     logo_shadow: link.logoShadow ?? true,
+    header_style: link.headerStyle ?? null,
+    banner_curve: link.bannerCurve ?? null,
+    logo_border_color: link.logoBorderColor ?? null,
     background_color: link.backgroundColor,
     text_color: link.textColor,
     accent_color: link.accentColor,
