@@ -37,6 +37,10 @@ export interface SmartLinkRow {
   header_style?: string | null;
   banner_curve?: boolean | null;
   logo_border_color?: string | null;
+  title_color?: string | null;
+  tagline_color?: string | null;
+  watermark_enabled?: boolean | null;
+  watermark_url?: string | null;
   background_color?: string | null;
   text_color?: string | null;
   accent_color?: string | null;
@@ -91,6 +95,10 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     headerStyle: (row.header_style as SmartLink['headerStyle']) ?? undefined,
     bannerCurve: row.banner_curve ?? undefined,
     logoBorderColor: row.logo_border_color ?? undefined,
+    titleColor: row.title_color ?? undefined,
+    taglineColor: row.tagline_color ?? undefined,
+    watermarkEnabled: row.watermark_enabled ?? undefined,
+    watermarkUrl: row.watermark_url ?? undefined,
     backgroundColor: row.background_color || "from-gray-50 to-white",
     textColor: row.text_color || "text-white",
     accentColor: row.accent_color || "#f59e0b",
@@ -142,6 +150,10 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     header_style: link.headerStyle ?? null,
     banner_curve: link.bannerCurve ?? null,
     logo_border_color: link.logoBorderColor ?? null,
+    title_color: link.titleColor ?? null,
+    tagline_color: link.taglineColor ?? null,
+    watermark_enabled: link.watermarkEnabled ?? null,
+    watermark_url: link.watermarkUrl ?? null,
     background_color: link.backgroundColor,
     text_color: link.textColor,
     accent_color: link.accentColor,

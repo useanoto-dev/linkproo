@@ -345,7 +345,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
                   height: "auto",
                   objectFit: "contain",
                   display: "block",
-                  borderRadius: '6px',
+                  borderRadius: link.logoShape === 'circle' ? '50%' : link.logoShape === 'square' ? '0' : '8px',
                 }}
                 className={link.logoShadow ?? true ? "drop-shadow-xl" : ""}
               />
@@ -360,13 +360,18 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           ) : (
             <h1
               className="font-bold leading-tight break-words"
-              style={{ color: accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
+              style={{ color: link.titleColor || accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
             >
               {link.businessName || "Nome do Negócio"}
             </h1>
           ))}
           {link.tagline && !link.hideTagline && (
-            <p className={`text-xs mt-1 italic ${subtextClass}`}>{link.tagline}</p>
+            <p
+              className={`text-xs mt-1 italic${link.taglineColor ? '' : ` ${subtextClass}`}`}
+              style={link.taglineColor ? { color: link.taglineColor } : undefined}
+            >
+              {link.tagline}
+            </p>
           )}
         </motion.div>
 
@@ -443,8 +448,11 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           )}
         </div>
 
-        {/* Footer — exibe marca d'água apenas no plano free */}
-        {(!link.ownerPlan || link.ownerPlan === "free") && (
+        {/* Footer — marca d'água configurável; fallback: plano free */}
+        {(link.watermarkEnabled !== undefined
+          ? link.watermarkEnabled
+          : (!link.ownerPlan || link.ownerPlan === "free")
+        ) && (
           <motion.div
             className="px-5 pb-6 pt-4 text-center"
             initial={{ opacity: 0 }}
@@ -452,7 +460,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
             transition={{ delay: 0.8, duration: 0.5 }}
           >
             <a
-              href="https://wa.me/5599984389747?text=Ol%C3%A1%2C+quero+criar+meu+Link+Pro%21"
+              href={link.watermarkUrl || "https://wa.me/5599984389747?text=Ol%C3%A1%2C+quero+criar+meu+Link+Pro%21"}
               target="_blank"
               rel="noopener noreferrer"
               className={`inline-flex items-center gap-1.5 text-[10px] rounded-full px-3 py-1.5 shadow-md border cursor-pointer transition-opacity hover:opacity-80 ${

@@ -268,4 +268,12 @@ export interface SmartLink {
   bannerCurve?: boolean;
   /** Em modo bio: cor da borda/anel do avatar (padrão: '#ffffff') */
   logoBorderColor?: string;
+  /** Cor independente para o nome/título do negócio (fallback: accentColor) */
+  titleColor?: string;
+  /** Cor independente para o slogan/tagline (fallback: automático por tema claro/escuro) */
+  taglineColor?: string;
+  /** Exibir marca d'água — sobrescreve a lógica baseada no plano quando definido */
+  watermarkEnabled?: boolean;
+  /** URL personalizada do link da marca d'água */
+  watermarkUrl?: string;
 }

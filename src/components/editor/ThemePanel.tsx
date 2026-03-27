@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { SmartLink, HeroObjectFit } from "@/types/smart-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Palette, Sparkles, Type, Crosshair } from "lucide-react";
+import { Palette, Sparkles, Type, Crosshair, RotateCcw } from "lucide-react";
 import { ImageUploader } from "./ImageUploader";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -110,7 +110,7 @@ const HERO_OVERLAY_COLOR_OPTIONS = [
   { value: 'custom' as const, label: 'Personalizado', preview: null },
 ] as const;
 
-export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
+export const ThemePanel = memo(function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
   const [customColors, setCustomColors] = useState({
     bg: "#1a1a2e",
     from: "#1a1a2e",
@@ -637,25 +637,144 @@ export function ThemePanel({ link, onUpdateLink }: ThemePanelProps) {
         <p className="text-[9px] text-muted-foreground">Clique no + para adicionar. Clique no emoji para remover.</p>
       </div>
 
-      {/* Accent color */}
+      {/* ── Cores independentes ──────────────────────────────────────────────── */}
+      <div className="space-y-3 p-3 rounded-xl border border-border/50 bg-secondary/10">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Cores do Texto</p>
+
+        {/* Title color */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] font-medium text-muted-foreground">Cor do Título / Nome</Label>
+            {link.titleColor && (
+              <button
+                onClick={() => onUpdateLink({ titleColor: undefined })}
+                className="flex items-center gap-0.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors"
+                title="Usar cor de destaque"
+              >
+                <RotateCcw className="h-2.5 w-2.5" />
+                <span>usar destaque</span>
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={link.titleColor || link.accentColor}
+              onChange={(e) => onUpdateLink({ titleColor: e.target.value })}
+              className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+            />
+            <Input
+              value={link.titleColor || ""}
+              onChange={(e) => onUpdateLink({ titleColor: e.target.value || undefined })}
+              placeholder={`usar destaque (${link.accentColor})`}
+              className="text-xs h-8 flex-1 font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Tagline color */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] font-medium text-muted-foreground">Cor do Slogan / Bio</Label>
+            {link.taglineColor && (
+              <button
+                onClick={() => onUpdateLink({ taglineColor: undefined })}
+                className="flex items-center gap-0.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors"
+                title="Usar cor automática"
+              >
+                <RotateCcw className="h-2.5 w-2.5" />
+                <span>automático</span>
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={link.taglineColor || "#888888"}
+              onChange={(e) => onUpdateLink({ taglineColor: e.target.value })}
+              className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+            />
+            <Input
+              value={link.taglineColor || ""}
+              onChange={(e) => onUpdateLink({ taglineColor: e.target.value || undefined })}
+              placeholder="automático (tema claro/escuro)"
+              className="text-xs h-8 flex-1 font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Accent color */}
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium text-muted-foreground">Cor de Destaque (Accent)</Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={link.accentColor}
+              onChange={(e) => onUpdateLink({ accentColor: e.target.value })}
+              className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+            />
+            <Input
+              value={link.accentColor}
+              onChange={(e) => onUpdateLink({ accentColor: e.target.value })}
+              placeholder="#f59e0b"
+              className="text-xs h-8 flex-1 font-mono"
+            />
+          </div>
+          <p className="text-[9px] text-muted-foreground">CTAs, separadores, botões e detalhes visuais</p>
+        </div>
+      </div>
+
+      {/* ── Logo shape ───────────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <Label className="text-[11px] font-medium text-muted-foreground">Cor de Destaque</Label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={link.accentColor}
-            onChange={(e) => onUpdateLink({ accentColor: e.target.value })}
-            className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
-          />
-          <Input
-            value={link.accentColor}
-            onChange={(e) => onUpdateLink({ accentColor: e.target.value })}
-            placeholder="#f59e0b"
-            className="text-xs h-8 flex-1 font-mono"
+        <Label className="text-[11px] font-medium text-muted-foreground">Formato da Logo</Label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {([
+            { value: 'square'  as const, label: 'Quadrado', preview: '■' },
+            { value: 'rounded' as const, label: 'Arredond.', preview: '▢' },
+            { value: 'circle'  as const, label: 'Círculo',   preview: '●' },
+          ]).map((opt) => {
+            const active = (link.logoShape ?? 'rounded') === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => onUpdateLink({ logoShape: opt.value })}
+                className={`flex flex-col items-center py-1.5 px-1 rounded-lg border text-[10px] font-medium transition-all gap-0.5 ${
+                  active
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border/50 bg-secondary/30 text-muted-foreground hover:border-border'
+                }`}
+              >
+                <span className="text-base leading-none">{opt.preview}</span>
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Marca d'água ─────────────────────────────────────────────────────── */}
+      <div className="space-y-3 p-3 rounded-xl border border-border/50 bg-secondary/10">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Marca d'água</p>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-foreground">Exibir marca d'água LinkPro</span>
+          <Switch
+            checked={link.watermarkEnabled ?? (!link.ownerPlan || link.ownerPlan === "free")}
+            onCheckedChange={(v) => onUpdateLink({ watermarkEnabled: v })}
           />
         </div>
-        <p className="text-[9px] text-muted-foreground">Aplicada no nome do negócio, CTAs, separadores e detalhes visuais</p>
+        {(link.watermarkEnabled ?? (!link.ownerPlan || link.ownerPlan === "free")) && (
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-muted-foreground">URL do link da marca d'água</Label>
+            <Input
+              value={link.watermarkUrl || ""}
+              onChange={(e) => onUpdateLink({ watermarkUrl: e.target.value || undefined })}
+              placeholder="https://wa.me/... (padrão)"
+              className="text-xs h-8 font-mono"
+            />
+            <p className="text-[9px] text-muted-foreground">Deixe vazio para usar o link padrão do WhatsApp.</p>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+});
