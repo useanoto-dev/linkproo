@@ -264,14 +264,18 @@ export interface SmartLink {
   ownerPlan?: string;
   /** Header layout style: 'classic' = logo dentro do conteúdo (padrão), 'bio' = avatar sobreposto ao banner (estilo bio.site) */
   headerStyle?: 'classic' | 'bio';
-  /** Em modo bio: curve SVG na borda inferior do banner */
+  /** Curve SVG na borda inferior do banner (funciona em qualquer estilo de header) */
   bannerCurve?: boolean;
+  /** Intensidade da curva do banner 0–100 (padrão: 50) */
+  bannerCurveIntensity?: number;
   /** Em modo bio: cor da borda/anel do avatar (padrão: '#ffffff') */
   logoBorderColor?: string;
   /** Cor independente para o nome/título do negócio (fallback: accentColor) */
   titleColor?: string;
   /** Cor independente para o slogan/tagline (fallback: automático por tema claro/escuro) */
   taglineColor?: string;
+  /** Tamanho da fonte do slogan/tagline em px (padrão: 13) */
+  taglineFontSize?: number;
   /** Exibir marca d'água — sobrescreve a lógica baseada no plano quando definido */
   watermarkEnabled?: boolean;
   /** URL personalizada do link da marca d'água */

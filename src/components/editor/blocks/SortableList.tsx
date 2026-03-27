@@ -173,14 +173,14 @@ const SortableBlock = memo(function SortableBlock({
 });
 
 const SortableItem = memo(function SortableItem({
-  item, buttonIndex, onUpdateButton, onRemoveButton, onDuplicateButton: _onDuplicateButton,
+  item, buttonIndex, onUpdateButton, onRemoveButton, onDuplicateButton,
   onUpdateBlock, onRemoveBlock, onDuplicateBlock, pages, openKey, editors,
 }: {
   item: UnifiedItem;
   buttonIndex: number;
   onUpdateButton: (id: string, updates: Partial<SmartLinkButton>) => void;
   onRemoveButton: (id: string) => void;
-  onDuplicateButton: (id: string) => void;
+  onDuplicateButton?: (id: string) => void;
   onUpdateBlock: (id: string, updates: Partial<LinkBlock>) => void;
   onRemoveBlock: (id: string) => void;
   onDuplicateBlock: (id: string) => void;
@@ -191,7 +191,7 @@ const SortableItem = memo(function SortableItem({
   if (item.kind === "button") {
     return (
       <BlockErrorBoundary blockId={item.id} onRemove={onRemoveButton}>
-        <SortableButton button={item.data} index={buttonIndex} onUpdate={onUpdateButton} onRemove={onRemoveButton} pages={pages} />
+        <SortableButton button={item.data} index={buttonIndex} onUpdate={onUpdateButton} onRemove={onRemoveButton} onDuplicate={onDuplicateButton} pages={pages} />
       </BlockErrorBoundary>
     );
   }

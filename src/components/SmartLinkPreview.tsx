@@ -171,17 +171,21 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
 
   return (
     <div className="min-h-full relative overflow-hidden" style={bgStyle}>
-      {/* SVG clip-path definition for bio banner curve — must live outside the clipped element */}
-      {isBioMode && link.bannerCurve && (
-        <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden', pointerEvents: 'none' }}>
-          <defs>
-            <clipPath id={curveClipId} clipPathUnits="objectBoundingBox">
-              {/* Clips the banner so its bottom edge curves upward in the center */}
-              <path d="M 0,0 L 1,0 L 1,1 C 0.7,0.82 0.3,0.82 0,1 Z" />
-            </clipPath>
-          </defs>
-        </svg>
-      )}
+      {/* SVG clip-path definition for banner curve — works for both bio and classic modes */}
+      {link.heroImage && link.bannerCurve && (() => {
+        // intensity 0 = flat (y=1.0), intensity 100 = very curved (y=0.55)
+        const intensity = link.bannerCurveIntensity ?? 50;
+        const y = (1.0 - (intensity / 100) * 0.45).toFixed(3);
+        return (
+          <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden', pointerEvents: 'none' }}>
+            <defs>
+              <clipPath id={curveClipId} clipPathUnits="objectBoundingBox">
+                <path d={`M 0,0 L 1,0 L 1,1 C 0.7,${y} 0.3,${y} 0,1 Z`} />
+              </clipPath>
+            </defs>
+          </svg>
+        );
+      })()}
       {link.bgHtml?.enabled && link.bgHtml.html && (
         <BgHtmlEffect html={link.bgHtml.html} />
       )}
@@ -234,8 +238,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            // Bio curve: clip the entire banner (image + overlay) with a curved bottom
-            style={isBioMode && link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : undefined}
+            // Curve: clip the entire banner (image + overlay) with a curved bottom — any mode
+            style={link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : undefined}
           >
             <img
               src={link.heroImage}
@@ -288,6 +292,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           const avatarSize = Math.max(80, link.logoSizePx ?? 80);
           const borderColor = link.logoBorderColor ?? '#ffffff';
           const borderPx = 4;
+          const shape = link.logoShape ?? 'circle';
+          const radius = shape === 'circle' ? '50%' : shape === 'square' ? '0' : '16px';
           return (
             <motion.div
               className="flex justify-center"
@@ -300,7 +306,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
                 style={{
                   padding: borderPx,
                   backgroundColor: borderColor,
-                  borderRadius: '50%',
+                  borderRadius: radius,
                   boxShadow: '0 2px 20px rgba(0,0,0,0.18)',
                   display: 'inline-block',
                 }}
@@ -312,7 +318,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
                     width: avatarSize,
                     height: avatarSize,
                     objectFit: 'cover',
-                    borderRadius: '50%',
+                    borderRadius: radius,
                     display: 'block',
                   }}
                 />
@@ -360,15 +366,19 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
           ) : (
             <h1
               className="font-bold leading-tight break-words"
-              style={{ color: link.titleColor || accent, fontSize: `${link.businessNameFontSize ?? 24}px` }}
+              style={{ color: link.titleColor || accent, fontSize: `${link.businessNameFontSize ?? 24}px`, fontFamily }}
             >
               {link.businessName || "Nome do Negócio"}
             </h1>
           ))}
           {link.tagline && !link.hideTagline && (
             <p
-              className={`text-xs mt-1 italic${link.taglineColor ? '' : ` ${subtextClass}`}`}
-              style={link.taglineColor ? { color: link.taglineColor } : undefined}
+              className={`mt-1 italic${link.taglineColor ? '' : ` ${subtextClass}`}`}
+              style={{
+                color: link.taglineColor || undefined,
+                fontSize: `${link.taglineFontSize ?? 13}px`,
+                fontFamily,
+              }}
             >
               {link.tagline}
             </p>

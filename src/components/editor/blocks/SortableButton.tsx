@@ -9,12 +9,14 @@ export const SortableButton = memo(function SortableButton({
   index,
   onUpdate,
   onRemove,
+  onDuplicate,
   pages,
 }: {
   button: SmartLinkButton;
   index: number;
   onUpdate: (id: string, updates: Partial<SmartLinkButton>) => void;
   onRemove: (id: string) => void;
+  onDuplicate?: (id: string) => void;
   pages: SubPage[];
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: button.id });
@@ -30,6 +32,7 @@ export const SortableButton = memo(function SortableButton({
         index={index}
         onUpdate={onUpdate}
         onRemove={onRemove}
+        onDuplicate={onDuplicate}
         dragHandleProps={listeners}
         pages={pages}
       />
