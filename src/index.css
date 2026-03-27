@@ -305,29 +305,50 @@
 
 /* ─── WhatsApp Floating Button ──────────────────────────────────────────────── */
 
-@keyframes wa-pulse-ring {
-  0%   { transform: scale(1);   opacity: 0.7; }
-  100% { transform: scale(1.9); opacity: 0;   }
+/*
+ * Pulse: ripple rings expand outward from the button using box-shadow,
+ * same technique used by WhatsApp Business, Intercom and Crisp.
+ */
+@keyframes wa-btn-pulse {
+  0%   { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 0   rgba(37,211,102,0.55); }
+  50%  { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 14px rgba(37,211,102,0.1); }
+  100% { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 20px rgba(37,211,102,0);   }
 }
 
-@keyframes wa-bounce-float {
-  0%, 100% { transform: translateY(0);   }
-  50%       { transform: translateY(-7px); }
+/*
+ * Bounce: gentle float up/down with a small scale on the peak,
+ * eases naturally so it doesn't feel mechanical.
+ */
+@keyframes wa-btn-bounce {
+  0%, 100% { transform: translateY(0)    scale(1);    }
+  40%       { transform: translateY(-9px) scale(1.06); }
+  65%       { transform: translateY(-4px) scale(1.02); }
 }
 
-/* label: fades in, lingers, fades out — loops every 6s */
-@keyframes wa-label-anim {
-  0%, 100% { opacity: 0; transform: translateX(8px);  }
-  15%, 75%  { opacity: 1; transform: translateX(0);    }
-  90%       { opacity: 0; transform: translateX(8px);  }
+/*
+ * Label — right-side button: label sits to the LEFT.
+ * Slides in from the right (toward center), lingers, slides back out.
+ * Total cycle: 9s  →  in 0.5s · stay 4s · out 0.5s · pause 4s · repeat
+ */
+@keyframes wa-label-in-right {
+  0%        { opacity: 0; transform: translateX(18px) scale(0.92); }
+  5%        { opacity: 1; transform: translateX(0)    scale(1);    }
+  55%       { opacity: 1; transform: translateX(0)    scale(1);    }
+  62%, 100% { opacity: 0; transform: translateX(18px) scale(0.92); }
 }
 
-@keyframes wa-label-anim-left {
-  0%, 100% { opacity: 0; transform: translateX(-8px); }
-  15%, 75%  { opacity: 1; transform: translateX(0);    }
-  90%       { opacity: 0; transform: translateX(-8px); }
+/*
+ * Label — left-side button: label sits to the RIGHT.
+ * Mirrors the above.
+ */
+@keyframes wa-label-in-left {
+  0%        { opacity: 0; transform: translateX(-18px) scale(0.92); }
+  5%        { opacity: 1; transform: translateX(0)     scale(1);    }
+  55%       { opacity: 1; transform: translateX(0)     scale(1);    }
+  62%, 100% { opacity: 0; transform: translateX(-18px) scale(0.92); }
 }
 
+/* ── Base button ── */
 .wa-float-btn {
   display: flex;
   align-items: center;
@@ -336,51 +357,48 @@
   height: 56px;
   border-radius: 50%;
   background: #25D366;
-  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45), 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 2px 6px rgba(0,0,0,0.18);
   position: relative;
   flex-shrink: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   text-decoration: none;
+  will-change: transform, box-shadow;
 }
 
 .wa-float-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 22px rgba(37, 211, 102, 0.55), 0 2px 8px rgba(0,0,0,0.22);
+  transform: scale(1.08) !important;
+  box-shadow: 0 6px 22px rgba(37,211,102,0.55), 0 2px 8px rgba(0,0,0,0.22) !important;
 }
 
 .wa-float-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.94) !important;
 }
 
-/* Pulse ring (pseudo-element via sibling span) */
-.wa-float-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 3px solid rgba(37, 211, 102, 0.6);
-  animation: wa-pulse-ring 2s ease-out infinite;
-  pointer-events: none;
-}
-
+/* ── Pulse animation ── */
 .wa-float-pulse {
-  /* button itself stays still — only the ring animates */
+  animation: wa-btn-pulse 2s ease-out infinite;
 }
 
+/* ── Bounce animation ── */
 .wa-float-bounce {
-  animation: wa-bounce-float 2.2s ease-in-out infinite;
+  animation: wa-btn-bounce 2.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
-/* Label bubble */
+/* ── Label bubble base ── */
 .wa-float-label {
   position: relative;
-  background: white;
-  border-radius: 10px;
-  padding: 8px 14px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
-  animation: wa-label-anim 6s ease-in-out infinite;
-  animation-delay: 1.2s;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 9px 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08);
+  /* start hidden so the delay doesn't flash on mount */
+  opacity: 0;
+  animation: wa-label-in-right 9s ease-in-out infinite;
+  animation-delay: 2s;
+  will-change: transform, opacity;
 }
 
+/* ── Label — left-side button variant ── */
 .wa-float-label-left {
-  animation-name: wa-label-anim-left;
+  animation-name: wa-label-in-left;
 }
