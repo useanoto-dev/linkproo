@@ -166,8 +166,22 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
     ? { background: customBg, fontFamily }
     : { background: heroBgColor, fontFamily };
 
+  // Unique ID for clip-path so multiple previews on the same page don't conflict
+  const curveClipId = `banner-curve-${link.id}`;
+
   return (
     <div className="min-h-full relative overflow-hidden" style={bgStyle}>
+      {/* SVG clip-path definition for bio banner curve — must live outside the clipped element */}
+      {isBioMode && link.bannerCurve && (
+        <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden', pointerEvents: 'none' }}>
+          <defs>
+            <clipPath id={curveClipId} clipPathUnits="objectBoundingBox">
+              {/* Clips the banner so its bottom edge curves upward in the center */}
+              <path d="M 0,0 L 1,0 L 1,1 C 0.7,0.82 0.3,0.82 0,1 Z" />
+            </clipPath>
+          </defs>
+        </svg>
+      )}
       {link.bgHtml?.enabled && link.bgHtml.html && (
         <BgHtmlEffect html={link.bgHtml.html} />
       )}
@@ -220,6 +234,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
+            // Bio curve: clip the entire banner (image + overlay) with a curved bottom
+            style={isBioMode && link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : undefined}
           >
             <img
               src={link.heroImage}
@@ -253,15 +269,6 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
                 className="absolute inset-0"
                 style={{ background: `linear-gradient(to bottom, ${heroBgColor}80 0%, transparent 40%)` }}
               />
-            )}
-
-            {/* Bio mode: wave curve at banner bottom */}
-            {isBioMode && (link.bannerCurve ?? false) && (
-              <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ height: 28, zIndex: 3 }}>
-                <svg viewBox="0 0 100 28" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                  <path d="M0,28 L0,14 Q50,0 100,14 L100,28 Z" fill={heroBgColor} />
-                </svg>
-              </div>
             )}
           </motion.div>
         );
