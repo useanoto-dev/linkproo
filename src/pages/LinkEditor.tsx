@@ -442,11 +442,11 @@ export default function LinkEditor() {
           )}
           {openDrawer && (
             <motion.div
-              initial={{ x: -300, opacity: 0 }}
+              initial={{ x: -320, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
+              exit={{ x: -320, opacity: 0 }}
               transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`absolute left-0 top-0 bottom-0 z-40 ${isMobile ? "w-full" : "w-[280px]"} bg-card border-r border-border shadow-lg flex flex-col`}
+              className={`absolute left-0 top-0 bottom-0 z-40 ${isMobile ? "w-full" : "w-[320px]"} bg-card border-r border-border shadow-lg flex flex-col`}
             >
               <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
                 <div className="flex items-center gap-2">
@@ -664,9 +664,11 @@ export default function LinkEditor() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              style={{ width: isMobile ? "100%" : 450 }}
-              className={`shrink-0 border-l border-border bg-secondary/20 flex flex-col items-center justify-center overflow-hidden ${
-                isMobile ? "fixed inset-0 z-50 bg-background" : ""
+              style={{ width: isMobile ? "100%" : 500 }}
+              className={`shrink-0 border-l border-border flex flex-col items-center justify-center overflow-hidden relative ${
+                isMobile
+                  ? "fixed inset-0 z-50 bg-background"
+                  : "bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]"
               }`}
             >
               {isMobile && (
@@ -679,24 +681,27 @@ export default function LinkEditor() {
                 </button>
               )}
 
-              {/* Header row: label + device selector */}
-              <div className="flex items-center justify-between w-full mb-3 px-1">
-                <div className="flex items-center gap-1.5">
-                  <Smartphone className="h-3 w-3 text-primary" />
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
-                    {editingSubPageId ? "Sub-página" : "Preview"}
+              {/* Header: status dot + label + device picker */}
+              <div className="flex items-center justify-between w-full mb-5 px-5">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                    {editingSubPageId ? "Sub-página" : "Preview ao vivo"}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 p-1 rounded-lg bg-secondary/70 border border-border/60">
                   {(["iphone15", "pixel8", "galaxy"] as DeviceType[]).map((d) => (
                     <button
                       key={d}
                       type="button"
                       onClick={() => setDevice(d)}
-                      className={`px-2 py-0.5 rounded-full text-[8.5px] font-semibold transition-all cursor-pointer select-none ${
+                      className={`px-2.5 py-1 rounded-md text-[9px] font-semibold transition-all cursor-pointer select-none ${
                         device === d
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-muted-foreground hover:text-foreground border border-border"
+                          ? "bg-background text-foreground shadow-sm border border-border/50"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {DEVICE_LABELS[d]}
@@ -705,53 +710,75 @@ export default function LinkEditor() {
                 </div>
               </div>
 
-              <div
-                onDragOver={handlePreviewDragOver}
-                onDragEnter={handlePreviewDragEnter}
-                onDragLeave={handlePreviewDragLeave}
-                onDrop={handlePreviewDrop}
-                className={`relative rounded-[2.5rem] transition-all duration-150 ${
-                  isDraggingOverPreview
-                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    : ""
-                }`}
-                style={{ transform: "scale(0.76)", transformOrigin: "top center", marginBottom: "-168px" }}
-              >
-                <DeviceFrame device={device}>
-                  {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
-                    <SubPagePreview
-                      page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
-                      link={previewLink}
-                    />
-                  ) : (
-                    <SmartLinkPreview
-                      link={previewLink}
-                      selectedId={selectedElementId ?? undefined}
-                      ghostBlockType={ghostBlockType ?? undefined}
-                      onSelectElement={(id) => {
-                        setSelectedElementId(id);
-                        if (openDrawer) setOpenDrawer(null);
-                      }}
-                    />
-                  )}
-                </DeviceFrame>
+              {/* Device + ambient glow */}
+              <div className="relative flex flex-col items-center">
+                {/* Ambient glow underneath the device */}
+                <div
+                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-72 h-24 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(ellipse at center, hsl(var(--primary)/0.22) 0%, transparent 70%)",
+                    filter: "blur(28px)",
+                  }}
+                />
 
-                {isDraggingOverPreview && (
-                  <div className="absolute inset-x-0 -bottom-8 flex items-center justify-center pointer-events-none">
-                    <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg animate-bounce">
-                      ⬇ Solte aqui para adicionar
-                    </span>
-                  </div>
-                )}
+                <div
+                  onDragOver={handlePreviewDragOver}
+                  onDragEnter={handlePreviewDragEnter}
+                  onDragLeave={handlePreviewDragLeave}
+                  onDrop={handlePreviewDrop}
+                  className={`relative transition-all duration-150 ${
+                    isDraggingOverPreview
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-[2.5rem]"
+                      : ""
+                  }`}
+                  style={{ transform: "scale(0.86)", transformOrigin: "top center", marginBottom: "-98px" }}
+                >
+                  <DeviceFrame device={device}>
+                    {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
+                      <SubPagePreview
+                        page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
+                        link={previewLink}
+                      />
+                    ) : (
+                      <SmartLinkPreview
+                        link={previewLink}
+                        selectedId={selectedElementId ?? undefined}
+                        ghostBlockType={ghostBlockType ?? undefined}
+                        onSelectElement={(id) => {
+                          setSelectedElementId(id);
+                          if (openDrawer) setOpenDrawer(null);
+                        }}
+                      />
+                    )}
+                  </DeviceFrame>
+
+                  {isDraggingOverPreview && (
+                    <div className="absolute inset-x-0 -bottom-8 flex items-center justify-center pointer-events-none">
+                      <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg animate-bounce">
+                        ⬇ Solte aqui para adicionar
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* URL bar */}
               {link.slug && !editingSubPageId && (
-                <div className="mt-3 px-3 py-1 rounded-full bg-secondary border border-border text-[10px] text-muted-foreground font-mono">
-                  {window.location.host}/l/<span className="text-primary font-semibold">{link.slug}</span>
-                </div>
+                <a
+                  href={`/l/${link.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary/70 border border-border/60 text-[10px] font-mono hover:border-primary/40 hover:bg-secondary transition-all group"
+                >
+                  <span className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+                    {window.location.host}/l/
+                  </span>
+                  <span className="text-foreground font-semibold">{link.slug}</span>
+                  <ExternalLink className="h-2.5 w-2.5 ml-0.5 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity" />
+                </a>
               )}
               {editingSubPageId && (
-                <div className="mt-3 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-semibold">
+                <div className="mt-6 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-semibold">
                   Editando sub-página
                 </div>
               )}

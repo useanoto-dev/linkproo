@@ -168,6 +168,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
 
   // Unique ID for clip-path so multiple previews on the same page don't conflict
   const curveClipId = `banner-curve-${link.id}`;
+  // Classic overlap only when: no bio mode, has hero, no custom bgHtml, curve OFF
+  const showClassicOverlap = !isBioMode && !!link.heroImage && !link.bgHtml?.enabled && !link.bannerCurve;
 
   return (
     <div className="min-h-full relative overflow-hidden" style={bgStyle}>
@@ -279,13 +281,12 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       })()}
 
       {/* ── Single unified content container ────────────────────────────────────
-          Business info, items, and footer all live in ONE div so they share
-          the exact same background layer with zero compositing seam.
-          Classic mode: overlaps banner with rounded top + background re-apply.
-          Bio mode: no overlap — avatar floats up via negative margin instead. */}
+          Classic mode without curve: overlaps banner with rounded-top pill + bg.
+          Classic mode with curve:    no overlap — curve already separates banner.
+          Bio mode:                   no overlap — avatar floats via negative margin. */}
       <div
-        className={`relative z-10 ${!isBioMode && link.heroImage && !link.bgHtml?.enabled ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
-        style={!isBioMode && link.heroImage && !link.bgHtml?.enabled ? bgStyle : undefined}
+        className={`relative z-10 ${showClassicOverlap ? "-mt-3 rounded-t-2xl shadow-[0_-2px_16px_rgba(0,0,0,0.10)]" : ""}`}
+        style={showClassicOverlap ? bgStyle : undefined}
       >
         {/* Bio mode: avatar overlapping the banner bottom */}
         {isBioMode && link.logoUrl && (() => {
