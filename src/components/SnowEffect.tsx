@@ -61,8 +61,9 @@ export function SnowEffect({ intensity, color }: SnowEffectProps) {
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
-    // Number of particles based on intensity and area
-    const count = Math.max(10, Math.floor((intensity / 100) * 80));
+    // Reduce particle count on mobile to prevent CPU starvation
+    const isMobile = window.innerWidth < 600;
+    const count = Math.max(10, Math.floor((intensity / 100) * (isMobile ? 40 : 80)));
 
     interface Particle {
       x: number;

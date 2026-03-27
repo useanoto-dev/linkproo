@@ -247,6 +247,9 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
               src={link.heroImage}
               alt={link.businessName}
               className="w-full"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               style={{
                 height:         heightPx ?? 'auto',
                 maxHeight:      heightPx ? undefined : '24rem',
@@ -347,6 +350,8 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
               <img
                 src={link.logoUrl}
                 alt="Logo"
+                loading="eager"
+                decoding="async"
                 style={{
                   width: link.logoSizePx ?? 80,
                   height: "auto",

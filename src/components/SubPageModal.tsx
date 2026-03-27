@@ -44,12 +44,15 @@ export function SubPageModal({ page, link, onClose }: SubPageModalProps) {
       {page && (
         <motion.div
           ref={contentRef}
-          className="fixed inset-0 z-[100] flex flex-col overflow-y-auto"
+          className="fixed inset-0 z-[100] flex flex-col overflow-y-auto overscroll-y-none"
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          style={{ background: customBg || bgColor || (dark ? "#111" : "#fff") }}
+          transition={{ type: "spring", stiffness: 420, damping: 40, restDelta: 0.001 }}
+          style={{
+            background: customBg || bgColor || (dark ? "#111" : "#fff"),
+            willChange: "transform",
+          }}
         >
           <SubPagePreview page={page} link={link} onBack={onClose} />
         </motion.div>

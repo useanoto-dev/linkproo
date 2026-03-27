@@ -277,4 +277,28 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* ─── Public minisite — mobile performance & scroll stability ───────────── */
+  /* Applied to the outer wrapper in PublicLinkPage so it never bleeds into     */
+  /* the editor/admin routes.                                                    */
+  .public-minisite {
+    /* Prevent iOS rubber-band bounce which feels like scroll jump to users */
+    overscroll-behavior-y: none;
+    /* Momentum scrolling on iOS < 13 */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Faster tap response on Android (removes 300ms click delay) */
+  .public-minisite button,
+  .public-minisite a,
+  .public-minisite [role="button"],
+  .public-minisite [tabindex] {
+    touch-action: manipulation;
+  }
+
+  /* GPU compositing layer for canvas-based effects — prevents paint during scroll */
+  .public-minisite canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 }

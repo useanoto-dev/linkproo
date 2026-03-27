@@ -100,8 +100,8 @@ export default function PublicLinkPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex justify-center">
-        <div className="w-full max-w-[480px] min-h-screen p-5 space-y-4">
+      <div className="public-minisite bg-background flex justify-center" style={{ minHeight: '100dvh' }}>
+        <div className="w-full max-w-[480px] p-5 space-y-4" style={{ minHeight: '100dvh' }}>
           <Skeleton className="h-48 w-full rounded-2xl" />
           <div className="flex flex-col items-center gap-3 px-2">
             <Skeleton className="h-14 w-14 rounded-2xl" />
@@ -138,10 +138,10 @@ export default function PublicLinkPage() {
 
   return (
     <div
-      className="min-h-screen flex justify-center"
-      style={{ background: customBg || bgColor }}
+      className="public-minisite flex justify-center"
+      style={{ background: customBg || bgColor, minHeight: '100dvh' }}
     >
-      <div className="w-full max-w-[480px] min-h-screen relative">
+      <div className="w-full max-w-[480px] relative" style={{ minHeight: '100dvh' }}>
         <SmartLinkPreview link={link} />
         {forcedPage && (
           <SubPageModal

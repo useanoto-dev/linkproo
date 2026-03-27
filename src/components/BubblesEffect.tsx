@@ -51,7 +51,8 @@ export function BubblesEffect({ intensity, color }: Props) {
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
-    const count = Math.max(5, Math.floor((intensity / 100) * 35));
+    const isMobile = window.innerWidth < 600;
+    const count = Math.max(5, Math.floor((intensity / 100) * (isMobile ? 18 : 35)));
 
     interface Bubble { x: number; y: number; r: number; speed: number; sway: number; swaySpd: number; swayPhase: number; opacity: number; }
     const hexRgb = (hex: string) => {
