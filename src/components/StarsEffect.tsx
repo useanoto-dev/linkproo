@@ -7,23 +7,27 @@ export function StarsEffect({ count, color, shooting }: Props) {
   const animRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const isIntersectingRef = useRef(false);
 
   // IntersectionObserver: pause when off-screen
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
+      ([entry]) => {
+        isIntersectingRef.current = entry.isIntersecting;
+        setIsVisible(entry.isIntersecting && !document.hidden);
+      },
       { threshold: 0.01 }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  // visibilitychange: pause when tab is backgrounded
+  // visibilitychange: pause when tab is hidden, resume when visible again
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.hidden) setIsVisible(false);
+      setIsVisible(isIntersectingRef.current && !document.hidden);
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);

@@ -27,9 +27,31 @@
     <link rel="canonical" href="/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" />
   <style id="lovable-matrixprompt-hide-badge">#lovable-badge { display: none !important; }</style>
+  <style>
+    /* Instant loading indicator shown before React boots — no JS needed */
+    html, body { margin: 0; padding: 0; }
+    #root:empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      background: #0a0a0a;
+    }
+    #root:empty::after {
+      content: '';
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(124,58,237,0.18);
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: lp-boot 0.7s linear infinite;
+    }
+    @keyframes lp-boot { to { transform: rotate(360deg); } }
+  </style>
 </head>
 
   <body>

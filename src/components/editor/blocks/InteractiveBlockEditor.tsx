@@ -1,11 +1,12 @@
 import React, { memo, useMemo } from "react";
-import { LinkBlock, SubPage } from "@/types/smart-link";
+import { LinkBlock, SubPage, BadgeItem } from "@/types/smart-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUploader, buildButtonPresets } from "../ImageUploader";
 import { ANIM_STYLE_OPTIONS } from "./constants";
+import { Trash2, Plus } from "lucide-react";
 
 interface InteractiveBlockEditorProps {
   block: LinkBlock;
@@ -22,25 +23,77 @@ export const InteractiveBlockEditor = memo(function InteractiveBlockEditor({ blo
   return (
     <>
       {block.type === "badges" && (
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Badges (emoji:label, separados por vírgula)</Label>
-          <Input
-            value={(block.badges || []).map(b => `${b.emoji}:${b.label}`).join(", ")}
-            onChange={(e) => {
-              const badges = e.target.value.split(",").map((s, i) => {
-                const parts = s.trim().split(":");
-                return {
-                  id: `badge-${i}`,
-                  emoji: parts[0]?.trim() || "⭐",
-                  label: parts[1]?.trim() || parts[0]?.trim() || "",
-                  color: ["bg-blue-500", "bg-green-500", "bg-red-500", "bg-purple-500", "bg-orange-500"][i % 5],
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Badges</p>
+            <button
+              type="button"
+              onClick={() => {
+                const COLORS = ["bg-blue-500", "bg-green-500", "bg-red-500", "bg-purple-500", "bg-orange-500"];
+                const idx = (block.badges || []).length;
+                const newBadge: BadgeItem = {
+                  id: `badge-${Date.now()}`,
+                  emoji: "⭐",
+                  label: "Novo Badge",
+                  color: COLORS[idx % COLORS.length],
                 };
-              }).filter(b => b.label);
-              onUpdate(block.id, { badges });
-            }}
-            placeholder="⭐:Qualidade, 🛡️:Garantia, 💰:Preços Acessíveis"
-            className="text-sm h-9"
-          />
+                onUpdate(block.id, { badges: [...(block.badges || []), newBadge] });
+              }}
+              className="flex items-center gap-1 text-[11px] text-primary hover:opacity-70 transition-opacity"
+            >
+              <Plus className="h-3 w-3" /> Adicionar
+            </button>
+          </div>
+
+          {(block.badges || []).length === 0 && (
+            <p className="text-[10px] text-muted-foreground text-center py-3 border border-dashed border-border rounded-lg">
+              Nenhum badge ainda. Clique em Adicionar.
+            </p>
+          )}
+
+          <div className="space-y-2">
+            {(block.badges || []).map((badge, idx) => (
+              <div key={badge.id} className="flex items-start gap-2 p-2.5 rounded-xl bg-secondary/40 border border-border/30">
+                {/* Emoji preview circle */}
+                <div className={`w-10 h-10 rounded-full ${badge.color} flex items-center justify-center shrink-0 text-xl shadow`}>
+                  {badge.emoji || "?"}
+                </div>
+
+                <div className="flex-1 space-y-1.5">
+                  <Input
+                    value={badge.emoji}
+                    onChange={(e) => {
+                      const updated = [...(block.badges || [])];
+                      updated[idx] = { ...badge, emoji: e.target.value };
+                      onUpdate(block.id, { badges: updated });
+                    }}
+                    placeholder="Cole um emoji (ex: ⭐)"
+                    className="text-sm h-7 text-center"
+                  />
+                  <Input
+                    value={badge.label}
+                    onChange={(e) => {
+                      const updated = [...(block.badges || [])];
+                      updated[idx] = { ...badge, label: e.target.value };
+                      onUpdate(block.id, { badges: updated });
+                    }}
+                    placeholder="Rótulo do badge"
+                    className="text-xs h-7"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdate(block.id, { badges: (block.badges || []).filter((_, i) => i !== idx) });
+                  }}
+                  className="text-destructive/50 hover:text-destructive transition-colors mt-1"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

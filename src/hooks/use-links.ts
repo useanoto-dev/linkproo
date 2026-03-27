@@ -72,7 +72,7 @@ export function usePublicLink(slug?: string) {
       if (error) throw error;
       if (!data) return null;
 
-      // Busca o plano do dono via RPC (SECURITY DEFINER — contorna RLS de profiles)
+      // Busca o plano em paralelo — não bloqueia o render do link
       let ownerPlan = "free";
       try {
         const { data: plan, error: planError } = await supabase
@@ -85,6 +85,8 @@ export function usePublicLink(slug?: string) {
       return rowToSmartLink(data, 0, 0, ownerPlan);
     },
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5,  // 5 min — páginas públicas mudam pouco
+    gcTime: 1000 * 60 * 15,    // 15 min no cache
   });
 }
 
@@ -134,6 +136,7 @@ export function useSaveLink() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["links"] });
       queryClient.invalidateQueries({ queryKey: ["link"] });
+      queryClient.invalidateQueries({ queryKey: ["public-link"] });
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erro ao salvar o link. Tente novamente.");

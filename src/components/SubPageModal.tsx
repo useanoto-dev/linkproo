@@ -17,12 +17,19 @@ export function SubPageModal({ page, link, onClose }: SubPageModalProps) {
   const dark = isDarkBg(link.backgroundColor);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll when open
+  // Lock body scroll when open — iOS-safe: position:fixed preserves scroll position
   useEffect(() => {
-    if (page) {
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = ""; };
-    }
+    if (!page) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
+    };
   }, [page]);
 
   // Scroll to top whenever a different sub-page is opened
