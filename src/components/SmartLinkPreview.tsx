@@ -88,10 +88,6 @@ interface SmartLinkPreviewProps {
   selectedId?: string;
   ghostBlockType?: BlockType;
   onSelectElement?: (id: string) => void;
-  /** Quando true, o preview está dentro do editor (DeviceFrame com transform).
-   *  Botão WhatsApp usa position:absolute ao invés de fixed para evitar
-   *  ser clipado pelo overflow:hidden do DeviceFrame. */
-  isEditorPreview?: boolean;
 }
 
 const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
@@ -119,7 +115,7 @@ const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   html: "Bloco HTML",
 };
 
-export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement, isEditorPreview }: SmartLinkPreviewProps) {
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
   const hasContent = link.businessName || link.heroImage || link.buttons.length > 0;
   const dark = isDarkBg(link.backgroundColor);
   const customBg = parseCustomBg(link.backgroundColor);
@@ -513,7 +509,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       </div>{/* end unified content container */}
 
       {link.whatsappFloat?.enabled && (
-        <WhatsAppFloat config={link.whatsappFloat} isEditorPreview={!!isEditorPreview} />
+        <WhatsAppFloat config={link.whatsappFloat} />
       )}
 
       <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />

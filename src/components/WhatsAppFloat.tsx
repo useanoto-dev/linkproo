@@ -3,9 +3,6 @@ import { WhatsAppFloat as WFConfig } from "@/types/smart-link";
 
 interface Props {
   config: WFConfig;
-  /** No editor o botão usa position:absolute (evita ser clipado pelo transform/overflow do DeviceFrame).
-   *  Na página pública usa position:fixed (comportamento correto no viewport). */
-  isEditorPreview?: boolean;
 }
 
 function WhatsAppIcon({ size = 28 }: { size?: number }) {
@@ -30,7 +27,7 @@ function WhatsAppIcon({ size = 28 }: { size?: number }) {
   );
 }
 
-export function WhatsAppFloat({ config, isEditorPreview = false }: Props) {
+export function WhatsAppFloat({ config }: Props) {
   if (!config.enabled) return null;
 
   const {
@@ -124,13 +121,9 @@ export function WhatsAppFloat({ config, isEditorPreview = false }: Props) {
     </div>
   ) : null;
 
-  // No editor: position absolute (relativo ao SmartLinkPreview que tem position:relative)
-  // Na página pública: position fixed (relativo ao viewport)
-  const positionClass = isEditorPreview ? "absolute" : "fixed";
-
   return (
     <div
-      className={`${positionClass} z-[200] flex items-center gap-3 ${isRight ? "flex-row-reverse" : "flex-row"} ${
+      className={`fixed z-[200] flex items-center gap-3 ${isRight ? "flex-row-reverse" : "flex-row"} ${
         isRight ? "right-4" : "left-4"
       }`}
       style={{ bottom: "24px" }}
