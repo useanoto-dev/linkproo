@@ -23,25 +23,23 @@ import {
 // ─── HtmlTitle — renderiza HTML completo do usuário dentro de um iframe isolado ──
 
 function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: number; align?: "left" | "center" | "right" }) {
-  const [height, setHeight] = useState(80);
+  const [height, setHeight] = useState(300);
 
-  useEffect(() => {
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type === "html-title-height" && typeof e.data.height === "number") {
-        setHeight(Math.max(20, e.data.height));
-      }
-    }
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
+  // Unique ID per instance so multiple HtmlTitle components don't cross-talk
+  const msgId = useMemo(() => `ht-${Math.random().toString(36).slice(2)}`, []);
 
-  // Inject a tiny postMessage reporter so the parent knows the body height
+  // Inject style + postMessage height reporter with MutationObserver for dynamic content
   const srcDoc = useMemo(() => {
-    const defaultStyle = `<style>html,body{margin:0;padding:0;text-align:${align};}</style>`;
+    const id = JSON.stringify(msgId);
+    const defaultStyle = `<style>html,body{margin:0;padding:0;box-sizing:border-box;text-align:${align};}</style>`;
     const reporter =
       `<scr` +
-      `ipt>function r(){window.parent.postMessage({type:'html-title-height',height:document.body.scrollHeight},'*');}` +
-      `window.addEventListener('load',r);setTimeout(r,120);setTimeout(r,600);</scr` +
+      `ipt>` +
+      `function _r(){window.parent.postMessage({type:'html-title-height',id:${id},height:document.body.scrollHeight},'*');}` +
+      `window.addEventListener('load',_r);` +
+      `new MutationObserver(_r).observe(document.body,{childList:true,subtree:true,attributes:true});` +
+      `setTimeout(_r,100);setTimeout(_r,500);setTimeout(_r,1200);` +
+      `</scr` +
       `ipt>`;
     let doc = html;
     if (doc.includes("</head>")) {
@@ -52,17 +50,30 @@ function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: num
     return doc.includes("</body>")
       ? doc.replace("</body>", reporter + "</body>")
       : doc + reporter;
-  }, [html, align]);
+  }, [html, align, msgId]);
+
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === "html-title-height" && e.data?.id === msgId && typeof e.data.height === "number") {
+        setHeight(Math.max(40, e.data.height + 8));
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [msgId]);
 
   return (
     // Outer div reserves the SCALED layout height so content below isn't overlapped
-    <div style={{ height: height * scale, overflow: "hidden", width: "100%" }}>
+    <div style={{ height: height * scale, width: "100%", overflow: "hidden" }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", height, width: "100%" }}>
+        {/* key=srcDoc forces iframe remount when HTML changes — browsers don't always
+            reload an existing iframe when srcdoc attribute is updated dynamically */}
         <iframe
+          key={srcDoc}
           srcDoc={srcDoc}
           sandbox="allow-scripts"
           scrolling="no"
-          style={{ width: "100%", height, border: "none", background: "transparent", display: "block", overflow: "hidden" }}
+          style={{ width: "100%", height, border: "none", background: "transparent", display: "block" }}
           title="business-name"
         />
       </div>
@@ -77,6 +88,10 @@ interface SmartLinkPreviewProps {
   selectedId?: string;
   ghostBlockType?: BlockType;
   onSelectElement?: (id: string) => void;
+  /** Quando true, o preview está dentro do editor (DeviceFrame com transform).
+   *  Botão WhatsApp usa position:absolute ao invés de fixed para evitar
+   *  ser clipado pelo overflow:hidden do DeviceFrame. */
+  isEditorPreview?: boolean;
 }
 
 const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
@@ -104,7 +119,7 @@ const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   html: "Bloco HTML",
 };
 
-export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement, isEditorPreview }: SmartLinkPreviewProps) {
   const hasContent = link.businessName || link.heroImage || link.buttons.length > 0;
   const dark = isDarkBg(link.backgroundColor);
   const customBg = parseCustomBg(link.backgroundColor);
@@ -498,7 +513,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       </div>{/* end unified content container */}
 
       {link.whatsappFloat?.enabled && (
-        <WhatsAppFloat config={link.whatsappFloat} />
+        <WhatsAppFloat config={link.whatsappFloat} isEditorPreview={!!isEditorPreview} />
       )}
 
       <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />

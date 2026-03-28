@@ -744,6 +744,7 @@ export default function LinkEditor() {
                         link={previewLink}
                         selectedId={selectedElementId ?? undefined}
                         ghostBlockType={ghostBlockType ?? undefined}
+                        isEditorPreview
                         onSelectElement={(id) => {
                           setSelectedElementId(id);
                           if (openDrawer) setOpenDrawer(null);
