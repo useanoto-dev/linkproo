@@ -1,13 +1,10 @@
+import { useEffect, useState } from "react";
 import { WhatsAppFloat as WFConfig } from "@/types/smart-link";
 
 interface Props {
   config: WFConfig;
 }
 
-/**
- * Official WhatsApp SVG logo as a React component.
- * Source shape: WA brand guidelines icon.
- */
 function WhatsAppIcon({ size = 28 }: { size?: number }) {
   return (
     <svg
@@ -44,17 +41,60 @@ export function WhatsAppFloat({ config }: Props) {
 
   const isRight = position === "bottom-right";
 
+  // React-driven label visibility — bypasses CSS cascade/reduced-motion issues.
+  // Loop: visible for 5s, hidden for 3s, repeat.
+  const [labelShown, setLabelShown] = useState(false);
+
+  useEffect(() => {
+    if (!showLabel || !label) return;
+
+    // Initial delay before first appearance
+    const init = setTimeout(() => setLabelShown(true), 800);
+    return () => clearTimeout(init);
+  }, [showLabel, label]);
+
+  useEffect(() => {
+    if (!showLabel || !label) return;
+    if (!labelShown) {
+      // Hidden phase — show again after 3s
+      const t = setTimeout(() => setLabelShown(true), 3000);
+      return () => clearTimeout(t);
+    } else {
+      // Visible phase — hide after 5s
+      const t = setTimeout(() => setLabelShown(false), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [labelShown, showLabel, label]);
+
   const waUrl = `https://wa.me/${phone.replace(/\D/g, "")}${
     message ? `?text=${encodeURIComponent(message)}` : ""
   }`;
 
-  // Animation class applied to the button
   const btnAnimation =
     animation === "pulse"
       ? "wa-float-pulse"
       : animation === "bounce"
       ? "wa-float-bounce"
       : "";
+
+  const labelEl = showLabel && label ? (
+    <div
+      className={`wa-float-label ${!isRight ? "wa-float-label-left" : ""}`}
+      data-shown={labelShown}
+    >
+      <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap leading-none">
+        {label}
+      </span>
+      {/* Arrow tip pointing toward the button */}
+      <span
+        className={`absolute top-1/2 -translate-y-1/2 border-[5px] border-transparent ${
+          isRight
+            ? "right-[-9px] border-l-white"
+            : "left-[-9px] border-r-white"
+        }`}
+      />
+    </div>
+  ) : null;
 
   return (
     <div
@@ -63,9 +103,11 @@ export function WhatsAppFloat({ config }: Props) {
       }`}
       style={{ bottom: "24px" }}
     >
-      {/* Button on LEFT side: button first, then label to its right */}
+      {/* Button on LEFT side */}
       {!isRight && (
+        // key forces CSS animation restart when animation type changes
         <a
+          key={animation}
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -76,26 +118,12 @@ export function WhatsAppFloat({ config }: Props) {
         </a>
       )}
 
-      {/* Label bubble — always between button and screen center */}
-      {showLabel && label && (
-        <div className={`wa-float-label ${!isRight ? "wa-float-label-left" : ""}`}>
-          <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap leading-none">
-            {label}
-          </span>
-          {/* Arrow tip pointing toward the button */}
-          <span
-            className={`absolute top-1/2 -translate-y-1/2 border-[5px] border-transparent ${
-              isRight
-                ? "right-[-9px] border-l-white"
-                : "left-[-9px] border-r-white"
-            }`}
-          />
-        </div>
-      )}
+      {labelEl}
 
-      {/* Button on RIGHT side: label to its left, button last */}
+      {/* Button on RIGHT side */}
       {isRight && (
         <a
+          key={animation}
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
