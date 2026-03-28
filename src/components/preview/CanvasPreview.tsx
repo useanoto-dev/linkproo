@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState, useCallback, CSSProperties, memo } from "react";
+import { useRef, useEffect, useState, useCallback, CSSProperties, memo, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Moveable from "react-moveable";
 import { SmartLink, SmartLinkButton, LinkBlock } from "@/types/smart-link";
 import { BlockRenderer } from "./BlockRenderer";
@@ -27,7 +28,7 @@ interface CanvasPreviewProps {
 
 function getDefaultHeight(item: CanvasItem): number {
   if (item.kind === "button") return 56;
-  const t = item.data.type;
+  const t = (item.data as LinkBlock).type;
   if (t === "spacer") return (item.data as LinkBlock).height ?? 32;
   if (t === "image" || t === "image-button") return 160;
   if (t === "video") return 220;
@@ -55,7 +56,6 @@ export function assignInitialCanvasPositions(
   buttons: SmartLinkButton[],
   blocks: LinkBlock[],
 ): { buttons: SmartLinkButton[]; blocks: LinkBlock[] } {
-  // Unified sort by order
   type Tagged = { kind: "button"; idx: number; order: number } | { kind: "block"; idx: number; order: number };
   const sorted: Tagged[] = [
     ...buttons.map((b, i) => ({ kind: "button" as const, idx: i, order: b.order ?? i })),
@@ -74,7 +74,6 @@ export function assignInitialCanvasPositions(
 
     const el = item.data;
     if (el.canvasX !== undefined) {
-      // Already has position — advance cursor past it
       const h = el.canvasH ?? getDefaultHeight(item);
       currentY = Math.max(currentY, (el.canvasY ?? 0) + h + 12);
       continue;
@@ -143,8 +142,8 @@ const CanvasItemEl = memo(function CanvasItemEl({
     cursor: isEditing ? "text" : "pointer",
     userSelect: isEditing ? "text" : "none",
     boxSizing: "border-box",
-    outline: isSelected ? "2px solid #6366f1" : "none",
-    outlineOffset: isSelected ? 2 : 0,
+    // Selection ring rendered via box-shadow (doesn't affect layout or get clipped)
+    boxShadow: isSelected ? "0 0 0 2px #6366f1" : "none",
     zIndex: isSelected ? 10 : 1,
   };
 
@@ -155,40 +154,23 @@ const CanvasItemEl = memo(function CanvasItemEl({
       ref={(domEl) => itemRefSetter(item.id, domEl)}
       data-canvas-id={item.id}
       style={style}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(item.id);
-      }}
+      onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
       onDoubleClick={(e) => {
         e.stopPropagation();
-        if (item.kind === "block" && TEXT_EDITABLE_TYPES.has(item.data.type)) {
+        if (item.kind === "block" && TEXT_EDITABLE_TYPES.has((item.data as LinkBlock).type)) {
           onStartEdit(item.id);
         }
       }}
     >
-      {/* Render the actual block/button */}
       {item.kind === "block" ? (
-        isEditing && TEXT_EDITABLE_TYPES.has(item.data.type) ? (
+        isEditing && TEXT_EDITABLE_TYPES.has((item.data as LinkBlock).type) ? (
           <div
             contentEditable
             suppressContentEditableWarning
-            style={{
-              outline: "none",
-              minHeight: 24,
-              padding: "4px 8px",
-              color: "inherit",
-              fontSize: "inherit",
-              fontFamily: "inherit",
-              width: "100%",
-            }}
-            onBlur={(e) => {
-              onEndEdit(item.id, e.currentTarget.textContent ?? "");
-            }}
+            style={{ outline: "none", minHeight: 24, padding: "4px 8px", color: "inherit", fontSize: "inherit", fontFamily: "inherit", width: "100%" }}
+            onBlur={(e) => onEndEdit(item.id, e.currentTarget.textContent ?? "")}
             onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                onEndEdit(item.id, e.currentTarget.textContent ?? "");
-                e.currentTarget.blur();
-              }
+              if (e.key === "Escape") { onEndEdit(item.id, e.currentTarget.textContent ?? ""); e.currentTarget.blur(); }
             }}
           >
             {(item.data as LinkBlock).content ?? ""}
@@ -214,20 +196,11 @@ const CanvasItemEl = memo(function CanvasItemEl({
         />
       )}
 
-      {/* Iframe capture overlay */}
+      {/* Iframe click capture overlay */}
       {item.kind === "block" && IFRAME_TYPES.has((item.data as LinkBlock).type) && !isEditing && (
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 10,
-            cursor: "pointer",
-            background: "transparent",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(item.id);
-          }}
+          style={{ position: "absolute", inset: 0, zIndex: 10, cursor: "pointer", background: "transparent" }}
+          onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
         />
       )}
     </div>
@@ -261,11 +234,10 @@ export const CanvasPreview = memo(function CanvasPreview({
   const textClass = dark ? "text-white" : "text-gray-900";
   const subtextClass = dark ? "text-white/60" : "text-gray-500";
 
-  // Build unified sorted items list
-  const items: CanvasItem[] = [
+  const items: CanvasItem[] = useMemo(() => [
     ...link.buttons.map((b, i) => ({ kind: "button" as const, id: b.id, data: b, order: b.order ?? i })),
     ...link.blocks.map((b, i) => ({ kind: "block" as const, id: b.id, data: b, order: b.order ?? (link.buttons.length + i) })),
-  ].sort((a, b) => a.order - b.order);
+  ].sort((a, b) => a.order - b.order), [link.buttons, link.blocks]);
 
   const itemRefSetter = useCallback((id: string, el: HTMLElement | null) => {
     itemRefs.current[id] = el;
@@ -274,91 +246,80 @@ export const CanvasPreview = memo(function CanvasPreview({
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (!selectedId) return;
-      // Don't intercept when editing text
-      if (editingId) return;
-
+      if (!selectedId || editingId) return;
       const step = e.shiftKey ? 10 : 1;
       const item = items.find((i) => i.id === selectedId);
       if (!item) return;
       const el = item.data;
 
       if (e.key === "Delete" || e.key === "Backspace") {
-        e.preventDefault();
-        onDeleteElement?.(selectedId);
+        e.preventDefault(); onDeleteElement?.(selectedId);
       } else if (e.key === "Escape") {
         onSelect(null);
       } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        onUpdateElement(selectedId, { canvasX: Math.round((el.canvasX ?? 0) - step) });
+        e.preventDefault(); onUpdateElement(selectedId, { canvasX: Math.round((el.canvasX ?? 0) - step) });
       } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        onUpdateElement(selectedId, { canvasX: Math.round((el.canvasX ?? 0) + step) });
+        e.preventDefault(); onUpdateElement(selectedId, { canvasX: Math.round((el.canvasX ?? 0) + step) });
       } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        onUpdateElement(selectedId, { canvasY: Math.round((el.canvasY ?? 0) - step) });
+        e.preventDefault(); onUpdateElement(selectedId, { canvasY: Math.round((el.canvasY ?? 0) - step) });
       } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        onUpdateElement(selectedId, { canvasY: Math.round((el.canvasY ?? 0) + step) });
+        e.preventDefault(); onUpdateElement(selectedId, { canvasY: Math.round((el.canvasY ?? 0) + step) });
       } else if ((e.ctrlKey || e.metaKey) && e.key === "d") {
-        e.preventDefault();
-        onDuplicateElement?.(selectedId);
+        e.preventDefault(); onDuplicateElement?.(selectedId);
       } else if ((e.ctrlKey || e.metaKey) && e.key === "]") {
-        e.preventDefault();
-        onBringForward?.(selectedId);
+        e.preventDefault(); onBringForward?.(selectedId);
       } else if ((e.ctrlKey || e.metaKey) && e.key === "[") {
-        e.preventDefault();
-        onSendBackward?.(selectedId);
+        e.preventDefault(); onSendBackward?.(selectedId);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [selectedId, editingId, items, onSelect, onUpdateElement, onDeleteElement, onDuplicateElement, onBringForward, onSendBackward]);
 
-  // Calculate artboard min height
   const minHeight = Math.max(700, ...items.map((i) => (i.data.canvasY ?? 0) + (i.data.canvasH ?? getDefaultHeight(i)) + 32));
 
-  const selectedTarget = selectedId ? itemRefs.current[selectedId] ?? undefined : undefined;
+  // The selected element's DOM node — used by Moveable rendered via Portal
+  const selectedTarget = selectedId ? (itemRefs.current[selectedId] ?? null) : null;
 
   return (
-    <div
-      ref={artboardRef}
-      style={{
-        position: "relative",
-        width: 390,
-        minHeight,
-        background: "transparent",
-        fontFamily,
-        overflow: "visible",
-      }}
-      onClick={(e) => {
-        if (e.target === artboardRef.current) onSelect(null);
-      }}
-    >
-      {items.map((item) => (
-        <CanvasItemEl
-          key={item.id}
-          item={item}
-          isSelected={selectedId === item.id}
-          editingId={editingId}
-          onSelect={onSelect}
-          onUpdate={onUpdateElement}
-          onStartEdit={(id) => setEditingId(id)}
-          onEndEdit={(id, text) => {
-            onUpdateElement(id, { content: text } as Partial<LinkBlock>);
-            setEditingId(null);
-          }}
-          itemRefSetter={itemRefSetter}
-          accent={accent}
-          linkId={link.id}
-          dark={dark}
-          textClass={textClass}
-          subtextClass={subtextClass}
-        />
-      ))}
+    <>
+      {/* Artboard — lives inside DeviceFrame (overflow:hidden), elements scroll normally */}
+      <div
+        ref={artboardRef}
+        style={{ position: "relative", width: 390, minHeight, background: "transparent", fontFamily, overflow: "visible" }}
+        onClick={(e) => { if (e.target === artboardRef.current) onSelect(null); }}
+      >
+        {items.map((item) => (
+          <CanvasItemEl
+            key={item.id}
+            item={item}
+            isSelected={selectedId === item.id}
+            editingId={editingId}
+            onSelect={onSelect}
+            onUpdate={onUpdateElement}
+            onStartEdit={(id) => setEditingId(id)}
+            onEndEdit={(id, text) => {
+              onUpdateElement(id, { content: text } as Partial<LinkBlock>);
+              setEditingId(null);
+            }}
+            itemRefSetter={itemRefSetter}
+            accent={accent}
+            linkId={link.id}
+            dark={dark}
+            textClass={textClass}
+            subtextClass={subtextClass}
+          />
+        ))}
+      </div>
 
-      {/* Moveable — rendered in the artboard so it scales with the frame */}
-      {selectedId && selectedTarget && !editingId && (
+      {/*
+        ─── MOVEABLE via createPortal → document.body ───────────────────────
+        CRITICAL: Moveable MUST be outside the DeviceFrame's overflow:hidden.
+        It uses getBoundingClientRect() on the target so it correctly tracks
+        the element's position through the CSS scale(0.86) transform.
+        The zoom prop compensates handle visual size for the same scale.
+      */}
+      {selectedTarget && !editingId && createPortal(
         <Moveable
           target={selectedTarget}
           zoom={1 / editorScale}
@@ -375,24 +336,28 @@ export const CanvasPreview = memo(function CanvasPreview({
           throttleResize={0}
           throttleRotate={0}
           onDrag={({ left, top }) => {
+            if (!selectedId) return;
             onUpdateElement(selectedId, {
-              canvasX: Math.round(left),
-              canvasY: Math.round(top),
+              canvasX: Math.round(left / editorScale),
+              canvasY: Math.round(top / editorScale),
             });
           }}
           onResize={({ width, height, drag }) => {
+            if (!selectedId) return;
             onUpdateElement(selectedId, {
-              canvasW: Math.round(width),
-              canvasH: Math.round(height),
-              canvasX: Math.round(drag.left),
-              canvasY: Math.round(drag.top),
+              canvasW: Math.round(width / editorScale),
+              canvasH: Math.round(height / editorScale),
+              canvasX: Math.round(drag.left / editorScale),
+              canvasY: Math.round(drag.top / editorScale),
             });
           }}
           onRotate={({ rotation }) => {
+            if (!selectedId) return;
             onUpdateElement(selectedId, { canvasRotation: Math.round(rotation) });
           }}
-        />
+        />,
+        document.body,
       )}
-    </div>
+    </>
   );
 });
