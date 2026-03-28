@@ -360,7 +360,8 @@
   box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 2px 6px rgba(0,0,0,0.18);
   position: relative;
   flex-shrink: 0;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* Transition only when NOT running an animation (hover/active feedback) */
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   text-decoration: none;
   will-change: transform, box-shadow;
 }
@@ -374,14 +375,18 @@
   transform: scale(0.94) !important;
 }
 
-/* ── Pulse animation ── */
+/* ── Pulse animation ──
+   Transition is kept so the hover box-shadow feedback still works;
+   CSS animations override transitions on the same property during playback. */
 .wa-float-pulse {
   animation: wa-btn-pulse 2s ease-out infinite;
 }
 
-/* ── Bounce animation ── */
+/* ── Bounce animation ──
+   Disable the transition so it doesn't fight the transform keyframes. */
 .wa-float-bounce {
-  animation: wa-btn-bounce 2.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: wa-btn-bounce 2.6s ease-in-out infinite;
+  transition: box-shadow 0.18s ease; /* keep shadow transition only */
 }
 
 /* ── Label bubble base ── */
@@ -391,10 +396,11 @@
   border-radius: 12px;
   padding: 9px 16px;
   box-shadow: 0 4px 18px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08);
-  /* start hidden so the delay doesn't flash on mount */
   opacity: 0;
   animation: wa-label-in-right 9s ease-in-out infinite;
-  animation-delay: 2s;
+  animation-delay: 1.5s;
+  /* backwards: apply frame-0 (opacity:0, translated) during the delay */
+  animation-fill-mode: backwards;
   will-change: transform, opacity;
 }
 

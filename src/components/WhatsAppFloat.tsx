@@ -33,7 +33,14 @@ function WhatsAppIcon({ size = 28 }: { size?: number }) {
 export function WhatsAppFloat({ config }: Props) {
   if (!config.enabled) return null;
 
-  const { phone, message, label, showLabel, position, animation } = config;
+  const {
+    phone,
+    message,
+    label,
+    showLabel = true,
+    position = "bottom-right",
+    animation = "pulse",
+  } = config;
 
   const isRight = position === "bottom-right";
 
