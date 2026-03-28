@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useMemo, useRef } from "react";
 import type React from "react";
 import { motion } from "framer-motion";
 import type { TargetAndTransition } from "framer-motion";
@@ -11,6 +11,75 @@ import { FaqAccordionItem } from "./FaqAccordionItem";
 import { recordClick } from "@/hooks/use-links";
 import { saveEmailCapture } from "@/hooks/use-email-captures";
 import { AnimatedButtonBlock } from "./AnimatedButtonBlock";
+
+// ─── FreeHtmlBlock ────────────────────────────────────────────────────────────
+// Renders user-provided HTML/CSS/scripts inside an isolated iframe.
+// - sandbox="allow-scripts": JS runs but cannot access parent DOM or cookies.
+// - Auto-height: postMessage reports body.scrollHeight when no fixed height set.
+// - Fixed height: renders with scrollbar if content overflows.
+
+function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixedHeight?: number }) {
+  const [autoHeight, setAutoHeight] = useState(60);
+  const msgId = useMemo(() => `fhb-${Math.random().toString(36).slice(2)}`, []);
+
+  useEffect(() => {
+    if (fixedHeight) return;
+    function onMsg(e: MessageEvent) {
+      if (e.data?.type === "fhb-height" && e.data?.id === msgId && typeof e.data.height === "number") {
+        setAutoHeight(Math.max(40, Math.min(e.data.height + 4, 1200)));
+      }
+    }
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [fixedHeight, msgId]);
+
+  const srcDoc = useMemo(() => {
+    const id = JSON.stringify(msgId);
+    const baseStyle = `<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;}</style>`;
+    const reporter = fixedHeight
+      ? ""
+      : `<scr` +
+        `ipt>function _rep(){window.parent.postMessage({type:'fhb-height',id:${id},height:document.body.scrollHeight},'*');}` +
+        `window.addEventListener('load',_rep);` +
+        `new MutationObserver(_rep).observe(document.body,{childList:true,subtree:true,attributes:true});` +
+        `setTimeout(_rep,200);setTimeout(_rep,800);</scr` +
+        `ipt>`;
+
+    let doc = htmlContent;
+    if (doc.includes("</head>")) {
+      doc = doc.replace("</head>", baseStyle + "</head>");
+    } else if (doc.trimStart().startsWith("<html") || doc.trimStart().startsWith("<!")) {
+      doc = baseStyle + doc;
+    } else {
+      doc = `<html><head>${baseStyle}</head><body>${doc}</body></html>`;
+    }
+    return doc.includes("</body>")
+      ? doc.replace("</body>", reporter + "</body>")
+      : doc + reporter;
+  }, [htmlContent, fixedHeight, msgId]);
+
+  const height = fixedHeight || autoHeight;
+
+  return (
+    <iframe
+      srcDoc={srcDoc}
+      sandbox="allow-scripts"
+      referrerPolicy="no-referrer"
+      scrolling={fixedHeight ? "yes" : "no"}
+      title="html-livre"
+      style={{
+        width: "100%",
+        height,
+        border: "none",
+        display: "block",
+        borderRadius: 12,
+        overflow: "hidden",
+      }}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function EmptyBlockPlaceholder({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
@@ -590,18 +659,15 @@ export const BlockRenderer = memo(function BlockRenderer({
 
   if (block.type === "html" && block.htmlContent) {
     return (
-      <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
-        <div
-          className="w-full overflow-hidden rounded-xl"
-          style={{ height: block.htmlHeight || 'auto', minHeight: 60, maxHeight: 800 }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.htmlContent || '', {
-            ALLOWED_TAGS: ['div', 'span', 'p', 'a', 'b', 'i', 'em', 'strong', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'img', 'video', 'iframe', 'br', 'hr', 'table', 'tr', 'td', 'th', 'thead', 'tbody'],
-            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'target', 'rel', 'width', 'height', 'frameborder', 'allowfullscreen', 'allow'],
-            FORCE_BODY: false,
-            ADD_TAGS: ['iframe'],
-            ADD_ATTR: ['allowfullscreen', 'frameborder', 'allow'],
-          }) }}
+      <motion.div
+        className="px-4 py-2"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay, duration: 0.5 }}
+      >
+        <FreeHtmlBlock
+          htmlContent={block.htmlContent}
+          fixedHeight={block.htmlHeight || undefined}
         />
       </motion.div>
     );

@@ -298,4 +298,10 @@ export interface WhatsAppFloat {
   position: 'bottom-right' | 'bottom-left';
   /** Animação do botão */
   animation: 'pulse' | 'bounce' | 'none';
+  /** Delay inicial antes do balão aparecer (ms). Padrão: 1500 */
+  labelDelayMs?: number;
+  /** Tempo que o balão fica visível (ms). Padrão: 4000 */
+  labelDurationMs?: number;
+  /** Tempo que o balão fica oculto entre ciclos (ms). Padrão: 5000 */
+  labelHiddenMs?: number;
 }

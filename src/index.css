@@ -306,46 +306,25 @@
 /* ─── WhatsApp Floating Button ──────────────────────────────────────────────── */
 
 /*
- * Pulse: ripple rings expand outward from the button using box-shadow,
- * same technique used by WhatsApp Business, Intercom and Crisp.
+ * Pulse: ripple ring expands from the button center and fades out.
+ * Standard "ping" pattern — 0% and 100% share the same state so the loop
+ * restarts invisibly. The ring stays transparent from 70%→100% to create
+ * a natural "hold" before the next ping.
  */
 @keyframes wa-btn-pulse {
-  0%   { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 0   rgba(37,211,102,0.55); }
-  50%  { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 14px rgba(37,211,102,0.1); }
-  100% { box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 0 0 20px rgba(37,211,102,0);   }
+  0%        { box-shadow: 0 4px 16px rgba(37,211,102,0.38), 0 0 0 0   rgba(37,211,102,0.60); }
+  60%       { box-shadow: 0 4px 16px rgba(37,211,102,0.38), 0 0 0 18px rgba(37,211,102,0);   }
+  100%      { box-shadow: 0 4px 16px rgba(37,211,102,0.38), 0 0 0 0   rgba(37,211,102,0);   }
 }
 
 /*
- * Bounce: gentle float up/down with a small scale on the peak,
- * eases naturally so it doesn't feel mechanical.
+ * Bounce: smooth float up/down with natural ease.
+ * 0% and 100% are identical → seamless loop.
  */
 @keyframes wa-btn-bounce {
   0%, 100% { transform: translateY(0)    scale(1);    }
-  40%       { transform: translateY(-9px) scale(1.06); }
-  65%       { transform: translateY(-4px) scale(1.02); }
-}
-
-/*
- * Label — right-side button: label sits to the LEFT.
- * Slides in from the right (toward center), lingers, slides back out.
- * Total cycle: 9s  →  in 0.5s · stay 4s · out 0.5s · pause 4s · repeat
- */
-@keyframes wa-label-in-right {
-  0%        { opacity: 0; transform: translateX(18px) scale(0.92); }
-  5%        { opacity: 1; transform: translateX(0)    scale(1);    }
-  55%       { opacity: 1; transform: translateX(0)    scale(1);    }
-  62%, 100% { opacity: 0; transform: translateX(18px) scale(0.92); }
-}
-
-/*
- * Label — left-side button: label sits to the RIGHT.
- * Mirrors the above.
- */
-@keyframes wa-label-in-left {
-  0%        { opacity: 0; transform: translateX(-18px) scale(0.92); }
-  5%        { opacity: 1; transform: translateX(0)     scale(1);    }
-  55%       { opacity: 1; transform: translateX(0)     scale(1);    }
-  62%, 100% { opacity: 0; transform: translateX(-18px) scale(0.92); }
+  40%       { transform: translateY(-10px) scale(1.07); }
+  65%       { transform: translateY(-4px)  scale(1.02); }
 }
 
 /* ── Base button ── */
@@ -357,42 +336,48 @@
   height: 56px;
   border-radius: 50%;
   background: #25D366;
-  box-shadow: 0 4px 16px rgba(37,211,102,0.4), 0 2px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.38), 0 2px 6px rgba(0,0,0,0.18);
   position: relative;
   flex-shrink: 0;
-  /* Transition only when NOT running an animation (hover/active feedback) */
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
   text-decoration: none;
+  cursor: pointer;
+  /* will-change enables GPU compositing for smooth animation */
   will-change: transform, box-shadow;
+  /* Default transition for hover/active states (no animation active) */
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.wa-float-btn:hover {
-  transform: scale(1.08) !important;
-  box-shadow: 0 6px 22px rgba(37,211,102,0.55), 0 2px 8px rgba(0,0,0,0.22) !important;
+/* Hover: scale up (only applies when NOT in bounce animation to avoid jitter) */
+.wa-float-btn:not(.wa-float-bounce):hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 22px rgba(37,211,102,0.55), 0 2px 8px rgba(0,0,0,0.22);
+}
+
+/* Keep hover for pulse — only box-shadow animates so transform hover is safe */
+.wa-float-pulse:hover {
+  transform: scale(1.1);
 }
 
 .wa-float-btn:active {
-  transform: scale(0.94) !important;
+  transform: scale(0.93) !important;
+  transition-duration: 0.08s !important;
 }
 
-/* ── Pulse animation ──
-   Transition is kept so the hover box-shadow feedback still works;
-   CSS animations override transitions on the same property during playback. */
+/* ── Pulse animation ── */
 .wa-float-pulse {
   animation: wa-btn-pulse 2s ease-out infinite;
 }
 
 /* ── Bounce animation ──
-   Disable the transition so it doesn't fight the transform keyframes. */
+   Remove transform transition so it doesn't fight the keyframe transform. */
 .wa-float-bounce {
-  animation: wa-btn-bounce 2.6s ease-in-out infinite;
-  transition: box-shadow 0.18s ease; /* keep shadow transition only */
+  animation: wa-btn-bounce 2.4s ease-in-out infinite;
+  transition: box-shadow 0.18s ease;
 }
 
-/* ── Label bubble base ──
-   Visibility is driven by React state via data-shown attribute.
-   CSS transitions handle the slide-in/out (not @keyframes — avoids
-   prefers-reduced-motion / CSS cascade layer conflicts).
+/* ── Label bubble ──
+   Visibility driven by React state via data-shown attribute.
+   CSS transitions handle fade+slide (no @keyframes needed).
 */
 .wa-float-label {
   position: relative;
@@ -400,24 +385,26 @@
   border-radius: 12px;
   padding: 9px 16px;
   box-shadow: 0 4px 18px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08);
-  /* hidden by default — React sets data-shown="true" to reveal */
+  /* Hidden by default; React flips data-shown to "true" to reveal */
   opacity: 0;
-  transform: translateX(18px) scale(0.92);
+  transform: translateX(14px) scale(0.94);
   pointer-events: none;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  /* Smooth fade + slide on appear/disappear */
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
 }
 
-/* Visible state (right-side button: label slides in from the right) */
+/* Visible state — right-side button: label slides in from the right */
 .wa-float-label[data-shown="true"] {
   opacity: 1;
   transform: translateX(0) scale(1);
   pointer-events: auto;
 }
 
-/* ── Label — left-side button: slides in from the left ── */
+/* Left-side button: label appears to the right, slides in from the left */
 .wa-float-label-left {
-  transform: translateX(-18px) scale(0.92);
+  transform: translateX(-14px) scale(0.94);
 }
 
 .wa-float-label-left[data-shown="true"] {

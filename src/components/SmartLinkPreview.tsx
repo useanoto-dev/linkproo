@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import DOMPurify from "dompurify";
 import { SmartLink, SmartLinkButton, LinkBlock, BlockType } from "@/types/smart-link";
 import { Zap } from "lucide-react";
 import { useMemo, useEffect, useState, useRef, memo } from "react";
@@ -374,9 +375,13 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
             <h1
               className="font-bold leading-tight break-words"
               style={{ color: link.titleColor || accent, fontSize: `${link.businessNameFontSize ?? 24}px`, fontFamily }}
-            >
-              {link.businessName || "Nome do Negócio"}
-            </h1>
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(link.businessName || "Nome do Negócio", {
+                  ALLOWED_TAGS: ["b", "i", "em", "strong", "span", "br", "sup", "sub", "u", "s", "mark"],
+                  ALLOWED_ATTR: ["style", "class"],
+                }),
+              }}
+            />
           ))}
           {link.tagline && !link.hideTagline && (
             <p

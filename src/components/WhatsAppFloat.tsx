@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WhatsAppFloat as WFConfig } from "@/types/smart-link";
 
 interface Props {
@@ -37,50 +37,74 @@ export function WhatsAppFloat({ config }: Props) {
     showLabel = true,
     position = "bottom-right",
     animation = "pulse",
+    labelDelayMs = 1500,
+    labelDurationMs = 4000,
+    labelHiddenMs = 5000,
   } = config;
 
   const isRight = position === "bottom-right";
 
-  // React-driven label visibility — bypasses CSS cascade/reduced-motion issues.
-  // Loop: visible for 5s, hidden for 3s, repeat.
   const [labelShown, setLabelShown] = useState(false);
+  // animKey forces CSS animation restart when animation type changes
+  const [animKey, setAnimKey] = useState(0);
+  const prevAnimRef = useRef(animation);
 
+  // Force CSS animation restart on animation type change
+  useEffect(() => {
+    if (prevAnimRef.current !== animation) {
+      prevAnimRef.current = animation;
+      setAnimKey((k) => k + 1);
+    }
+  }, [animation]);
+
+  // Label visibility cycle: delay → visible → hidden → repeat
   useEffect(() => {
     if (!showLabel || !label) return;
-
-    // Initial delay before first appearance
-    const init = setTimeout(() => setLabelShown(true), 800);
+    const init = setTimeout(() => setLabelShown(true), labelDelayMs);
     return () => clearTimeout(init);
-  }, [showLabel, label]);
+  }, [showLabel, label, labelDelayMs]);
 
   useEffect(() => {
     if (!showLabel || !label) return;
     if (!labelShown) {
-      // Hidden phase — show again after 3s
-      const t = setTimeout(() => setLabelShown(true), 3000);
+      const t = setTimeout(() => setLabelShown(true), labelHiddenMs);
       return () => clearTimeout(t);
     } else {
-      // Visible phase — hide after 5s
-      const t = setTimeout(() => setLabelShown(false), 5000);
+      const t = setTimeout(() => setLabelShown(false), labelDurationMs);
       return () => clearTimeout(t);
     }
-  }, [labelShown, showLabel, label]);
+  }, [labelShown, showLabel, label, labelDurationMs, labelHiddenMs]);
 
   const waUrl = `https://wa.me/${phone.replace(/\D/g, "")}${
     message ? `?text=${encodeURIComponent(message)}` : ""
   }`;
 
-  const btnAnimation =
+  const animClass =
     animation === "pulse"
       ? "wa-float-pulse"
       : animation === "bounce"
       ? "wa-float-bounce"
       : "";
 
+  const btnEl = (
+    <a
+      key={`btn-${animKey}`}
+      href={waUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Abrir WhatsApp"
+      title="Falar no WhatsApp"
+      className={`wa-float-btn${animClass ? ` ${animClass}` : ""}`}
+    >
+      <WhatsAppIcon size={28} />
+    </a>
+  );
+
   const labelEl = showLabel && label ? (
     <div
-      className={`wa-float-label ${!isRight ? "wa-float-label-left" : ""}`}
-      data-shown={labelShown}
+      className={`wa-float-label${!isRight ? " wa-float-label-left" : ""}`}
+      data-shown={String(labelShown)}
+      aria-hidden={!labelShown}
     >
       <span className="text-[13px] font-medium text-gray-800 whitespace-nowrap leading-none">
         {label}
@@ -92,47 +116,20 @@ export function WhatsAppFloat({ config }: Props) {
             ? "right-[-9px] border-l-white"
             : "left-[-9px] border-r-white"
         }`}
+        aria-hidden="true"
       />
     </div>
   ) : null;
 
   return (
     <div
-      className={`fixed z-[200] flex items-center gap-3 flex-row ${
+      className={`fixed z-[200] flex items-center gap-3 ${isRight ? "flex-row-reverse" : "flex-row"} ${
         isRight ? "right-4" : "left-4"
       }`}
       style={{ bottom: "24px" }}
     >
-      {/* Button on LEFT side */}
-      {!isRight && (
-        // key forces CSS animation restart when animation type changes
-        <a
-          key={animation}
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Abrir WhatsApp"
-          className={`wa-float-btn ${btnAnimation}`}
-        >
-          <WhatsAppIcon size={28} />
-        </a>
-      )}
-
+      {btnEl}
       {labelEl}
-
-      {/* Button on RIGHT side */}
-      {isRight && (
-        <a
-          key={animation}
-          href={waUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Abrir WhatsApp"
-          className={`wa-float-btn ${btnAnimation}`}
-        >
-          <WhatsAppIcon size={28} />
-        </a>
-      )}
     </div>
   );
 }

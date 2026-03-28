@@ -160,12 +160,62 @@ export function EffectsPanel({ link, onUpdateLink }: EffectsPanelProps) {
                 />
               </div>
               {wa.showLabel && (
-                <Input
-                  value={wa.label}
-                  onChange={(e) => onUpdateLink({ whatsappFloat: { ...wa, label: e.target.value } })}
-                  placeholder="Entre em contato"
-                  className="text-xs h-8"
-                />
+                <div className="space-y-2.5">
+                  <Input
+                    value={wa.label}
+                    onChange={(e) => onUpdateLink({ whatsappFloat: { ...wa, label: e.target.value } })}
+                    placeholder="Entre em contato"
+                    className="text-xs h-8"
+                  />
+                  {/* Delay before first appearance */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <Label className="text-[10px] text-muted-foreground">Aparece após</Label>
+                      <span className="text-[10px] tabular-nums text-muted-foreground">
+                        {((wa.labelDelayMs ?? 1500) / 1000).toFixed(1)}s
+                      </span>
+                    </div>
+                    <Slider
+                      value={[wa.labelDelayMs ?? 1500]}
+                      onValueChange={([v]) => onUpdateLink({ whatsappFloat: { ...wa, labelDelayMs: v } })}
+                      min={500}
+                      max={10000}
+                      step={500}
+                    />
+                  </div>
+                  {/* Duration visible */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <Label className="text-[10px] text-muted-foreground">Fica visível por</Label>
+                      <span className="text-[10px] tabular-nums text-muted-foreground">
+                        {((wa.labelDurationMs ?? 4000) / 1000).toFixed(0)}s
+                      </span>
+                    </div>
+                    <Slider
+                      value={[wa.labelDurationMs ?? 4000]}
+                      onValueChange={([v]) => onUpdateLink({ whatsappFloat: { ...wa, labelDurationMs: v } })}
+                      min={1000}
+                      max={15000}
+                      step={1000}
+                    />
+                  </div>
+                  {/* Pause between cycles */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <Label className="text-[10px] text-muted-foreground">Pausa entre ciclos</Label>
+                      <span className="text-[10px] tabular-nums text-muted-foreground">
+                        {((wa.labelHiddenMs ?? 5000) / 1000).toFixed(0)}s
+                      </span>
+                    </div>
+                    <Slider
+                      value={[wa.labelHiddenMs ?? 5000]}
+                      onValueChange={([v]) => onUpdateLink({ whatsappFloat: { ...wa, labelHiddenMs: v } })}
+                      min={1000}
+                      max={20000}
+                      step={1000}
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
