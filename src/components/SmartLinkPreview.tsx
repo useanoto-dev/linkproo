@@ -148,6 +148,149 @@ const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
   html: "Bloco HTML",
 };
 
+// ── CanvasModeRender ──────────────────────────────────────────────────────────
+// Responsive canvas: scales the fixed 390px artboard to fill any viewport width.
+// Used by SmartLinkPreview when link.canvasMode = true (editor preview + public page).
+
+type UnifiedItem =
+  | { kind: "button"; data: SmartLinkButton; order: number }
+  | { kind: "block"; data: LinkBlock; order: number };
+
+interface CanvasModeRenderProps {
+  canvasItems: UnifiedItem[];
+  artboardH: number;
+  artboardW: number;
+  bgStyle: React.CSSProperties;
+  link: SmartLink;
+  snow: SmartLink["snowEffect"];
+  accent: string;
+  dark: boolean;
+  textClass: string;
+  subtextClass: string;
+  entryVariants: ReturnType<typeof getEntryVariants>;
+  selectedId?: string;
+  onSelectElement?: (id: string) => void;
+  openPage: SmartLink["pages"][number] | null;
+  setOpenPageId: (id: string | null) => void;
+}
+
+function CanvasModeRender({
+  canvasItems,
+  artboardH,
+  artboardW,
+  bgStyle,
+  link,
+  snow,
+  accent,
+  dark,
+  textClass,
+  subtextClass,
+  entryVariants,
+  selectedId,
+  onSelectElement,
+  openPage,
+  setOpenPageId,
+}: CanvasModeRenderProps) {
+  // Track container width for responsive scaling
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerW, setContainerW] = useState(artboardW);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width;
+      if (w > 0) setContainerW(w);
+    });
+    obs.observe(el);
+    setContainerW(el.offsetWidth || artboardW);
+    return () => obs.disconnect();
+  }, [artboardW]);
+
+  const scale = containerW / artboardW;
+  const scaledH = artboardH * scale;
+
+  return (
+    <div ref={containerRef} className="min-h-full relative overflow-hidden" style={bgStyle}>
+      {/* Background effects */}
+      {link.bgHtml?.enabled && link.bgHtml.html && <BgHtmlEffect html={link.bgHtml.html} />}
+      {link.starsEffect?.enabled && <StarsEffect count={link.starsEffect.count} color={link.starsEffect.color} shooting={link.starsEffect.shooting} />}
+      {link.matrixEffect?.enabled && <MatrixEffect speed={link.matrixEffect.speed} color={link.matrixEffect.color} />}
+      {snow?.enabled && <SnowEffect intensity={snow.intensity} color={snow.color} />}
+      {link.bubblesEffect?.enabled && <BubblesEffect intensity={link.bubblesEffect.intensity} color={link.bubblesEffect.color} />}
+      {link.firefliesEffect?.enabled && <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />}
+      {link.floatingEmojis.map((emoji, i) => (
+        <FloatingEmoji key={`${emoji}-${i}`} emoji={emoji} delay={i * 1.5} />
+      ))}
+
+      {/* Responsive artboard: scale(containerW / 390) from top-left */}
+      <div style={{ position: "relative", width: "100%", height: scaledH }}>
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: artboardW,
+          height: artboardH,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}>
+          {canvasItems.map((item) => {
+            const el = item.data;
+            const isSelected = selectedId === (el as SmartLinkButton & LinkBlock).id;
+            return (
+              <div
+                key={(el as SmartLinkButton & LinkBlock).id}
+                style={{
+                  position: "absolute",
+                  left: el.canvasX ?? 16,
+                  top: el.canvasY ?? 0,
+                  width: el.canvasW ?? 358,
+                  height: el.canvasH !== undefined ? el.canvasH : "auto",
+                  transform: `rotate(${el.canvasRotation ?? 0}deg)`,
+                  transformOrigin: "center center",
+                  cursor: onSelectElement ? "pointer" : "default",
+                  outline: isSelected ? "2px solid #6366f1" : "none",
+                  outlineOffset: isSelected ? 2 : 0,
+                  boxSizing: "border-box",
+                }}
+                onClick={onSelectElement
+                  ? (e) => { e.stopPropagation(); onSelectElement((el as SmartLinkButton & LinkBlock).id); }
+                  : undefined}
+              >
+                {item.kind === "block" ? (
+                  <BlockRenderer
+                    block={item.data as LinkBlock}
+                    accent={accent}
+                    dark={dark}
+                    textClass={textClass}
+                    subtextClass={subtextClass}
+                    delay={0}
+                    linkId={link.id}
+                    entryVariants={entryVariants}
+                    onOpenPage={(pageId) => setOpenPageId(pageId)}
+                  />
+                ) : (
+                  <ButtonPreview
+                    btn={item.data as SmartLinkButton}
+                    accent={accent}
+                    linkId={link.id}
+                    entryVariants={entryVariants}
+                    onOpenPage={(pageId) => setOpenPageId(pageId)}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {openPage && (
+        <SubPageModal page={openPage} link={link} onClose={() => setOpenPageId(null)} />
+      )}
+    </div>
+  );
+}
+
 export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
   const hasContent = link.businessName || link.heroImage || link.buttons.length > 0 || link.blocks.length > 0;
   const dark = isDarkBg(link.backgroundColor);
@@ -216,6 +359,36 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
   const curveClipId = `banner-curve-${link.id}`;
   // Classic overlap only when: no bio mode, has hero, no custom bgHtml, curve OFF
   const showClassicOverlap = !isBioMode && !!link.heroImage && !link.bgHtml?.enabled && !link.bannerCurve;
+
+  // ── Canvas mode render (public page + editor preview) ──────────────────
+  if (link.canvasMode) {
+    const canvasItems = items;
+    const ARTBOARD_W = 390;
+    const artboardH = Math.max(700, ...canvasItems.map(
+      (i) => (i.data.canvasY ?? 0) + (i.data.canvasH ?? 64) + 32
+    ));
+    const entryVariants = getEntryVariants("none", 0);
+
+    return (
+      <CanvasModeRender
+        canvasItems={canvasItems}
+        artboardH={artboardH}
+        artboardW={ARTBOARD_W}
+        bgStyle={bgStyle}
+        link={link}
+        snow={snow}
+        accent={accent}
+        dark={dark}
+        textClass={textClass}
+        subtextClass={subtextClass}
+        entryVariants={entryVariants}
+        selectedId={selectedId}
+        onSelectElement={onSelectElement}
+        openPage={openPage}
+        setOpenPageId={setOpenPageId}
+      />
+    );
+  }
 
   return (
     <div className="min-h-full relative overflow-hidden" style={bgStyle}>

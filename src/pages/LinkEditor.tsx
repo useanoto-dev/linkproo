@@ -6,8 +6,11 @@ import { SubPagePreview } from "@/components/SubPagePreview";
 import { ElementsSidebar } from "@/components/editor/ElementsSidebar";
 import { BlockEditor } from "@/components/editor/BlockEditor";
 import { ThemePanel } from "@/components/editor/ThemePanel";
-import { SmartLink, BlockType, SubPage } from "@/types/smart-link";
-import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard, ArrowLeft } from "lucide-react";
+import { CanvasPreview, assignInitialCanvasPositions } from "@/components/preview/CanvasPreview";
+import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
+import { CanvasPropertiesPanel } from "@/components/editor/CanvasPropertiesPanel";
+import { SmartLink, BlockType, SubPage, SmartLinkButton, LinkBlock } from "@/types/smart-link";
+import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard, ArrowLeft, LayoutGrid } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EffectsPanel } from "@/components/editor/EffectsPanel";
 import { SubPageEditor } from "@/components/editor/SubPageEditor";
@@ -99,6 +102,7 @@ export default function LinkEditor() {
   const [openDrawer, setOpenDrawer] = useState<"elements" | "theme" | "effects" | "pages" | null>(null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [editingSubPageId, setEditingSubPageId] = useState<string | null>(null);
+  const [isCanvasMode, setIsCanvasMode] = useState(false);
   const [initialized, setInitialized] = useState(!isEditing);
   const [isDraggingOverPreview, setIsDraggingOverPreview] = useState(false);
   const [ghostBlockType, setGhostBlockType] = useState<BlockType | null>(null);
@@ -124,6 +128,8 @@ export default function LinkEditor() {
       reset(existingLink);
       initializeRef(existingLink);
       setInitialized(true);
+      // Restore canvas mode from saved link
+      setIsCanvasMode(existingLink.canvasMode ?? false);
     }
   }, [existingLink, initialized, reset, initializeRef]);
 
@@ -189,6 +195,116 @@ export default function LinkEditor() {
     setLink((prev) => ({ ...prev, ...updates }));
   }, [setLink]);
 
+  // ── Canvas mode ──────────────────────────────────────────────────────────
+  const handleToggleCanvasMode = useCallback(() => {
+    const newMode = !isCanvasMode;
+    setIsCanvasMode(newMode);
+    if (newMode) {
+      // Assign initial positions to all elements that don't have canvas coords yet
+      const { buttons, blocks } = assignInitialCanvasPositions(link.buttons, link.blocks);
+      updateLink({ canvasMode: true, buttons, blocks });
+    } else {
+      updateLink({ canvasMode: false });
+      setSelectedElementId(null);
+    }
+  }, [isCanvasMode, link.buttons, link.blocks, updateLink]);
+
+  const handleCanvasUpdateElement = useCallback((id: string, updates: Partial<SmartLinkButton> | Partial<LinkBlock>) => {
+    updateLink({
+      buttons: link.buttons.map((b) => b.id === id ? { ...b, ...updates } : b),
+      blocks: link.blocks.map((b) => b.id === id ? { ...b, ...updates } : b),
+    });
+  }, [link.buttons, link.blocks, updateLink]);
+
+  const handleCanvasDeleteElement = useCallback((id: string) => {
+    updateLink({
+      buttons: link.buttons.filter((b) => b.id !== id),
+      blocks: link.blocks.filter((b) => b.id !== id),
+    });
+    setSelectedElementId(null);
+  }, [link.buttons, link.blocks, updateLink]);
+
+  const handleCanvasDuplicateElement = useCallback((id: string) => {
+    const btn = link.buttons.find((b) => b.id === id);
+    if (btn) {
+      const newBtn: SmartLinkButton = {
+        ...btn,
+        id: Date.now().toString(),
+        canvasX: (btn.canvasX ?? 0) + 16,
+        canvasY: (btn.canvasY ?? 0) + 16,
+        order: (btn.order ?? 0) + 0.5,
+      };
+      updateLink({ buttons: [...link.buttons, newBtn] });
+      setSelectedElementId(newBtn.id);
+      return;
+    }
+    const blk = link.blocks.find((b) => b.id === id);
+    if (blk) {
+      const newBlk: LinkBlock = {
+        ...blk,
+        id: Date.now().toString(),
+        canvasX: (blk.canvasX ?? 0) + 16,
+        canvasY: (blk.canvasY ?? 0) + 16,
+        order: (blk.order ?? 0) + 0.5,
+      };
+      updateLink({ blocks: [...link.blocks, newBlk] });
+      setSelectedElementId(newBlk.id);
+    }
+  }, [link.buttons, link.blocks, updateLink]);
+
+  const handleCanvasBringForward = useCallback((id: string) => {
+    const allItems = [
+      ...link.buttons.map((b) => ({ kind: "button" as const, id: b.id, order: b.order ?? 0 })),
+      ...link.blocks.map((b) => ({ kind: "block" as const, id: b.id, order: b.order ?? 0 })),
+    ].sort((a, b) => a.order - b.order);
+    const idx = allItems.findIndex((i) => i.id === id);
+    if (idx < allItems.length - 1) {
+      const next = allItems[idx + 1];
+      const cur = allItems[idx];
+      const curOrder = cur.order;
+      const nextOrder = next.order;
+      updateLink({
+        buttons: link.buttons.map((b) =>
+          b.id === cur.id ? { ...b, order: nextOrder + 0.5 } :
+          b.id === next.id ? { ...b, order: curOrder } : b
+        ),
+        blocks: link.blocks.map((b) =>
+          b.id === cur.id ? { ...b, order: nextOrder + 0.5 } :
+          b.id === next.id ? { ...b, order: curOrder } : b
+        ),
+      });
+    }
+  }, [link.buttons, link.blocks, updateLink]);
+
+  const handleCanvasSendBackward = useCallback((id: string) => {
+    const allItems = [
+      ...link.buttons.map((b) => ({ kind: "button" as const, id: b.id, order: b.order ?? 0 })),
+      ...link.blocks.map((b) => ({ kind: "block" as const, id: b.id, order: b.order ?? 0 })),
+    ].sort((a, b) => a.order - b.order);
+    const idx = allItems.findIndex((i) => i.id === id);
+    if (idx > 0) {
+      const prev = allItems[idx - 1];
+      const cur = allItems[idx];
+      const curOrder = cur.order;
+      const prevOrder = prev.order;
+      updateLink({
+        buttons: link.buttons.map((b) =>
+          b.id === cur.id ? { ...b, order: prevOrder - 0.5 } :
+          b.id === prev.id ? { ...b, order: curOrder } : b
+        ),
+        blocks: link.blocks.map((b) =>
+          b.id === cur.id ? { ...b, order: prevOrder - 0.5 } :
+          b.id === prev.id ? { ...b, order: curOrder } : b
+        ),
+      });
+    }
+  }, [link.buttons, link.blocks, updateLink]);
+
+  // Selected element for canvas properties panel
+  const canvasSelectedElement = selectedElementId
+    ? (link.buttons.find((b) => b.id === selectedElementId) ?? link.blocks.find((b) => b.id === selectedElementId) ?? null)
+    : null;
+
   const getNextOrder = () => {
     const maxBtnOrder = link.buttons.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
     const maxBlkOrder = link.blocks.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
@@ -247,6 +363,12 @@ export default function LinkEditor() {
       "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
       carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
     };
+    // In canvas mode, compute a drop position: below the last element
+    const canvasDropY = isCanvasMode
+      ? Math.max(16, ...link.buttons.map((b) => (b.canvasY ?? 0) + (b.canvasH ?? 56) + 12),
+          ...link.blocks.map((b) => (b.canvasY ?? 0) + (b.canvasH ?? 64) + 12))
+      : 0;
+
     if (type === "button") {
       updateLink({
         buttons: [
@@ -259,16 +381,20 @@ export default function LinkEditor() {
             icon: "",
             gradientColor: "from-blue-600 to-blue-800",
             iconEmoji: "",
-            imagePosition: "right",
+            imagePosition: "right" as const,
             imageOpacity: 85,
             imageSize: 50,
             order: nextOrder,
+            ...(isCanvasMode ? { canvasX: 16, canvasY: canvasDropY, canvasW: 358, canvasH: 56, canvasRotation: 0 } : {}),
           },
         ],
       });
     } else {
       const newBlock = createBlockDefaults(type, nextOrder, extraDefaults);
-      updateLink({ blocks: [...link.blocks, newBlock] });
+      const blockWithCanvas = isCanvasMode
+        ? { ...newBlock, canvasX: 16, canvasY: canvasDropY, canvasW: 358, canvasH: 64, canvasRotation: 0 }
+        : newBlock;
+      updateLink({ blocks: [...link.blocks, blockWithCanvas] });
     }
     toast.success(`${names[type] || "Bloco"} adicionado!`);
   };
@@ -513,6 +639,21 @@ export default function LinkEditor() {
               </button>
             ))}
 
+            {/* Canvas mode toggle */}
+            <button
+              type="button"
+              onClick={handleToggleCanvasMode}
+              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                isCanvasMode
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-indigo-400/50"
+              }`}
+              title={isCanvasMode ? "Modo Lista" : "Modo Canvas (Canva-style)"}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{isCanvasMode ? "Lista" : "Canvas"}</span>
+            </button>
+
             {/* Undo / Redo */}
             <div className="flex items-center gap-0.5 ml-1">
               <button
@@ -652,7 +793,17 @@ export default function LinkEditor() {
                   </div>
                 );
               })() : (
-                <BlockEditor link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt} selectedElementId={selectedElementId ?? undefined} onElementSelected={setSelectedElementId} />
+                <>
+                  {isCanvasMode && canvasSelectedElement && (
+                    <div className="mb-4">
+                      <CanvasPropertiesPanel
+                        element={canvasSelectedElement}
+                        onUpdate={(updates) => handleCanvasUpdateElement(selectedElementId!, updates as Partial<SmartLinkButton> | Partial<LinkBlock>)}
+                      />
+                    </div>
+                  )}
+                  <BlockEditor link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt} selectedElementId={selectedElementId ?? undefined} onElementSelected={setSelectedElementId} />
+                </>
               )}
             </div>
           </div>
@@ -741,6 +892,23 @@ export default function LinkEditor() {
                         page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
                         link={previewLink}
                       />
+                    ) : isCanvasMode ? (
+                      <div style={{ position: "relative", width: "100%", minHeight: "100%" }}>
+                        <CanvasPreview
+                          link={previewLink}
+                          editorScale={0.86}
+                          selectedId={selectedElementId}
+                          onSelect={(id) => {
+                            setSelectedElementId(id);
+                            if (openDrawer) setOpenDrawer(null);
+                          }}
+                          onUpdateElement={handleCanvasUpdateElement}
+                          onDeleteElement={handleCanvasDeleteElement}
+                          onDuplicateElement={handleCanvasDuplicateElement}
+                          onBringForward={handleCanvasBringForward}
+                          onSendBackward={handleCanvasSendBackward}
+                        />
+                      </div>
                     ) : (
                       <SmartLinkPreview
                         link={previewLink}
@@ -787,6 +955,18 @@ export default function LinkEditor() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Canvas toolbar — position:fixed, tracks selected element via rAF polling */}
+        {isCanvasMode && selectedElementId && canvasSelectedElement && (
+          <CanvasToolbar
+            selectedId={selectedElementId}
+            onDelete={handleCanvasDeleteElement}
+            onDuplicate={handleCanvasDuplicateElement}
+            onBringForward={handleCanvasBringForward}
+            onSendBackward={handleCanvasSendBackward}
+            onDeselect={() => setSelectedElementId(null)}
+          />
+        )}
 
         {/* Keyboard shortcuts overlay */}
         {showShortcuts && (

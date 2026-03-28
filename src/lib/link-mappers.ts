@@ -62,6 +62,7 @@ export interface SmartLinkRow {
   } | null;
   buttons?: unknown;
   pages?: unknown;
+  canvas_mode?: boolean | null;
   badges?: unknown;
   floating_emojis?: unknown;
   blocks?: unknown;
@@ -117,6 +118,7 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     starsEffect: row.bg_effects?.stars as StarsEffect | undefined,
     bgHtml: row.bg_effects?.bgHtml as BgHtmlEffect | undefined,
     whatsappFloat: row.bg_effects?.whatsappFloat as WhatsAppFloat | undefined,
+    canvasMode: row.canvas_mode ?? false,
     buttons: (row.buttons as SmartLink["buttons"]) || [],
     pages: (row.pages as SmartLink["pages"]) || [],
     badges: (row.badges as string[]) || [],
@@ -183,5 +185,6 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
       bgHtml: link.bgHtml ?? null,
       whatsappFloat: link.whatsappFloat ?? null,
     }) : null,
+    canvas_mode: link.canvasMode ?? false,
   };
 }

@@ -24,6 +24,12 @@ export interface SmartLinkButton {
   buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal';
   buttonBorderRadius?: number;  // per-button border radius override, 0-24px
   whatsappMessage?: string;     // pre-filled message for WhatsApp links
+  // Canvas positioning — undefined = renders in list (legacy mode)
+  canvasX?: number;
+  canvasY?: number;
+  canvasW?: number;
+  canvasH?: number;
+  canvasRotation?: number;
 }
 
 export type BlockType =
@@ -136,6 +142,12 @@ export interface LinkBlock {
   // Scheduling — ISO datetime strings (e.g. "2025-06-01T09:00")
   visibleFrom?: string;   // block hidden before this time
   visibleUntil?: string;  // block hidden after this time
+  // Canvas positioning — undefined = renders in list (legacy mode)
+  canvasX?: number;
+  canvasY?: number;
+  canvasW?: number;
+  canvasH?: number;
+  canvasRotation?: number;
 }
 
 export interface ContactItem {
@@ -282,6 +294,8 @@ export interface SmartLink {
   watermarkUrl?: string;
   /** Botão flutuante do WhatsApp */
   whatsappFloat?: WhatsAppFloat;
+  /** Canvas mode: true = absolute artboard, false/undefined = vertical list */
+  canvasMode?: boolean;
 }
 
 export interface WhatsAppFloat {
