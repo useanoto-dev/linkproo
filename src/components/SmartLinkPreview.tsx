@@ -22,16 +22,23 @@ import {
 
 // ─── HtmlTitle — renderiza HTML completo do usuário dentro de um iframe isolado ──
 
-function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: number; align?: "left" | "center" | "right" }) {
+function HtmlTitle({ html, scale, align = "center", textColor = "#111" }: {
+  html: string;
+  scale: number;
+  align?: "left" | "center" | "right";
+  textColor?: string;
+}) {
   const [height, setHeight] = useState(300);
 
-  // Unique ID per instance so multiple HtmlTitle components don't cross-talk
-  const msgId = useMemo(() => `ht-${Math.random().toString(36).slice(2)}`, []);
+  // useRef gives a stable ID — more reliable than useMemo([]) which React can discard
+  const msgIdRef = useRef(`ht-${Math.random().toString(36).slice(2)}`);
+  const msgId = msgIdRef.current;
 
   // Inject style + postMessage height reporter with MutationObserver for dynamic content
   const srcDoc = useMemo(() => {
     const id = JSON.stringify(msgId);
-    const defaultStyle = `<style>html,body{margin:0;padding:0;box-sizing:border-box;text-align:${align};}</style>`;
+    // background:transparent → page theme shows through; color fallback for unstyled snippets
+    const defaultStyle = `<style>html,body{margin:0;padding:0;box-sizing:border-box;background:transparent;color:${textColor};text-align:${align};}</style>`;
     // Robust height measurement: handles absolute/fixed/flex/grid layouts
     const reporter =
       `<scr` +
@@ -76,7 +83,7 @@ function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: num
     return doc.includes("</body>")
       ? doc.replace("</body>", reporter + "</body>")
       : doc + reporter;
-  }, [html, align, msgId]);
+  }, [html, align, textColor, msgId]);
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
@@ -407,6 +414,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
               html={link.businessName || "<p>Nome do Negócio</p>"}
               scale={(link.businessNameFontSize ?? 100) / 100}
               align={link.businessNameAlign ?? "center"}
+              textColor={link.titleColor || (dark ? "#ffffff" : "#111111")}
             />
           ) : (
             <h1

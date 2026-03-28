@@ -20,7 +20,9 @@ import { AnimatedButtonBlock } from "./AnimatedButtonBlock";
 
 function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixedHeight?: number }) {
   const [autoHeight, setAutoHeight] = useState(150);
-  const msgId = useMemo(() => `fhb-${Math.random().toString(36).slice(2)}`, []);
+  // useRef gives a stable ID that never triggers useMemo/useEffect deps changes
+  const msgIdRef = useRef(`fhb-${Math.random().toString(36).slice(2)}`);
+  const msgId = msgIdRef.current;
 
   useEffect(() => {
     if (fixedHeight) return;
@@ -35,7 +37,8 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
 
   const srcDoc = useMemo(() => {
     const id = JSON.stringify(msgId);
-    const baseStyle = `<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;}</style>`;
+    // background:transparent lets the page theme show through the iframe
+    const baseStyle = `<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;background:transparent;}</style>`;
     // Robust height measurement: handles absolute/fixed/flex/grid layouts
     const reporter = fixedHeight
       ? ""
@@ -82,7 +85,9 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
   const height = fixedHeight || autoHeight;
 
   return (
+    // key=srcDoc forces a full iframe remount whenever HTML changes (reliable across all browsers)
     <iframe
+      key={srcDoc}
       srcDoc={srcDoc}
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
@@ -95,6 +100,7 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
         display: "block",
         borderRadius: 12,
         overflow: "hidden",
+        background: "transparent",
       }}
     />
   );
@@ -271,13 +277,15 @@ export const BlockRenderer = memo(function BlockRenderer({
 }: BlockRendererProps) {
   const isNewLink = linkId.startsWith("new-");
 
+  // Hook must be called unconditionally — BEFORE any early returns (Rules of Hooks)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
   // Scheduling visibility — hidden outside the configured window (skip in editor preview)
   if (!isNewLink && (block.visibleFrom || block.visibleUntil)) {
     const now = new Date();
     if (block.visibleFrom && now < new Date(block.visibleFrom)) return null;
     if (block.visibleUntil && now >= new Date(block.visibleUntil)) return null;
   }
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   if (block.type === "image-button") {
     if (!block.buttonImageUrl) {

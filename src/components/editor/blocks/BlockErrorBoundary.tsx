@@ -11,6 +11,10 @@ export class BlockErrorBoundary extends React.Component<
     return { hasError: true };
   }
 
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[BlockErrorBoundary] block:", this.props.blockId, error, info.componentStack);
+  }
+
   render() {
     if (this.state.hasError) {
       return (
