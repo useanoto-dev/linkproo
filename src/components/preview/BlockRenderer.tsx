@@ -19,14 +19,14 @@ import { AnimatedButtonBlock } from "./AnimatedButtonBlock";
 // - Fixed height: renders with scrollbar if content overflows.
 
 function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixedHeight?: number }) {
-  const [autoHeight, setAutoHeight] = useState(60);
+  const [autoHeight, setAutoHeight] = useState(150);
   const msgId = useMemo(() => `fhb-${Math.random().toString(36).slice(2)}`, []);
 
   useEffect(() => {
     if (fixedHeight) return;
     function onMsg(e: MessageEvent) {
       if (e.data?.type === "fhb-height" && e.data?.id === msgId && typeof e.data.height === "number") {
-        setAutoHeight(Math.max(40, Math.min(e.data.height + 4, 1200)));
+        setAutoHeight(Math.max(40, Math.min(e.data.height + 4, 2400)));
       }
     }
     window.addEventListener("message", onMsg);
@@ -36,10 +36,25 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
   const srcDoc = useMemo(() => {
     const id = JSON.stringify(msgId);
     const baseStyle = `<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;}</style>`;
+    // Robust height measurement: handles absolute/fixed/flex/grid layouts
     const reporter = fixedHeight
       ? ""
       : `<scr` +
-        `ipt>function _rep(){window.parent.postMessage({type:'fhb-height',id:${id},height:document.body.scrollHeight},'*');}` +
+        `ipt>` +
+        `function _rep(){` +
+          `var h=0;` +
+          `try{` +
+            `h=Math.max(` +
+              `document.body?document.body.scrollHeight:0,` +
+              `document.body?document.body.offsetHeight:0,` +
+              `document.documentElement?document.documentElement.scrollHeight:0,` +
+              `document.documentElement?document.documentElement.offsetHeight:0` +
+            `);` +
+            `if(h<10){var els=document.querySelectorAll("body > *");for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();h=Math.max(h,r.bottom+(window.pageYOffset||0));}}` +
+            `if(h<10)h=window.innerHeight||150;` +
+          `}catch(e){h=150;}` +
+          `window.parent.postMessage({type:'fhb-height',id:${id},height:h},'*');` +
+        `}` +
         `window.addEventListener('load',_rep);` +
         `new MutationObserver(_rep).observe(document.body,{childList:true,subtree:true,attributes:true});` +
         `setTimeout(_rep,200);setTimeout(_rep,800);</scr` +
@@ -47,10 +62,16 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
 
     let doc = htmlContent;
     if (doc.includes("</head>")) {
+      // Full HTML with </head> tag
       doc = doc.replace("</head>", baseStyle + "</head>");
-    } else if (doc.trimStart().startsWith("<html") || doc.trimStart().startsWith("<!")) {
+    } else if (/<body[\s>]/i.test(doc)) {
+      // Full HTML with <body> but no </head> — inject before <body>
+      doc = doc.replace(/<body[\s>]/i, (m) => baseStyle + m);
+    } else if (/^\s*<!|^\s*<html[\s>]/i.test(doc)) {
+      // DOCTYPE or <html> with no head/body — prepend style
       doc = baseStyle + doc;
     } else {
+      // Plain snippet — wrap in complete HTML document
       doc = `<html><head>${baseStyle}</head><body>${doc}</body></html>`;
     }
     return doc.includes("</body>")

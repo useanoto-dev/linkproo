@@ -53,7 +53,13 @@ function showProtectToast() {
     document.head.appendChild(s);
   }
 
-  el.innerHTML = `<span style="font-size:15px">🔒</span><span>Conteúdo protegido — direitos reservados.</span>`;
+  const lockIcon = document.createElement("span");
+  lockIcon.style.fontSize = "15px";
+  lockIcon.textContent = "🔒";
+  const lockMsg = document.createElement("span");
+  lockMsg.textContent = "Conteúdo protegido — direitos reservados.";
+  el.appendChild(lockIcon);
+  el.appendChild(lockMsg);
   document.body.appendChild(el);
 
   setTimeout(() => {

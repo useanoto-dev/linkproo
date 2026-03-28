@@ -32,22 +32,28 @@ export default function SettingsPage() {
     let cancelled = false;
 
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, avatar_url, company")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("display_name, avatar_url, company")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-      if (cancelled) return;
+        if (cancelled) return;
+        if (error) throw error;
 
-      if (data) {
-        setProfile({
-          display_name: data.display_name || "",
-          avatar_url: data.avatar_url || "",
-          company: data.company || "",
-        });
+        if (data) {
+          setProfile({
+            display_name: data.display_name || "",
+            avatar_url: data.avatar_url || "",
+            company: data.company || "",
+          });
+        }
+      } catch (err) {
+        if (!cancelled) console.error("Profile load error:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     })();
 
     return () => {

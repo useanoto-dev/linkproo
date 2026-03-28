@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, Layout } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { templates, templateCategories } from "@/data/templates";
 import { useLinks, useLinkStats } from "@/hooks/use-links";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
@@ -191,9 +191,10 @@ const Dashboard = () => {
     { label: "Taxa de Conversão", value: `${conversionRate}%`, icon: TrendingUp, change: "Cliques / Visualizações" },
   ];
 
-  const filteredTemplates = selectedCategory
-    ? templates.filter(t => t.category === selectedCategory)
-    : templates;
+  const filteredTemplates = useMemo(
+    () => selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates,
+    [selectedCategory]
+  );
 
   const handleUseTemplate = (templateId: string) => {
     navigate(`/links/new?template=${templateId}`);

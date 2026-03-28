@@ -77,7 +77,7 @@ export function usePublicLink(slug?: string) {
       try {
         const { data: plan, error: planError } = await supabase
           .rpc("get_link_owner_plan", { _user_id: data.user_id });
-        if (!planError && plan) ownerPlan = plan as string;
+        if (!planError && typeof plan === "string") ownerPlan = plan;
       } catch {
         // Erro de rede — padrão é "free" (exibe marca d'água)
       }
@@ -105,8 +105,16 @@ export function useSaveLink() {
       if (isNew) {
         // Enforce plan limits before creating
         const [{ plan }, { count: linkCount }] = await Promise.all([
-          supabase.from("profiles").select("plan").eq("user_id", user.id).single().then(r => ({ plan: (r.data?.plan || "free") as string })),
-          supabase.from("links").select("*", { count: "exact", head: true }).eq("user_id", user.id).then(r => ({ count: r.count || 0 })),
+          supabase.from("profiles").select("plan").eq("user_id", user.id).single()
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return { plan: (data?.plan || "free") as string };
+            }),
+          supabase.from("links").select("*", { count: "exact", head: true }).eq("user_id", user.id)
+            .then(({ error, count }) => {
+              if (error) throw error;
+              return { count: count || 0 };
+            }),
         ]);
         const planLimits: Record<string, number> = { free: 3, pro: 50, business: Infinity };
         const maxLinks = planLimits[plan] ?? planLimits.free;

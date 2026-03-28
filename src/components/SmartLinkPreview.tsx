@@ -32,21 +32,47 @@ function HtmlTitle({ html, scale, align = "center" }: { html: string; scale: num
   const srcDoc = useMemo(() => {
     const id = JSON.stringify(msgId);
     const defaultStyle = `<style>html,body{margin:0;padding:0;box-sizing:border-box;text-align:${align};}</style>`;
+    // Robust height measurement: handles absolute/fixed/flex/grid layouts
     const reporter =
       `<scr` +
       `ipt>` +
-      `function _r(){window.parent.postMessage({type:'html-title-height',id:${id},height:document.body.scrollHeight},'*');}` +
+      `function _r(){` +
+        `var h=0;` +
+        `try{` +
+          `h=Math.max(` +
+            `document.body?document.body.scrollHeight:0,` +
+            `document.body?document.body.offsetHeight:0,` +
+            `document.documentElement?document.documentElement.scrollHeight:0,` +
+            `document.documentElement?document.documentElement.offsetHeight:0` +
+          `);` +
+          // Fallback: scan all top-level children via bounding rects (catches abs/fixed)
+          `if(h<10){var els=document.querySelectorAll("body > *");for(var i=0;i<els.length;i++){var r=els[i].getBoundingClientRect();h=Math.max(h,r.bottom+(window.pageYOffset||0));}}` +
+          // Last resort: use viewport height (full-page designs)
+          `if(h<10)h=window.innerHeight||200;` +
+        `}catch(e){h=200;}` +
+        `window.parent.postMessage({type:'html-title-height',id:${id},height:h},'*');` +
+      `}` +
       `window.addEventListener('load',_r);` +
       `new MutationObserver(_r).observe(document.body,{childList:true,subtree:true,attributes:true});` +
       `setTimeout(_r,100);setTimeout(_r,500);setTimeout(_r,1200);` +
       `</scr` +
       `ipt>`;
+
     let doc = html;
     if (doc.includes("</head>")) {
+      // Full HTML doc with </head> — inject style just before closing tag
       doc = doc.replace("</head>", defaultStyle + "</head>");
-    } else {
+    } else if (/<body[\s>]/i.test(doc)) {
+      // Full HTML doc with <body> but no </head> — inject before <body>
+      doc = doc.replace(/<body[\s>]/i, (m) => defaultStyle + m);
+    } else if (/^\s*<!|^\s*<html[\s>]/i.test(doc)) {
+      // DOCTYPE or <html> with no head/body tags — prepend style
       doc = defaultStyle + doc;
+    } else {
+      // Plain snippet — wrap in proper HTML document structure
+      doc = `<html><head>${defaultStyle}</head><body>${doc}</body></html>`;
     }
+
     return doc.includes("</body>")
       ? doc.replace("</body>", reporter + "</body>")
       : doc + reporter;
@@ -116,7 +142,7 @@ const GHOST_BLOCK_LABELS: Partial<Record<BlockType, string>> = {
 };
 
 export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
-  const hasContent = link.businessName || link.heroImage || link.buttons.length > 0;
+  const hasContent = link.businessName || link.heroImage || link.buttons.length > 0 || link.blocks.length > 0;
   const dark = isDarkBg(link.backgroundColor);
   const customBg = parseCustomBg(link.backgroundColor);
   const heroBgColor = extractBgColor(link.backgroundColor);

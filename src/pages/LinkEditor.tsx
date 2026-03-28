@@ -354,13 +354,15 @@ export default function LinkEditor() {
       if (isNew) {
         navigate(`/links/${saved.id}/edit`, { replace: true });
       }
-    } catch (e: any) {
-      if (e?.message?.includes("Limite de links")) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const code = (error as { code?: string })?.code;
+      if (msg.includes("Limite de links")) {
         toast.error("Você atingiu o limite de links do seu plano. Faça upgrade para criar mais!");
-      } else if (e?.message?.includes("duplicate key") || e?.code === "23505") {
+      } else if (msg.includes("duplicate key") || code === "23505") {
         toast.error("Esse endereço já está em uso. Escolha outro slug.");
       } else {
-        toast.error("Erro ao salvar: " + (e?.message || "tente novamente"));
+        toast.error("Erro ao salvar: " + (msg || "tente novamente"));
       }
     }
   };
@@ -395,7 +397,7 @@ export default function LinkEditor() {
             <Skeleton className="h-8 w-full rounded-lg" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="rounded-xl border border-border p-3 space-y-2">
+                <div key={`skeleton-block-${i}`} className="rounded-xl border border-border p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-4 w-4 rounded" />
                     <Skeleton className="h-4 w-24" />
@@ -413,7 +415,7 @@ export default function LinkEditor() {
               <Skeleton className="h-4 w-48 mx-auto" />
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-11 w-full rounded-xl" />
+                  <Skeleton key={`skeleton-btn-${i}`} className="h-11 w-full rounded-xl" />
                 ))}
               </div>
             </div>
