@@ -27,7 +27,10 @@ function FreeHtmlBlock({ htmlContent, fixedHeight }: { htmlContent: string; fixe
   useEffect(() => {
     if (fixedHeight) return;
     function onMsg(e: MessageEvent) {
-      if (e.data?.type === "fhb-height" && e.data?.id === msgId && typeof e.data.height === "number") {
+      // Only accept messages from same origin or sandboxed iframes (origin === 'null')
+      if (e.origin !== window.location.origin && e.origin !== 'null') return;
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === "fhb-height" && e.data.id === msgId && typeof e.data.height === "number") {
         setAutoHeight(Math.max(40, Math.min(e.data.height + 4, 2400)));
       }
     }
