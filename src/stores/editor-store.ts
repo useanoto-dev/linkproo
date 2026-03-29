@@ -2,8 +2,12 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { SmartLink, BlockType } from '@/types/smart-link';
 import { DeviceType } from '@/components/editor/DeviceFrame';
+import { EDITOR_MAX_HISTORY } from '@/lib/editor-constants';
 
-const MAX_HISTORY = 50;
+export function serializeLink(l: SmartLink): string {
+  const { views, clicks, createdAt, ...rest } = l;
+  return JSON.stringify(rest);
+}
 
 export interface EditorUIState {
   openDrawer: 'elements' | 'theme' | 'effects' | 'pages' | null;
@@ -32,6 +36,14 @@ export interface EditorStore {
   canUndo: boolean;
   canRedo: boolean;
 
+  // Autosave
+  autosave: {
+    status: 'idle' | 'saving' | 'saved' | 'error';
+    savedAt: Date | null;
+    lastSavedSnapshot: string;
+    enabled: boolean;
+  };
+
   // Actions — link data
   setLink: (updater: SmartLink | ((prev: SmartLink) => SmartLink), skipHistory?: boolean) => void;
   updateLink: (updates: Partial<SmartLink>) => void;
@@ -44,6 +56,12 @@ export interface EditorStore {
 
   // Actions — UI
   setUI: (updates: Partial<EditorUIState>) => void;
+
+  // Actions — autosave
+  setAutosaveStatus: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+  setAutosaveSavedAt: (date: Date) => void;
+  initAutosaveSnapshot: (link: SmartLink) => void;
+  setAutosaveEnabled: (enabled: boolean) => void;
 }
 
 const EMPTY_LINK = {} as SmartLink;
@@ -54,6 +72,12 @@ export const useEditorStore = create<EditorStore>()(
     previewLink: EMPTY_LINK,
     past: [],
     future: [],
+    autosave: {
+      status: 'idle',
+      savedAt: null,
+      lastSavedSnapshot: '',
+      enabled: false,
+    },
     ui: {
       openDrawer: null,
       selectedElementId: null,
@@ -73,7 +97,7 @@ export const useEditorStore = create<EditorStore>()(
       const next = typeof updater === 'function' ? updater(prev) : updater;
       const newPast = skipHistory
         ? state.past
-        : [...state.past.slice(-(MAX_HISTORY - 1)), prev];
+        : [...state.past.slice(-(EDITOR_MAX_HISTORY - 1)), prev];
       const newFuture = skipHistory ? state.future : [];
       set({
         link: next,
@@ -136,5 +160,10 @@ export const useEditorStore = create<EditorStore>()(
     setUI: (updates) => {
       set((state) => ({ ui: { ...state.ui, ...updates } }));
     },
+
+    setAutosaveStatus: (status) => set((state) => ({ autosave: { ...state.autosave, status } })),
+    setAutosaveSavedAt: (date) => set((state) => ({ autosave: { ...state.autosave, savedAt: date } })),
+    initAutosaveSnapshot: (link) => set((state) => ({ autosave: { ...state.autosave, lastSavedSnapshot: serializeLink(link) } })),
+    setAutosaveEnabled: (enabled) => set((state) => ({ autosave: { ...state.autosave, enabled } })),
   }))
 );

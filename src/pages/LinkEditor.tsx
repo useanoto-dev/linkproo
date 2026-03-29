@@ -14,13 +14,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { templates } from '@/data/templates';
 import { useSaveLink, useLink } from '@/hooks/use-links';
-import { smartLinkToRow } from '@/lib/link-mappers';
-import { useAutosave } from '@/hooks/use-autosave';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { validateSlug, checkSlugAvailability } from '@/lib/slug-utils';
 import { useEditorStore } from '@/stores/editor-store';
 import { useBlockOperations } from '@/hooks/use-block-operations';
+import { registerAutosaveSubscriber, flushAutosave, retryAutosave } from '@/stores/autosave-subscriber';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -103,46 +101,45 @@ export default function LinkEditor() {
 
   // Autosave
   const isExistingLink = isEditing || !link.id?.startsWith('new-');
-  const autosaveFn = useCallback(async (l: SmartLink) => {
-    if (!user) return;
-    const row = smartLinkToRow(l, user.id);
-    const { error } = await supabase
-      .from('links')
-      // @ts-expect-error smartLinkToRow includes fields not yet in generated Supabase types
-      .update(row).eq('id', l.id).eq('user_id', user.id);
-    if (error) throw error;
-  }, [user]);
+  const autosave = useEditorStore((s) => s.autosave);
 
-  const { status: autosaveStatus, initializeRef, savedAt, retry, flush } = useAutosave(
-    link, autosaveFn, isExistingLink && initialized, 1500,
-  );
+  // Register autosave subscriber when user is available
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsubscribe = registerAutosaveSubscriber(user.id);
+    return () => {
+      void flushAutosave(); // flush on unmount
+      unsubscribe();
+    };
+  }, [user?.id]);
 
   // Load existing link
   useEffect(() => {
     if (existingLink && !initialized) {
       resetLink(existingLink);
-      initializeRef(existingLink);
+      useEditorStore.getState().initAutosaveSnapshot(existingLink);
+      useEditorStore.getState().setAutosaveEnabled(true);
       setInitialized(true);
     }
-  }, [existingLink, initialized, resetLink, initializeRef]);
+  }, [existingLink, initialized, resetLink]);
 
   // beforeunload / visibility / unmount flush
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      const autosaveStatus = useEditorStore.getState().autosave.status;
       if (autosaveStatus === 'saving' || autosaveStatus === 'error') {
         e.preventDefault();
         e.returnValue = 'Há alterações não salvas. Tem certeza que deseja sair?';
       }
     };
-    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flush(); };
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') void flushAutosave(); };
     window.addEventListener('beforeunload', onBeforeUnload);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [autosaveStatus, flush]);
-  useEffect(() => () => { flush(); }, [flush]);
+  }, []);
 
   // Drag-from-sidebar events
   useEffect(() => {
@@ -251,8 +248,8 @@ export default function LinkEditor() {
         {/* Center panel */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-background">
           <EditorToolbar
-            autosaveStatus={autosaveStatus} savedAt={savedAt}
-            onRetryAutosave={retry} onSave={handleSave}
+            autosaveStatus={autosave.status} savedAt={autosave.savedAt}
+            onRetryAutosave={retryAutosave} onSave={handleSave}
             isSavePending={saveLink.isPending} isExistingLink={isExistingLink}
           />
           <div

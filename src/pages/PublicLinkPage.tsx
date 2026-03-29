@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { SmartLinkPreview } from "@/components/SmartLinkPreview";
 import { usePublicLink, recordView } from "@/hooks/use-links";
 import { useEffect, useRef, useState } from "react";
@@ -36,67 +37,6 @@ export default function PublicLinkPage() {
     const cleanup = initProtection();
     return cleanup;
   }, []);
-
-  // Dynamic SEO meta tags with proper cleanup
-  useEffect(() => {
-    if (!link) return;
-    document.title = `${link.businessName} | LinkPro`;
-
-    const createdMetas: HTMLMetaElement[] = [];
-    let canonicalEl: HTMLLinkElement | null = null;
-
-    const setMeta = (property: string, content: string) => {
-      let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        if (property.startsWith("og:")) {
-          el.setAttribute("property", property);
-        } else {
-          el.setAttribute("name", property);
-        }
-        document.head.appendChild(el);
-        createdMetas.push(el as HTMLMetaElement);
-      }
-      el.setAttribute("content", content);
-    };
-
-    const description = link.tagline || `${link.businessName} - Página de links`;
-    const pageUrl = `${window.location.origin}/l/${link.slug}`;
-    const ogImage = link.heroImage || link.logoUrl;
-
-    setMeta("description", description);
-
-    // Open Graph
-    setMeta("og:title", link.businessName);
-    setMeta("og:description", description);
-    setMeta("og:type", "website");
-    setMeta("og:url", pageUrl);
-    if (ogImage) setMeta("og:image", ogImage);
-
-    // Twitter Card
-    setMeta("twitter:card", "summary_large_image");
-    setMeta("twitter:title", link.businessName);
-    setMeta("twitter:description", description);
-    if (ogImage) setMeta("twitter:image", ogImage);
-
-    // Canonical URL
-    canonicalEl = document.querySelector('link[rel="canonical"]');
-    if (!canonicalEl) {
-      canonicalEl = document.createElement("link");
-      canonicalEl.setAttribute("rel", "canonical");
-      document.head.appendChild(canonicalEl);
-    }
-    canonicalEl.setAttribute("href", pageUrl);
-
-    return () => {
-      document.title = "LinkPro";
-      createdMetas.forEach((el) => el.remove());
-      // Restore canonical to root
-      if (canonicalEl) {
-        canonicalEl.setAttribute("href", window.location.origin);
-      }
-    };
-  }, [link]);
 
   if (isLoading) {
     return (
@@ -136,7 +76,29 @@ export default function PublicLinkPage() {
     ? (link.pages || []).find((p) => p.id === forcedPageId) ?? null
     : null;
 
+  const seoDescription = link.tagline || `${link.businessName} - Página de links`;
+  const pageUrl = `${window.location.origin}/${link.slug}`;
+  const ogImage = link.heroImage || link.logoUrl;
+
   return (
+    <>
+      <Helmet>
+        <title>{link.businessName} | LinkPro</title>
+        <meta name="description" content={seoDescription} />
+        {/* Open Graph */}
+        <meta property="og:title" content={link.businessName} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        {ogImage && <meta property="og:image" content={ogImage} />}
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={link.businessName} />
+        <meta name="twitter:description" content={seoDescription} />
+        {ogImage && <meta name="twitter:image" content={ogImage} />}
+        {/* Canonical */}
+        <link rel="canonical" href={pageUrl} />
+      </Helmet>
     <div
       className="public-minisite flex justify-center"
       style={{ background: customBg || bgColor, minHeight: '100dvh' }}
@@ -152,5 +114,6 @@ export default function PublicLinkPage() {
         )}
       </div>
     </div>
+    </>
   );
 }

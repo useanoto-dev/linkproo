@@ -6,6 +6,11 @@ import { DeviceFrame, DeviceType, DEVICE_LABELS } from '@/components/editor/Devi
 import { SmartLink } from '@/types/smart-link';
 import { useEditorStore } from '@/stores/editor-store';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  EDITOR_PREVIEW_SCALE,
+  EDITOR_PREVIEW_SCALE_OFFSET_PX,
+  EDITOR_PREVIEW_PANEL_WIDTH,
+} from '@/lib/editor-constants';
 
 export interface EditorPreviewProps {
   previewLink: SmartLink;
@@ -42,7 +47,7 @@ export function EditorPreview({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 16 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
-      style={{ width: isMobile ? '100%' : 500 }}
+      style={{ width: isMobile ? '100%' : EDITOR_PREVIEW_PANEL_WIDTH }}
       className={`shrink-0 border-l border-border flex flex-col items-center justify-center overflow-hidden relative ${
         isMobile
           ? 'fixed inset-0 z-50 bg-background'
@@ -108,7 +113,7 @@ export function EditorPreview({
               ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-[2.5rem]'
               : ''
           }`}
-          style={{ transform: 'scale(0.86)', transformOrigin: 'top center', marginBottom: '-98px' }}
+          style={{ transform: `scale(${EDITOR_PREVIEW_SCALE})`, transformOrigin: 'top center', marginBottom: `${EDITOR_PREVIEW_SCALE_OFFSET_PX}px` }}
         >
           <DeviceFrame device={device}>
             {subPage ? (
