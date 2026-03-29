@@ -1,5 +1,6 @@
-import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect, WhatsAppFloat } from "@/types/smart-link";
+import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect, WhatsAppFloat, SmartLinkButton } from "@/types/smart-link";
 import type { Json } from "@/integrations/supabase/types";
+import { SmartLinkRowSchema, SmartLinkButtonSchema, LinkBlockSchema } from './schemas';
 
 /**
  * Serializa um valor TypeScript tipado para o tipo Json do Supabase (colunas JSONB).
@@ -62,7 +63,6 @@ export interface SmartLinkRow {
   } | null;
   buttons?: unknown;
   pages?: unknown;
-  canvas_mode?: boolean | null;
   badges?: unknown;
   floating_emojis?: unknown;
   blocks?: unknown;
@@ -77,6 +77,33 @@ export interface SmartLinkRow {
 
 /** Convert a DB row (any shape) to a SmartLink domain object */
 export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickCount = 0, ownerPlan?: string): SmartLink {
+  // Validate at the DB boundary — catches schema drift early.
+  // Uses safeParse: logs errors but never throws, so callers are unaffected.
+  const parsed = SmartLinkRowSchema.safeParse(row);
+  if (!parsed.success) {
+    console.error('[link-mappers] rowToSmartLink validation failed:', parsed.error.flatten());
+  }
+
+  // Validate buttons array — skip individual items that don't conform.
+  const rawButtons: unknown[] = Array.isArray(row.buttons) ? row.buttons : [];
+  const validatedButtons = rawButtons.filter((b: unknown) => {
+    const result = SmartLinkButtonSchema.safeParse(b);
+    if (!result.success) {
+      console.error('[link-mappers] invalid button skipped:', result.error.flatten());
+    }
+    return result.success;
+  }) as SmartLinkButton[];
+
+  // Validate blocks array — skip individual items that don't conform.
+  const rawBlocks: unknown[] = Array.isArray(row.blocks) ? row.blocks : [];
+  const validatedBlocks = rawBlocks.filter((bl: unknown) => {
+    const result = LinkBlockSchema.safeParse(bl);
+    if (!result.success) {
+      console.error('[link-mappers] invalid block skipped:', result.error.flatten());
+    }
+    return result.success;
+  }) as SmartLink['blocks'];
+
   return {
     id: row.id,
     slug: row.slug,
@@ -118,12 +145,11 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     starsEffect: row.bg_effects?.stars as StarsEffect | undefined,
     bgHtml: row.bg_effects?.bgHtml as BgHtmlEffect | undefined,
     whatsappFloat: row.bg_effects?.whatsappFloat as WhatsAppFloat | undefined,
-    canvasMode: row.canvas_mode ?? false,
-    buttons: (row.buttons as SmartLink["buttons"]) || [],
+    buttons: validatedButtons,
     pages: (row.pages as SmartLink["pages"]) || [],
     badges: (row.badges as string[]) || [],
     floatingEmojis: (row.floating_emojis as string[]) || [],
-    blocks: (row.blocks as SmartLink["blocks"]) || [],
+    blocks: validatedBlocks,
     views: viewCount,
     clicks: clickCount,
     isActive: row.is_active ?? true,
@@ -185,6 +211,5 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
       bgHtml: link.bgHtml ?? null,
       whatsappFloat: link.whatsappFloat ?? null,
     }) : null,
-    canvas_mode: link.canvasMode ?? false,
   };
 }

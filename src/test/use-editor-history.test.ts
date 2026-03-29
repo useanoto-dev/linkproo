@@ -1,6 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useEditorHistory } from "@/hooks/use-editor-history";
+/**
+ * History behaviour is now provided by useEditorStore (Zustand).
+ * These tests exercise the same undo/redo/reset contract that was previously
+ * covered by the deleted useEditorHistory hook.
+ */
+import { describe, it, expect, beforeEach } from "vitest";
+import { useEditorStore } from "@/stores/editor-store";
 import type { SmartLink } from "@/types/smart-link";
 
 const BASE: SmartLink = {
@@ -24,127 +28,106 @@ const BASE: SmartLink = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
-describe("useEditorHistory", () => {
+// Reset the store before each test to avoid cross-test pollution
+beforeEach(() => {
+  useEditorStore.getState().resetLink(BASE);
+});
+
+describe("editor-store history", () => {
   it("inicia com estado inicial, sem histórico", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-    expect(result.current.state).toEqual(BASE);
-    expect(result.current.canUndo).toBe(false);
-    expect(result.current.canRedo).toBe(false);
+    const { link, canUndo, canRedo } = useEditorStore.getState();
+    expect(link).toEqual(BASE);
+    expect(canUndo).toBe(false);
+    expect(canRedo).toBe(false);
   });
 
-  it("set() atualiza o estado e habilita canUndo", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-
-    expect(result.current.state.businessName).toBe("V2");
-    expect(result.current.canUndo).toBe(true);
-    expect(result.current.canRedo).toBe(false);
+  it("setLink() atualiza o estado e habilita canUndo", () => {
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    const { link, canUndo, canRedo } = useEditorStore.getState();
+    expect(link.businessName).toBe("V2");
+    expect(canUndo).toBe(true);
+    expect(canRedo).toBe(false);
   });
 
   it("undo() restaura o estado anterior", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.undo(); });
-
-    expect(result.current.state.businessName).toBe("Empresa");
-    expect(result.current.canUndo).toBe(false);
-    expect(result.current.canRedo).toBe(true);
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().undo();
+    const { link, canUndo, canRedo } = useEditorStore.getState();
+    expect(link.businessName).toBe("Empresa");
+    expect(canUndo).toBe(false);
+    expect(canRedo).toBe(true);
   });
 
   it("redo() reaplicam estado desfeito", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.undo(); });
-    act(() => { result.current.redo(); });
-
-    expect(result.current.state.businessName).toBe("V2");
-    expect(result.current.canRedo).toBe(false);
-    expect(result.current.canUndo).toBe(true);
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().undo();
+    useEditorStore.getState().redo();
+    const { link, canUndo, canRedo } = useEditorStore.getState();
+    expect(link.businessName).toBe("V2");
+    expect(canRedo).toBe(false);
+    expect(canUndo).toBe(true);
   });
 
-  it("set() após undo atualiza o estado para o novo valor", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.undo(); });
-    act(() => { result.current.set({ ...BASE, businessName: "V3" }); });
-
-    expect(result.current.state.businessName).toBe("V3");
+  it("setLink() após undo sobrescreve o futuro", () => {
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().undo();
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V3" });
+    expect(useEditorStore.getState().link.businessName).toBe("V3");
   });
 
   it("suporta atualização funcional via função", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => {
-      result.current.set((prev) => ({ ...prev, tagline: "via fn" }));
-    });
-
-    expect(result.current.state.tagline).toBe("via fn");
-    expect(result.current.canUndo).toBe(true);
+    useEditorStore.getState().setLink((prev) => ({ ...prev, tagline: "via fn" }));
+    const { link, canUndo } = useEditorStore.getState();
+    expect(link.tagline).toBe("via fn");
+    expect(canUndo).toBe(true);
   });
 
-  it("reset() limpa todo o histórico e seta novo estado", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.set({ ...BASE, businessName: "V3" }); });
-    act(() => { result.current.reset(BASE); });
-
-    expect(result.current.state).toEqual(BASE);
-    expect(result.current.canUndo).toBe(false);
-    expect(result.current.canRedo).toBe(false);
+  it("resetLink() limpa todo o histórico e seta novo estado", () => {
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V3" });
+    useEditorStore.getState().resetLink(BASE);
+    const { link, canUndo, canRedo } = useEditorStore.getState();
+    expect(link).toEqual(BASE);
+    expect(canUndo).toBe(false);
+    expect(canRedo).toBe(false);
   });
 
   it("undo() sem histórico não lança erro e mantém estado", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.undo(); });
-
-    expect(result.current.state).toEqual(BASE);
-    expect(result.current.canUndo).toBe(false);
+    useEditorStore.getState().undo();
+    const { link, canUndo } = useEditorStore.getState();
+    expect(link).toEqual(BASE);
+    expect(canUndo).toBe(false);
   });
 
   it("redo() sem futuro não lança erro e mantém estado", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.redo(); }); // nada para redesfazer
-
-    expect(result.current.state.businessName).toBe("V2");
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().redo(); // nothing to redo
+    expect(useEditorStore.getState().link.businessName).toBe("V2");
   });
 
   it("múltiplos undos restauram estados na ordem correta", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V2" });
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V3" });
+    useEditorStore.getState().setLink({ ...BASE, businessName: "V4" });
 
-    act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
-    act(() => { result.current.set({ ...BASE, businessName: "V3" }); });
-    act(() => { result.current.set({ ...BASE, businessName: "V4" }); });
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().link.businessName).toBe("V3");
 
-    act(() => { result.current.undo(); });
-    expect(result.current.state.businessName).toBe("V3");
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().link.businessName).toBe("V2");
 
-    act(() => { result.current.undo(); });
-    expect(result.current.state.businessName).toBe("V2");
-
-    act(() => { result.current.undo(); });
-    expect(result.current.state.businessName).toBe("Empresa");
+    useEditorStore.getState().undo();
+    expect(useEditorStore.getState().link.businessName).toBe("Empresa");
   });
 
   it("limite de 50 estados de histórico é respeitado", () => {
-    const { result } = renderHook(() => useEditorHistory(BASE));
-
     for (let i = 0; i < 55; i++) {
-      act(() => { result.current.set((prev) => ({ ...prev, tagline: `V${i}` })); });
+      useEditorStore.getState().setLink((prev) => ({ ...prev, tagline: `V${i}` }));
     }
-
-    // Desfaz 50 vezes (máximo permitido)
+    // Undo 50 times (the maximum allowed)
     for (let i = 0; i < 50; i++) {
-      act(() => { result.current.undo(); });
+      useEditorStore.getState().undo();
     }
-
-    expect(result.current.canUndo).toBe(false);
+    expect(useEditorStore.getState().canUndo).toBe(false);
   });
 });

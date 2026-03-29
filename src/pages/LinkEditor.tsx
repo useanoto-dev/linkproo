@@ -1,54 +1,36 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { SmartLinkPreview } from "@/components/SmartLinkPreview";
-import { SubPagePreview } from "@/components/SubPagePreview";
-import { ElementsSidebar } from "@/components/editor/ElementsSidebar";
-import { BlockEditor } from "@/components/editor/BlockEditor";
-import { ThemePanel } from "@/components/editor/ThemePanel";
-import { CanvasPreview, assignInitialCanvasPositions } from "@/components/preview/CanvasPreview";
-import { CanvasToolbar } from "@/components/editor/CanvasToolbar";
-import { CanvasPropertiesPanel } from "@/components/editor/CanvasPropertiesPanel";
-import { SmartLink, BlockType, SubPage, SmartLinkButton, LinkBlock } from "@/types/smart-link";
-import { Save, Eye, EyeOff, Palette, Layers, Smartphone, PanelRightClose, Loader2, X, ExternalLink, Copy, Undo2, Redo2, Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard, ArrowLeft, LayoutGrid } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EffectsPanel } from "@/components/editor/EffectsPanel";
-import { SubPageEditor } from "@/components/editor/SubPageEditor";
-import { DeviceFrame, DeviceType, DEVICE_LABELS } from "@/components/editor/DeviceFrame";
-import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { templates } from "@/data/templates";
-import { useSaveLink, useLink, getPublicLinkUrl } from "@/hooks/use-links";
-import { smartLinkToRow } from "@/lib/link-mappers";
-import { createBlockDefaults } from "@/lib/block-utils";
-import { useAutosave } from "@/hooks/use-autosave";
-import { useEditorHistory } from "@/hooks/use-editor-history";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { validateSlug, checkSlugAvailability } from "@/lib/slug-utils";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { DashboardLayout } from '@/components/DashboardLayout';
+import { BlockEditor } from '@/components/editor/BlockEditor';
+import { EditorToolbar } from '@/components/editor/EditorToolbar';
+import { EditorDrawer } from '@/components/editor/EditorDrawer';
+import { EditorPreview } from '@/components/editor/EditorPreview';
+import { ShortcutsModal } from '@/components/editor/ShortcutsModal';
+import { SmartLink, BlockType } from '@/types/smart-link';
+import { Eye, PanelRightClose, ArrowLeft, FileText } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { templates } from '@/data/templates';
+import { useSaveLink, useLink } from '@/hooks/use-links';
+import { smartLinkToRow } from '@/lib/link-mappers';
+import { useAutosave } from '@/hooks/use-autosave';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { validateSlug, checkSlugAvailability } from '@/lib/slug-utils';
+import { useEditorStore } from '@/stores/editor-store';
+import { useBlockOperations } from '@/hooks/use-block-operations';
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function createDefaultLink(): SmartLink {
   return {
-    id: "new-" + Date.now(),
-    slug: "",
-    businessName: "",
-    tagline: "",
-    heroImage: "",
-    logoUrl: "",
-    backgroundColor: "from-gray-50 to-white",
-    textColor: "text-white",
-    accentColor: "#f59e0b",
-    fontFamily: "Inter",
-    buttons: [],
-    badges: [],
-    floatingEmojis: [],
-    blocks: [],
-    pages: [],
-    views: 0,
-    clicks: 0,
-    isActive: true,
-    createdAt: new Date().toISOString(),
+    id: 'new-' + Date.now(), slug: '', businessName: '', tagline: '',
+    heroImage: '', logoUrl: '', backgroundColor: 'from-gray-50 to-white',
+    textColor: 'text-white', accentColor: '#f59e0b', fontFamily: 'Inter',
+    buttons: [], badges: [], floatingEmojis: [], blocks: [], pages: [],
+    views: 0, clicks: 0, isActive: true, createdAt: new Date().toISOString(),
   };
 }
 
@@ -57,11 +39,7 @@ function createFromTemplate(templateId: string): SmartLink | null {
   if (!tpl) return null;
   const now = Date.now();
   return {
-    ...tpl.template,
-    id: "new-" + now,
-    views: 0,
-    clicks: 0,
-    isActive: true,
+    ...tpl.template, id: 'new-' + now, views: 0, clicks: 0, isActive: true,
     createdAt: new Date().toISOString(),
     buttons: tpl.template.buttons.map((b, i) => ({ ...b, id: `${now}-btn-${i}`, order: i })),
     blocks: tpl.template.blocks.map((b, i) => ({ ...b, id: `${now}-blk-${i}`, order: tpl.template.buttons.length + i })),
@@ -69,13 +47,13 @@ function createFromTemplate(templateId: string): SmartLink | null {
   };
 }
 
-// Extracted to src/hooks/use-editor-history.ts
+// ─── component ───────────────────────────────────────────────────────────────
 
 export default function LinkEditor() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const templateId = searchParams.get("template");
+  const templateId = searchParams.get('template');
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
@@ -83,466 +61,175 @@ export default function LinkEditor() {
   const { data: existingLink, isLoading } = useLink(id);
   const saveLink = useSaveLink();
 
-  const initialLink = templateId ? createFromTemplate(templateId) || createDefaultLink() : createDefaultLink();
-  const { state: link, set: setLink, undo, redo, canUndo, canRedo, reset } = useEditorHistory(initialLink);
+  // Store selectors
+  const link = useEditorStore((s) => s.link);
+  const previewLink = useEditorStore((s) => s.previewLink);
+  const setLink = useEditorStore((s) => s.setLink);
+  const updateLink = useEditorStore((s) => s.updateLink);
+  const resetLink = useEditorStore((s) => s.resetLink);
+  const updatePreviewLink = useEditorStore((s) => s.updatePreviewLink);
+  const undo = useEditorStore((s) => s.undo);
+  const redo = useEditorStore((s) => s.redo);
+  const showPreview = useEditorStore((s) => s.ui.showPreview);
+  const openDrawer = useEditorStore((s) => s.ui.openDrawer);
+  const editingSubPageId = useEditorStore((s) => s.ui.editingSubPageId);
+  const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
+  const setUI = useEditorStore((s) => s.setUI);
 
-  // Debounced preview — preview only updates 150ms after user stops typing
-  // This eliminates 95% of preview re-renders without affecting editor responsiveness
-  const [previewLink, setPreviewLink] = useState(link);
+  const [initialized, setInitialized] = useState(!isEditing);
+  const dragTypeRef = useRef<BlockType | null>(null);
+
+  // Block operations
+  const { insertBlockAt, addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
+    useBlockOperations({ link, updateLink, setLink });
+
+  // Initialize store on first mount
+  useEffect(() => {
+    const initialLink = templateId ? createFromTemplate(templateId) ?? createDefaultLink() : createDefaultLink();
+    resetLink(initialLink);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced preview (50ms)
   const previewTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    previewTimerRef.current = setTimeout(() => setPreviewLink(link), 50);
+    previewTimerRef.current = setTimeout(() => updatePreviewLink(link), 50);
     return () => { if (previewTimerRef.current) clearTimeout(previewTimerRef.current); };
-  }, [link]);
+  }, [link, updatePreviewLink]);
 
-  const [showPreview, setShowPreview] = useState(true);
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [device, setDevice] = useState<DeviceType>("iphone15");
-  const [openDrawer, setOpenDrawer] = useState<"elements" | "theme" | "effects" | "pages" | null>(null);
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [editingSubPageId, setEditingSubPageId] = useState<string | null>(null);
-  const [isCanvasMode, setIsCanvasMode] = useState(false);
-  const [initialized, setInitialized] = useState(!isEditing);
-  const [isDraggingOverPreview, setIsDraggingOverPreview] = useState(false);
-  const [ghostBlockType, setGhostBlockType] = useState<BlockType | null>(null);
-  const dragTypeRef = useRef<BlockType | null>(null);
+  // Mobile: hide preview
+  useEffect(() => { if (isMobile) setUI({ showPreview: false }); }, [isMobile, setUI]);
 
-  // Autosave using shared mapper
-  const isExistingLink = isEditing || !link.id.startsWith("new-");
+  // Autosave
+  const isExistingLink = isEditing || !link.id?.startsWith('new-');
   const autosaveFn = useCallback(async (l: SmartLink) => {
     if (!user) return;
     const row = smartLinkToRow(l, user.id);
     const { error } = await supabase
-      .from("links")
-      // @ts-expect-error smartLinkToRow includes fields (bg_effects, business_name_font_size, business_name_align, business_name_html) not yet in generated Supabase types
-      .update(row)
-      .eq("id", l.id)
-      .eq("user_id", user.id);
+      .from('links')
+      // @ts-expect-error smartLinkToRow includes fields not yet in generated Supabase types
+      .update(row).eq('id', l.id).eq('user_id', user.id);
     if (error) throw error;
   }, [user]);
-  const { status: autosaveStatus, initializeRef, savedAt, retry, flush } = useAutosave(link, autosaveFn, isExistingLink && initialized, 1500);
 
+  const { status: autosaveStatus, initializeRef, savedAt, retry, flush } = useAutosave(
+    link, autosaveFn, isExistingLink && initialized, 1500,
+  );
+
+  // Load existing link
   useEffect(() => {
     if (existingLink && !initialized) {
-      reset(existingLink);
+      resetLink(existingLink);
       initializeRef(existingLink);
       setInitialized(true);
-      // Restore canvas mode from saved link
-      setIsCanvasMode(existingLink.canvasMode ?? false);
     }
-  }, [existingLink, initialized, reset, initializeRef]);
+  }, [existingLink, initialized, resetLink, initializeRef]);
 
-  // Warn before leaving with unsaved changes and attempt immediate save
+  // beforeunload / visibility / unmount flush
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Try to flush pending saves synchronously before unload
-      // Note: async operations during beforeunload are unreliable,
-      // but we can at minimum reduce the risk
-      if (autosaveStatus === "saving" || autosaveStatus === "error") {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (autosaveStatus === 'saving' || autosaveStatus === 'error') {
         e.preventDefault();
-        e.returnValue = "Há alterações não salvas. Tem certeza que deseja sair?";
+        e.returnValue = 'Há alterações não salvas. Tem certeza que deseja sair?';
       }
     };
-
-    const handleVisibilityChange = () => {
-      // When tab becomes hidden (user switching tabs or about to close),
-      // trigger immediate save
-      if (document.visibilityState === "hidden") {
-        flush();
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [autosaveStatus, flush]);
+  useEffect(() => () => { flush(); }, [flush]);
 
-  // Save on unmount (navigation away within the app)
+  // Drag-from-sidebar events
   useEffect(() => {
-    return () => {
-      flush();
-    };
-  }, [flush]);
+    const onStart = (e: Event) => { dragTypeRef.current = (e as CustomEvent).detail?.type as BlockType || null; };
+    const onEnd = () => { dragTypeRef.current = null; setUI({ ghostBlockType: null }); };
+    window.addEventListener('block-drag-start', onStart);
+    window.addEventListener('block-drag-end', onEnd);
+    return () => { window.removeEventListener('block-drag-start', onStart); window.removeEventListener('block-drag-end', onEnd); };
+  }, [setUI]);
 
-  useEffect(() => {
-    if (isMobile) setShowPreview(false);
-  }, [isMobile]);
-
-  // Track which block type is being dragged from the sidebar
-  useEffect(() => {
-    const onStart = (e: Event) => {
-      const type = (e as CustomEvent).detail?.type as BlockType;
-      dragTypeRef.current = type || null;
-    };
-    const onEnd = () => {
-      dragTypeRef.current = null;
-      setGhostBlockType(null);
-    };
-    window.addEventListener("block-drag-start", onStart);
-    window.addEventListener("block-drag-end", onEnd);
-    return () => {
-      window.removeEventListener("block-drag-start", onStart);
-      window.removeEventListener("block-drag-end", onEnd);
-    };
-  }, []);
-
-  const updateLink = useCallback((updates: Partial<SmartLink>) => {
-    setLink((prev) => ({ ...prev, ...updates }));
-  }, [setLink]);
-
-  // ── Canvas mode ──────────────────────────────────────────────────────────
-  const handleToggleCanvasMode = useCallback(() => {
-    const newMode = !isCanvasMode;
-    setIsCanvasMode(newMode);
-    if (newMode) {
-      // Assign initial positions to all elements that don't have canvas coords yet
-      const { buttons, blocks } = assignInitialCanvasPositions(link.buttons, link.blocks);
-      updateLink({ canvasMode: true, buttons, blocks });
-    } else {
-      updateLink({ canvasMode: false });
-      setSelectedElementId(null);
-    }
-  }, [isCanvasMode, link.buttons, link.blocks, updateLink]);
-
-  const handleCanvasUpdateElement = useCallback((id: string, updates: Partial<SmartLinkButton> | Partial<LinkBlock>) => {
-    updateLink({
-      buttons: link.buttons.map((b) => b.id === id ? { ...b, ...updates } : b),
-      blocks: link.blocks.map((b) => b.id === id ? { ...b, ...updates } : b),
-    });
-  }, [link.buttons, link.blocks, updateLink]);
-
-  const handleCanvasDeleteElement = useCallback((id: string) => {
-    updateLink({
-      buttons: link.buttons.filter((b) => b.id !== id),
-      blocks: link.blocks.filter((b) => b.id !== id),
-    });
-    setSelectedElementId(null);
-  }, [link.buttons, link.blocks, updateLink]);
-
-  const handleCanvasDuplicateElement = useCallback((id: string) => {
-    const btn = link.buttons.find((b) => b.id === id);
-    if (btn) {
-      const newBtn: SmartLinkButton = {
-        ...btn,
-        id: Date.now().toString(),
-        canvasX: (btn.canvasX ?? 0) + 16,
-        canvasY: (btn.canvasY ?? 0) + 16,
-        order: (btn.order ?? 0) + 0.5,
-      };
-      updateLink({ buttons: [...link.buttons, newBtn] });
-      setSelectedElementId(newBtn.id);
-      return;
-    }
-    const blk = link.blocks.find((b) => b.id === id);
-    if (blk) {
-      const newBlk: LinkBlock = {
-        ...blk,
-        id: Date.now().toString(),
-        canvasX: (blk.canvasX ?? 0) + 16,
-        canvasY: (blk.canvasY ?? 0) + 16,
-        order: (blk.order ?? 0) + 0.5,
-      };
-      updateLink({ blocks: [...link.blocks, newBlk] });
-      setSelectedElementId(newBlk.id);
-    }
-  }, [link.buttons, link.blocks, updateLink]);
-
-  const handleCanvasBringForward = useCallback((id: string) => {
-    const allItems = [
-      ...link.buttons.map((b) => ({ kind: "button" as const, id: b.id, order: b.order ?? 0 })),
-      ...link.blocks.map((b) => ({ kind: "block" as const, id: b.id, order: b.order ?? 0 })),
-    ].sort((a, b) => a.order - b.order);
-    const idx = allItems.findIndex((i) => i.id === id);
-    if (idx < allItems.length - 1) {
-      const next = allItems[idx + 1];
-      const cur = allItems[idx];
-      const curOrder = cur.order;
-      const nextOrder = next.order;
-      updateLink({
-        buttons: link.buttons.map((b) =>
-          b.id === cur.id ? { ...b, order: nextOrder + 0.5 } :
-          b.id === next.id ? { ...b, order: curOrder } : b
-        ),
-        blocks: link.blocks.map((b) =>
-          b.id === cur.id ? { ...b, order: nextOrder + 0.5 } :
-          b.id === next.id ? { ...b, order: curOrder } : b
-        ),
-      });
-    }
-  }, [link.buttons, link.blocks, updateLink]);
-
-  const handleCanvasSendBackward = useCallback((id: string) => {
-    const allItems = [
-      ...link.buttons.map((b) => ({ kind: "button" as const, id: b.id, order: b.order ?? 0 })),
-      ...link.blocks.map((b) => ({ kind: "block" as const, id: b.id, order: b.order ?? 0 })),
-    ].sort((a, b) => a.order - b.order);
-    const idx = allItems.findIndex((i) => i.id === id);
-    if (idx > 0) {
-      const prev = allItems[idx - 1];
-      const cur = allItems[idx];
-      const curOrder = cur.order;
-      const prevOrder = prev.order;
-      updateLink({
-        buttons: link.buttons.map((b) =>
-          b.id === cur.id ? { ...b, order: prevOrder - 0.5 } :
-          b.id === prev.id ? { ...b, order: curOrder } : b
-        ),
-        blocks: link.blocks.map((b) =>
-          b.id === cur.id ? { ...b, order: prevOrder - 0.5 } :
-          b.id === prev.id ? { ...b, order: curOrder } : b
-        ),
-      });
-    }
-  }, [link.buttons, link.blocks, updateLink]);
-
-  // Selected element for canvas properties panel
-  const canvasSelectedElement = selectedElementId
-    ? (link.buttons.find((b) => b.id === selectedElementId) ?? link.blocks.find((b) => b.id === selectedElementId) ?? null)
-    : null;
-
-  const getNextOrder = () => {
-    const maxBtnOrder = link.buttons.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
-    const maxBlkOrder = link.blocks.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
-    return Math.max(maxBtnOrder, maxBlkOrder, link.buttons.length + link.blocks.length - 1) + 1;
-  };
-
-  const insertBlockAt = useCallback((type: BlockType, atIndex: number, extraDefaults?: Record<string, unknown>) => {
-    // Bump order of all existing items at or after atIndex by 1
-    const updatedButtons = link.buttons.map((b) =>
-      (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
-    );
-    const updatedBlocks = link.blocks.map((b) =>
-      (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
-    );
-
-    const names: Record<string, string> = {
-      button: "Botão Visual", "image-button": "Botão Imagem", text: "Texto",
-      badges: "Badges", cta: "CTA", separator: "Separador", image: "Imagem",
-      header: "Título", spacer: "Espaçador", video: "Vídeo", hero: "Hero",
-      info: "Info", countdown: "Countdown", faq: "FAQ", gallery: "Galeria",
-      testimonial: "Depoimento", stats: "Números/Stats", product: "Produto",
-      "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
-      carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
-    };
-
-    if (type === "button") {
-      const newBtn = {
-        id: Date.now().toString(),
-        label: "",
-        subtitle: "",
-        url: "",
-        icon: "",
-        gradientColor: "from-blue-600 to-blue-800",
-        iconEmoji: "",
-        imagePosition: "right" as const,
-        imageOpacity: 85,
-        imageSize: 50,
-        order: atIndex,
-      };
-      updateLink({ buttons: [...updatedButtons, newBtn], blocks: updatedBlocks });
-    } else {
-      const newBlock = createBlockDefaults(type, atIndex, extraDefaults);
-      updateLink({ buttons: updatedButtons, blocks: [...updatedBlocks, newBlock] });
-    }
-    toast.success(`${names[type] || "Bloco"} inserido!`);
-  }, [link, updateLink]);
-
-  const addBlock = (type: BlockType, extraDefaults?: Record<string, unknown>) => {
-    const nextOrder = getNextOrder();
-    const names: Record<string, string> = {
-      button: "Botão Visual", "image-button": "Botão Imagem", text: "Texto",
-      badges: "Badges", cta: "CTA", separator: "Separador", image: "Imagem",
-      header: "Título", spacer: "Espaçador", video: "Vídeo", hero: "Hero",
-      info: "Info", countdown: "Countdown", faq: "FAQ", gallery: "Galeria",
-      testimonial: "Depoimento", stats: "Números/Stats", product: "Produto",
-      "email-capture": "Captura Email", spotify: "Spotify", map: "Mapa",
-      carousel: "Carrossel", banner: "Banner Promo", "animated-button": "Botão Animado",
-    };
-    // In canvas mode, compute a drop position: below the last element
-    const canvasDropY = isCanvasMode
-      ? Math.max(16, ...link.buttons.map((b) => (b.canvasY ?? 0) + (b.canvasH ?? 56) + 12),
-          ...link.blocks.map((b) => (b.canvasY ?? 0) + (b.canvasH ?? 64) + 12))
-      : 0;
-
-    if (type === "button") {
-      updateLink({
-        buttons: [
-          ...link.buttons,
-          {
-            id: Date.now().toString(),
-            label: "",
-            subtitle: "",
-            url: "",
-            icon: "",
-            gradientColor: "from-blue-600 to-blue-800",
-            iconEmoji: "",
-            imagePosition: "right" as const,
-            imageOpacity: 85,
-            imageSize: 50,
-            order: nextOrder,
-            ...(isCanvasMode ? { canvasX: 16, canvasY: canvasDropY, canvasW: 358, canvasH: 56, canvasRotation: 0 } : {}),
-          },
-        ],
-      });
-    } else {
-      const newBlock = createBlockDefaults(type, nextOrder, extraDefaults);
-      const blockWithCanvas = isCanvasMode
-        ? { ...newBlock, canvasX: 16, canvasY: canvasDropY, canvasW: 358, canvasH: 64, canvasRotation: 0 }
-        : newBlock;
-      updateLink({ blocks: [...link.blocks, blockWithCanvas] });
-    }
-    toast.success(`${names[type] || "Bloco"} adicionado!`);
-  };
-
-  const handlePreviewDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (e.dataTransfer.types.includes("application/x-block-type")) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-    }
-  }, []);
-
-  const handlePreviewDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (e.dataTransfer.types.includes("application/x-block-type")) {
-      setIsDraggingOverPreview(true);
-      if (dragTypeRef.current) setGhostBlockType(dragTypeRef.current);
-    }
-  }, []);
-
-  const handlePreviewDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-      setIsDraggingOverPreview(false);
-      setGhostBlockType(null);
-    }
-  }, []);
-
-  const handlePreviewDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDraggingOverPreview(false);
-    setGhostBlockType(null);
-    const type = e.dataTransfer.getData("application/x-block-type") as BlockType;
-    if (!type) return;
-    const defaultsRaw = e.dataTransfer.getData("application/x-block-defaults");
-    const defaults: Record<string, unknown> = defaultsRaw ? JSON.parse(defaultsRaw) : {};
-    addBlock(type, defaults);
-  }, [addBlock]);
-
-  const updateSubPage = useCallback((pageId: string, updates: Partial<SubPage>) => {
-    setLink((prev) => ({
-      ...prev,
-      pages: (prev.pages || []).map((p) => p.id === pageId ? { ...p, ...updates } : p),
-    }));
-  }, [setLink]);
-
-  const addBlockToSubPage = useCallback((pageId: string, type: BlockType, extraDefaults?: Record<string, unknown>) => {
-    const page = (link.pages || []).find((p) => p.id === pageId);
-    if (!page) return;
-    const nextOrder = page.blocks.reduce((max, b) => Math.max(max, b.order ?? 0), -1) + 1;
-    const newBlock = createBlockDefaults(type, nextOrder, extraDefaults);
-    updateSubPage(pageId, { blocks: [...page.blocks, newBlock] });
-    toast.success("Bloco adicionado!");
-  }, [link.pages, updateSubPage]);
-
-  const insertBlockToSubPageAt = useCallback((pageId: string, type: BlockType, atIndex: number, extraDefaults?: Record<string, unknown>) => {
-    const page = (link.pages || []).find((p) => p.id === pageId);
-    if (!page) return;
-    const sorted = [...page.blocks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const newOrder = atIndex;
-    const bumpedBlocks = sorted.map((b) => (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b);
-    const newBlock = createBlockDefaults(type, newOrder, extraDefaults);
-    updateSubPage(pageId, { blocks: [...bumpedBlocks, newBlock] });
-  }, [link.pages, updateSubPage]);
-
-  const handleSave = async () => {
-    // Validate slug
+  // Save
+  const handleSave = useCallback(async () => {
     const slugError = validateSlug(link.slug);
-    if (slugError) {
-      toast.error(slugError);
-      return;
-    }
-
-    // Check slug uniqueness
-    const isNew = !isEditing;
-    const isAvailable = await checkSlugAvailability(link.slug, isNew ? undefined : link.id);
-    if (!isAvailable) {
-      toast.error("Esse endereço já está em uso. Escolha outro slug.");
-      return;
-    }
-
+    if (slugError) { toast.error(slugError); return; }
+    const isAvailable = await checkSlugAvailability(link.slug, isEditing ? link.id : undefined);
+    if (!isAvailable) { toast.error('Esse endereço já está em uso. Escolha outro slug.'); return; }
     try {
-      const saved = await saveLink.mutateAsync({ link, isNew });
-      setLink(saved);
-      toast.success("Link salvo com sucesso! 🎉");
-      if (isNew) {
-        navigate(`/links/${saved.id}/edit`, { replace: true });
-      }
+      const saved = await saveLink.mutateAsync({ link, isNew: !isEditing });
+      setLink(saved, true);
+      toast.success('Link salvo com sucesso! 🎉');
+      if (!isEditing) navigate(`/links/${saved.id}/edit`, { replace: true });
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       const code = (error as { code?: string })?.code;
-      if (msg.includes("Limite de links")) {
-        toast.error("Você atingiu o limite de links do seu plano. Faça upgrade para criar mais!");
-      } else if (msg.includes("duplicate key") || code === "23505") {
-        toast.error("Esse endereço já está em uso. Escolha outro slug.");
-      } else {
-        toast.error("Erro ao salvar: " + (msg || "tente novamente"));
-      }
+      if (msg.includes('Limite de links')) toast.error('Você atingiu o limite de links do seu plano. Faça upgrade para criar mais!');
+      else if (msg.includes('duplicate key') || code === '23505') toast.error('Esse endereço já está em uso. Escolha outro slug.');
+      else toast.error('Erro ao salvar: ' + (msg || 'tente novamente'));
     }
-  };
+  }, [link, isEditing, saveLink, setLink, navigate]);
 
-  // Keyboard shortcuts for undo/redo/save
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) redo();
-        else undo();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === "y") {
-        e.preventDefault();
-        redo();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        handleSave();
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); handleSave(); }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [undo, redo, handleSave]);
+
+  // Drag handlers for preview panel
+  const handlePreviewDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes('application/x-block-type')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+  }, []);
+  const handlePreviewDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes('application/x-block-type'))
+      setUI({ isDraggingOverPreview: true, ghostBlockType: dragTypeRef.current });
+  }, [setUI]);
+  const handlePreviewDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+      setUI({ isDraggingOverPreview: false, ghostBlockType: null });
+  }, [setUI]);
+  const handlePreviewDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setUI({ isDraggingOverPreview: false, ghostBlockType: null });
+    const type = e.dataTransfer.getData('application/x-block-type') as BlockType;
+    if (!type) return;
+    const defaultsRaw = e.dataTransfer.getData('application/x-block-defaults');
+    addBlock(type, defaultsRaw ? JSON.parse(defaultsRaw) : {});
+  }, [addBlock, setUI]);
+
+  // ─── loading skeleton ─────────────────────────────────────────────────────
 
   if (isEditing && isLoading) {
     return (
       <DashboardLayout title="Editor de Link" noPadding>
         <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-          {/* Left panel skeleton */}
           <div className="w-80 shrink-0 border-r border-border bg-card p-4 space-y-4 overflow-hidden">
             <Skeleton className="h-8 w-full rounded-lg" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={`skeleton-block-${i}`} className="rounded-xl border border-border p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-4 rounded" />
-                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-4 rounded" /><Skeleton className="h-4 w-24" />
                   </div>
                   <Skeleton className="h-3 w-full" />
                 </div>
               ))}
             </div>
           </div>
-          {/* Preview area skeleton */}
           <div className="flex-1 flex items-center justify-center bg-muted/30">
             <div className="w-[375px] space-y-4">
               <Skeleton className="w-full h-40 rounded-xl" />
-              <Skeleton className="h-6 w-32 mx-auto" />
-              <Skeleton className="h-4 w-48 mx-auto" />
+              <Skeleton className="h-6 w-32 mx-auto" /><Skeleton className="h-4 w-48 mx-auto" />
               <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={`skeleton-btn-${i}`} className="h-11 w-full rounded-xl" />
-                ))}
+                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={`skeleton-btn-${i}`} className="h-11 w-full rounded-xl" />)}
               </div>
             </div>
           </div>
@@ -551,492 +238,92 @@ export default function LinkEditor() {
     );
   }
 
+  // ─── main render ──────────────────────────────────────────────────────────
+
+  const subPage = editingSubPageId ? (link.pages || []).find((p) => p.id === editingSubPageId) : null;
+
   return (
     <DashboardLayout title="Editor de Link" noPadding>
       <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden relative">
 
-        {/* Slide-out drawer for Elements / Theme */}
-        <AnimatePresence>
-          {openDrawer && isMobile && (
-            <motion.div
-              key="drawer-scrim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="absolute inset-0 z-30 bg-black/50"
-              onClick={() => { setOpenDrawer(null); setEditingSubPageId(null); }}
-            />
-          )}
-          {openDrawer && (
-            <motion.div
-              initial={{ x: -320, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -320, opacity: 0 }}
-              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={`absolute left-0 top-0 bottom-0 z-40 ${isMobile ? "w-full" : "w-[320px]"} bg-card border-r border-border shadow-lg flex flex-col`}
-            >
-              <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
-                <div className="flex items-center gap-2">
-                  {openDrawer === "elements" ? (
-                    <Layers className="h-4 w-4 text-primary" />
-                  ) : openDrawer === "effects" ? (
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  ) : openDrawer === "pages" ? (
-                    <FileText className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Palette className="h-4 w-4 text-primary" />
-                  )}
-                  <span className="text-sm font-bold text-foreground">
-                    {openDrawer === "elements" ? "Elementos" : openDrawer === "effects" ? "Efeitos" : openDrawer === "pages" ? "Páginas" : "Tema"}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setOpenDrawer(null); setEditingSubPageId(null); }}
-                  className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto custom-scroll p-3">
-                {openDrawer === "elements" ? (
-                  <ElementsSidebar onAddBlock={(type, defaults) => { addBlock(type, defaults); }} />
-                ) : openDrawer === "effects" ? (
-                  <EffectsPanel link={link} onUpdateLink={updateLink} />
-                ) : openDrawer === "pages" ? (
-                  <SubPageEditor link={link} onUpdateLink={updateLink} onEditingPageChange={setEditingSubPageId} onOpenPageEditor={(id) => { setEditingSubPageId(id); setOpenDrawer(null); }} />
-                ) : (
-                  <ThemePanel link={link} onUpdateLink={updateLink} />
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <EditorDrawer link={link} onUpdateLink={updateLink} onAddBlock={addBlock} />
 
         {/* Center panel */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-background">
-          {/* Top toolbar */}
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card shrink-0 overflow-x-auto custom-scroll min-w-0">
-            {[
-              { key: "elements" as const, icon: Layers, label: "Elementos" },
-              { key: "theme" as const, icon: Palette, label: "Tema" },
-              { key: "effects" as const, icon: Sparkles, label: "Efeitos" },
-              { key: "pages" as const, icon: FileText, label: "Páginas" },
-            ].map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setOpenDrawer(openDrawer === key ? null : key)}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                  openDrawer === key
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{label}</span>
-              </button>
-            ))}
-
-            {/* Canvas mode toggle */}
-            <button
-              type="button"
-              onClick={handleToggleCanvasMode}
-              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                isCanvasMode
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-indigo-400/50"
-              }`}
-              title={isCanvasMode ? "Modo Lista" : "Modo Canvas (Canva-style)"}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{isCanvasMode ? "Lista" : "Canvas"}</span>
-            </button>
-
-            {/* Undo / Redo */}
-            <div className="flex items-center gap-0.5 ml-1">
-              <button
-                type="button"
-                onClick={undo}
-                disabled={!canUndo}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
-                title="Desfazer (Ctrl+Z)"
-              >
-                <Undo2 className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={redo}
-                disabled={!canRedo}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer select-none"
-                title="Refazer (Ctrl+Shift+Z)"
-              >
-                <Redo2 className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowShortcuts(true)}
-                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer select-none"
-                title="Atalhos de teclado"
-              >
-                <Keyboard className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="flex-1" />
-
-            {/* Autosave status */}
-            {isExistingLink && (
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                {autosaveStatus === "saving" && (
-                  <><Cloud className="h-3 w-3 animate-pulse" /><span>Salvando...</span></>
-                )}
-                {autosaveStatus === "saved" && (
-                  <><Check className="h-3 w-3 text-green-400" /><span className="text-green-400">Salvo</span></>
-                )}
-                {autosaveStatus === "error" && (
-                  <button
-                    type="button"
-                    onClick={retry}
-                    className="flex items-center gap-1 text-destructive hover:underline cursor-pointer"
-                  >
-                    <AlertCircle className="h-3 w-3" />
-                    <span>Erro — tentar novamente</span>
-                  </button>
-                )}
-                {autosaveStatus === "idle" && isExistingLink && (
-                  savedAt ? (
-                    <><Check className="h-3 w-3 opacity-40" /><span>Salvo às {savedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span></>
-                  ) : (
-                    <><Cloud className="h-3 w-3" /><span>Autosave</span></>
-                  )
-                )}
-              </div>
-            )}
-
-            {/* Copy & Open public link */}
-            {link.slug && !link.id.startsWith("new-") && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(getPublicLinkUrl(link.slug));
-                    toast.success("Link copiado!");
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30 transition-all cursor-pointer select-none"
-                  title="Copiar link público"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  Copiar
-                </button>
-                <a
-                  href={getPublicLinkUrl(link.slug)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30 transition-all"
-                  title="Abrir link público"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Abrir
-                </a>
-              </>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saveLink.isPending}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold text-xs hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50 cursor-pointer select-none disabled:cursor-not-allowed"
-            >
-              {saveLink.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              {saveLink.isPending ? "Salvando..." : "Salvar"}
-            </button>
-          </div>
-
-          {/* Editor content */}
+          <EditorToolbar
+            autosaveStatus={autosaveStatus} savedAt={savedAt}
+            onRetryAutosave={retry} onSave={handleSave}
+            isSavePending={saveLink.isPending} isExistingLink={isExistingLink}
+          />
           <div
             className="flex-1 overflow-y-auto custom-scroll p-4 lg:p-6"
             style={{ contain: 'paint', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            onPointerDown={() => { if (openDrawer) { setOpenDrawer(null); setEditingSubPageId(null); } }}
+            onPointerDown={() => { if (openDrawer) setUI({ openDrawer: null, editingSubPageId: null }); }}
           >
-            <div className={`mx-auto ${showPreview ? "max-w-3xl" : "max-w-2xl"}`}>
-              {editingSubPageId && (link.pages || []).find(p => p.id === editingSubPageId) ? (() => {
-                const subPage = (link.pages || []).find(p => p.id === editingSubPageId)!;
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                      <button
-                        type="button"
-                        onClick={() => { setEditingSubPageId(null); if (openDrawer !== "pages") setOpenDrawer("pages"); }}
-                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        Páginas
-                      </button>
-                      <div className="w-px h-4 bg-border shrink-0" />
-                      <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="text-sm font-semibold text-foreground truncate">{subPage.title}</span>
-                      <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{subPage.blocks.length} blocos</span>
-                    </div>
-                    <BlockEditor
-                      link={link}
-                      onUpdateLink={updateLink}
-                      onInsertBlockAt={insertBlockAt}
-                      subPageMode={{
-                        page: subPage,
-                        onUpdatePage: (updates) => updateSubPage(editingSubPageId, updates),
-                        onAddBlock: (type, defaults) => addBlockToSubPage(editingSubPageId, type, defaults),
-                        onInsertBlockAt: (type, atIndex, defaults) => insertBlockToSubPageAt(editingSubPageId, type, atIndex, defaults),
-                      }}
-                    />
+            <div className={`mx-auto ${showPreview ? 'max-w-3xl' : 'max-w-2xl'}`}>
+              {subPage ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                    <button
+                      type="button"
+                      onClick={() => { setUI({ editingSubPageId: null }); if (openDrawer !== 'pages') setUI({ openDrawer: 'pages' }); }}
+                      className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />Páginas
+                    </button>
+                    <div className="w-px h-4 bg-border shrink-0" />
+                    <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-sm font-semibold text-foreground truncate">{subPage.title}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{subPage.blocks.length} blocos</span>
                   </div>
-                );
-              })() : (
-                <>
-                  {isCanvasMode && canvasSelectedElement && (
-                    <div className="mb-4">
-                      <CanvasPropertiesPanel
-                        element={canvasSelectedElement}
-                        onUpdate={(updates) => handleCanvasUpdateElement(selectedElementId!, updates as Partial<SmartLinkButton> | Partial<LinkBlock>)}
-                      />
-                    </div>
-                  )}
-                  <BlockEditor link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt} selectedElementId={selectedElementId ?? undefined} onElementSelected={setSelectedElementId} />
-                </>
+                  <BlockEditor
+                    link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt}
+                    subPageMode={{
+                      page: subPage,
+                      onUpdatePage: (updates) => updateSubPage(editingSubPageId, updates),
+                      onAddBlock: (type, defaults) => addBlockToSubPage(editingSubPageId, type, defaults),
+                      onInsertBlockAt: (type, atIndex, defaults) => insertBlockToSubPageAt(editingSubPageId, type, atIndex, defaults),
+                    }}
+                  />
+                </div>
+              ) : (
+                <BlockEditor
+                  link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt}
+                  selectedElementId={selectedElementId ?? undefined}
+                  onElementSelected={(id) => setUI({ selectedElementId: id })}
+                />
               )}
             </div>
           </div>
         </div>
 
-        {/* Right panel - Preview */}
+        {/* Right preview panel */}
         <AnimatePresence>
           {showPreview && (
-            <motion.div
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              style={{ width: isMobile ? "100%" : 500 }}
-              className={`shrink-0 border-l border-border flex flex-col items-center justify-center overflow-hidden relative ${
-                isMobile
-                  ? "fixed inset-0 z-50 bg-background"
-                  : "bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]"
-              }`}
-            >
-              {isMobile && (
-                <button
-                  type="button"
-                  onClick={() => setShowPreview(false)}
-                  className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-secondary border border-border cursor-pointer"
-                >
-                  <EyeOff className="h-4 w-4" />
-                </button>
-              )}
-
-              {/* Header: status dot + label + device picker */}
-              <div className="flex items-center justify-between w-full mb-5 px-5">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                    {editingSubPageId ? "Sub-página" : "Preview ao vivo"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-0.5 p-1 rounded-lg bg-secondary/70 border border-border/60">
-                  {(["iphone15", "pixel8", "galaxy"] as DeviceType[]).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setDevice(d)}
-                      className={`px-2.5 py-1 rounded-md text-[9px] font-semibold transition-all cursor-pointer select-none ${
-                        device === d
-                          ? "bg-background text-foreground shadow-sm border border-border/50"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {DEVICE_LABELS[d]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Device + ambient glow */}
-              <div className="relative flex flex-col items-center">
-                {/* Ambient glow underneath the device */}
-                <div
-                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-72 h-24 pointer-events-none"
-                  style={{
-                    background: "radial-gradient(ellipse at center, hsl(var(--primary)/0.22) 0%, transparent 70%)",
-                    filter: "blur(28px)",
-                  }}
-                />
-
-                <div
-                  onDragOver={handlePreviewDragOver}
-                  onDragEnter={handlePreviewDragEnter}
-                  onDragLeave={handlePreviewDragLeave}
-                  onDrop={handlePreviewDrop}
-                  className={`relative transition-all duration-150 ${
-                    isDraggingOverPreview
-                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-[2.5rem]"
-                      : ""
-                  }`}
-                  style={{ transform: "scale(0.86)", transformOrigin: "top center", marginBottom: "-98px" }}
-                >
-                  <DeviceFrame device={device}>
-                    {editingSubPageId && (link.pages || []).find((p) => p.id === editingSubPageId) ? (
-                      <SubPagePreview
-                        page={(link.pages || []).find((p) => p.id === editingSubPageId)!}
-                        link={previewLink}
-                      />
-                    ) : isCanvasMode ? (
-                      <div style={{ position: "relative", width: "100%", minHeight: "100%" }}>
-                        <CanvasPreview
-                          link={previewLink}
-                          editorScale={0.86}
-                          selectedId={selectedElementId}
-                          onSelect={(id) => {
-                            setSelectedElementId(id);
-                            if (openDrawer) setOpenDrawer(null);
-                          }}
-                          onUpdateElement={handleCanvasUpdateElement}
-                          onDeleteElement={handleCanvasDeleteElement}
-                          onDuplicateElement={handleCanvasDuplicateElement}
-                          onBringForward={handleCanvasBringForward}
-                          onSendBackward={handleCanvasSendBackward}
-                        />
-                      </div>
-                    ) : (
-                      <SmartLinkPreview
-                        link={previewLink}
-                        selectedId={selectedElementId ?? undefined}
-                        ghostBlockType={ghostBlockType ?? undefined}
-                        onSelectElement={(id) => {
-                          setSelectedElementId(id);
-                          if (openDrawer) setOpenDrawer(null);
-                        }}
-                      />
-                    )}
-                  </DeviceFrame>
-
-                  {isDraggingOverPreview && (
-                    <div className="absolute inset-x-0 -bottom-8 flex items-center justify-center pointer-events-none">
-                      <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold shadow-lg animate-bounce">
-                        ⬇ Solte aqui para adicionar
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* URL bar */}
-              {link.slug && !editingSubPageId && (
-                <a
-                  href={`/l/${link.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary/70 border border-border/60 text-[10px] font-mono hover:border-primary/40 hover:bg-secondary transition-all group"
-                >
-                  <span className="text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-                    {window.location.host}/l/
-                  </span>
-                  <span className="text-foreground font-semibold">{link.slug}</span>
-                  <ExternalLink className="h-2.5 w-2.5 ml-0.5 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity" />
-                </a>
-              )}
-              {editingSubPageId && (
-                <div className="mt-6 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-semibold">
-                  Editando sub-página
-                </div>
-              )}
-            </motion.div>
+            <EditorPreview
+              previewLink={previewLink} link={link}
+              onDragOver={handlePreviewDragOver} onDragEnter={handlePreviewDragEnter}
+              onDragLeave={handlePreviewDragLeave} onDrop={handlePreviewDrop}
+            />
           )}
         </AnimatePresence>
 
-        {/* Canvas toolbar — position:fixed, tracks selected element via rAF polling */}
-        {isCanvasMode && selectedElementId && canvasSelectedElement && (
-          <CanvasToolbar
-            selectedId={selectedElementId}
-            onDelete={handleCanvasDeleteElement}
-            onDuplicate={handleCanvasDuplicateElement}
-            onBringForward={handleCanvasBringForward}
-            onSendBackward={handleCanvasSendBackward}
-            onDeselect={() => setSelectedElementId(null)}
-          />
-        )}
+        <ShortcutsModal />
 
-        {/* Keyboard shortcuts overlay */}
-        {showShortcuts && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowShortcuts(false)}
-          >
-            <div
-              className="relative bg-card border border-border rounded-2xl shadow-2xl p-6 w-80 max-w-[90vw]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Keyboard className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-bold text-foreground">Atalhos de Teclado</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowShortcuts(false)}
-                  className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex flex-col gap-2">
-                {[
-                  { keys: ["Ctrl", "Z"], description: "Desfazer" },
-                  { keys: ["Ctrl", "Shift", "Z"], description: "Refazer" },
-                  { keys: ["Ctrl", "Y"], description: "Refazer (alternativo)" },
-                  { keys: ["Ctrl", "S"], description: "Salvar" },
-                ].map(({ keys, description }) => (
-                  <div key={description} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0">
-                    <span className="text-sm text-muted-foreground">{description}</span>
-                    <div className="flex items-center gap-1">
-                      {keys.map((k, i) => (
-                        <kbd
-                          key={i}
-                          className="px-1.5 py-0.5 rounded-md bg-secondary border border-border text-[11px] font-mono font-semibold text-foreground leading-none"
-                        >
-                          {k}
-                        </kbd>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Preview toggle */}
+        {/* Preview toggle FAB */}
         <button
           type="button"
-          onClick={() => setShowPreview(!showPreview)}
+          onClick={() => setUI({ showPreview: !showPreview })}
           className={`fixed z-50 shadow-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer select-none ${
             isMobile
-              ? "bottom-6 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-primary/30"
-              : "bottom-6 right-6 h-10 px-4 rounded-xl bg-card border border-border text-foreground text-xs font-medium gap-2 hover:bg-secondary"
+              ? 'bottom-6 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-primary/30'
+              : 'bottom-6 right-6 h-10 px-4 rounded-xl bg-card border border-border text-foreground text-xs font-medium gap-2 hover:bg-secondary'
           }`}
         >
           {showPreview ? (
-            <>
-              <PanelRightClose className="h-4 w-4" />
-              {!isMobile && <span>Fechar Preview</span>}
-            </>
+            <><PanelRightClose className="h-4 w-4" />{!isMobile && <span>Fechar Preview</span>}</>
           ) : (
-            <>
-              <Eye className="h-4 w-4" />
-              {!isMobile && <span>Preview</span>}
-            </>
+            <><Eye className="h-4 w-4" />{!isMobile && <span>Preview</span>}</>
           )}
         </button>
       </div>
