@@ -32,6 +32,14 @@ export function SubPageModal({ page, link, onClose }: SubPageModalProps) {
     };
   }, [page]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!page) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [page, onClose]);
+
   // Scroll to top whenever a different sub-page is opened
   useEffect(() => {
     if (page && contentRef.current) {
@@ -44,6 +52,9 @@ export function SubPageModal({ page, link, onClose }: SubPageModalProps) {
       {page && (
         <motion.div
           ref={contentRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={page.title || "Sub-página"}
           className="fixed inset-0 z-[100] flex flex-col overflow-y-auto overscroll-y-none"
           initial={{ y: "100%" }}
           animate={{ y: 0 }}

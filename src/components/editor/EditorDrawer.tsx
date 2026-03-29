@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Layers, Palette, Sparkles, FileText } from 'lucide-react';
+import { useEffect } from 'react';
 import { ElementsSidebar } from '@/components/editor/ElementsSidebar';
 import { ThemePanel } from '@/components/editor/ThemePanel';
 import { EffectsPanel } from '@/components/editor/EffectsPanel';
@@ -16,11 +17,18 @@ export interface EditorDrawerProps {
 
 export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerProps) {
   const openDrawer = useEditorStore((s) => s.ui.openDrawer);
-  const editingSubPageId = useEditorStore((s) => s.ui.editingSubPageId);
   const setUI = useEditorStore((s) => s.setUI);
   const isMobile = useIsMobile();
 
   const closeDrawer = () => setUI({ openDrawer: null, editingSubPageId: null });
+
+  // Close on Escape
+  useEffect(() => {
+    if (!openDrawer) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [openDrawer]);
 
   const drawerLabel: Record<NonNullable<typeof openDrawer>, string> = {
     elements: 'Elementos',
@@ -37,6 +45,8 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
     ? FileText
     : Palette;
 
+  const titleId = 'editor-drawer-title';
+
   return (
     <AnimatePresence>
       {openDrawer && isMobile && (
@@ -47,11 +57,15 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
           className="absolute inset-0 z-30 bg-black/50"
+          aria-hidden="true"
           onClick={closeDrawer}
         />
       )}
       {openDrawer && (
         <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
           initial={{ x: -320, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -320, opacity: 0 }}
@@ -60,17 +74,18 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
         >
           <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
             <div className="flex items-center gap-2">
-              <DrawerIcon className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">
+              <DrawerIcon className="h-4 w-4 text-primary" aria-hidden="true" />
+              <span id={titleId} className="text-sm font-bold text-foreground">
                 {drawerLabel[openDrawer]}
               </span>
             </div>
             <button
               type="button"
+              aria-label={`Fechar painel ${drawerLabel[openDrawer]}`}
               onClick={closeDrawer}
               className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto custom-scroll p-3">
