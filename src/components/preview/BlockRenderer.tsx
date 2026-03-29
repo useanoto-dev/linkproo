@@ -11,6 +11,7 @@ import { FaqAccordionItem } from "./FaqAccordionItem";
 import { recordClick } from "@/hooks/use-links";
 import { saveEmailCapture } from "@/hooks/use-email-captures";
 import { AnimatedButtonBlock } from "./AnimatedButtonBlock";
+import { toast } from "sonner";
 
 // ─── FreeHtmlBlock ────────────────────────────────────────────────────────────
 // Renders user-provided HTML/CSS/scripts inside an isolated iframe.
@@ -131,8 +132,7 @@ const EmailCaptureBlock = memo(function EmailCaptureBlock({
     setSubmitted(true);
     saveEmailCapture(linkId, email, block.id).catch((err) => {
       console.error('[EmailCapture] Falha ao salvar email:', err);
-      // UX não é revertida — usuário já viu "sucesso"
-      // Em produção: integrar Sentry aqui
+      toast.error('Não foi possível registrar seu e-mail. Tente novamente.');
     });
   };
 

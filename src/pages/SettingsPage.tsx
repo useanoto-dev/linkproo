@@ -50,7 +50,10 @@ export default function SettingsPage() {
           });
         }
       } catch (err) {
-        if (!cancelled) console.error("Profile load error:", err);
+        if (!cancelled) {
+          console.error("Profile load error:", err);
+          toast.error("Erro ao carregar perfil. Recarregue a página.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

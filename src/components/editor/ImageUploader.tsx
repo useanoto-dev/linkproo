@@ -169,7 +169,8 @@ export function ImageUploader({
       const success = await uploadAndSave(rawImage);
       if (success) closeModal();
     } catch (err) {
-      console.error(err);
+      console.error("[ImageUploader] handleUseOriginal failed:", err);
+      toast.error("Erro ao salvar imagem. Tente novamente.");
     } finally {
       setUploading(false);
     }
@@ -206,7 +207,8 @@ export function ImageUploader({
       const success = await uploadAndSave(croppedPreview);
       if (success) closeModal();
     } catch (err) {
-      console.error(err);
+      console.error("[ImageUploader] handleSaveCropped failed:", err);
+      toast.error("Erro ao salvar imagem recortada. Tente novamente.");
     } finally {
       setUploading(false);
     }
