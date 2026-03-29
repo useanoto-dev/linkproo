@@ -21,7 +21,9 @@ interface SmartLinkPreviewProps {
 }
 
 export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
-  const hasContent = link.businessName || link.heroImage || link.buttons.length > 0 || link.blocks.length > 0;
+  const buttons = link.buttons ?? [];
+  const blocks = link.blocks ?? [];
+  const hasContent = link.businessName || link.heroImage || buttons.length > 0 || blocks.length > 0;
   const dark = isDarkBg(link.backgroundColor);
   const customBg = parseCustomBg(link.backgroundColor);
   const heroBgColor = extractBgColor(link.backgroundColor);
@@ -56,11 +58,11 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       | { kind: "block"; data: LinkBlock; order: number };
 
     const list: UnifiedPreviewItem[] = [
-      ...link.buttons.map((b, i) => ({ kind: "button" as const, data: b, order: b.order ?? i })),
-      ...link.blocks.map((b, i) => ({ kind: "block" as const, data: b, order: b.order ?? (link.buttons.length + i) })),
+      ...buttons.map((b, i) => ({ kind: "button" as const, data: b, order: b.order ?? i })),
+      ...blocks.map((b, i) => ({ kind: "block" as const, data: b, order: b.order ?? (buttons.length + i) })),
     ].sort((a, b) => a.order - b.order);
     return list;
-  }, [link.buttons, link.blocks]);
+  }, [buttons, blocks]);
 
   if (!hasContent) {
     return (

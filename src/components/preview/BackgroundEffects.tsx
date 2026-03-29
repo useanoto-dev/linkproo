@@ -42,7 +42,7 @@ export function BackgroundEffects({ link }: BackgroundEffectsProps) {
       {link.firefliesEffect?.enabled && (
         <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />
       )}
-      {link.floatingEmojis.map((emoji, i) => (
+      {(link.floatingEmojis ?? []).map((emoji, i) => (
         <FloatingEmoji key={`${emoji}-${i}`} emoji={emoji} delay={i * 1.5} />
       ))}
     </>
