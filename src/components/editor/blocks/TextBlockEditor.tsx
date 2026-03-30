@@ -1,4 +1,4 @@
-import React, { memo, RefObject } from "react";
+import React, { memo, RefObject, useState } from "react";
 import { LinkBlock } from "@/types/smart-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,20 @@ interface TextBlockEditorProps {
 }
 
 export const TextBlockEditor = memo(function TextBlockEditor({ block, onUpdate, textareaRef, applyTextFormat }: TextBlockEditorProps) {
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+
+  function handleLinkConfirm() {
+    applyTextFormat("a", linkUrl);
+    setLinkUrl('');
+    setShowLinkInput(false);
+  }
+
+  function handleLinkCancel() {
+    setLinkUrl('');
+    setShowLinkInput(false);
+  }
+
   return (
     <>
       {(block.type === "text" || block.type === "cta") && (
@@ -21,34 +35,63 @@ export const TextBlockEditor = memo(function TextBlockEditor({ block, onUpdate, 
               {block.type === "cta" ? "Título do CTA" : "Texto"}
             </Label>
             {block.type === "text" && (
-              <div className="flex gap-1 mb-1">
-                <button
-                  type="button"
-                  title="Negrito"
-                  className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
-                  onClick={() => applyTextFormat("b")}
-                >
-                  B
-                </button>
-                <button
-                  type="button"
-                  title="Itálico"
-                  className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary italic"
-                  onClick={() => applyTextFormat("i")}
-                >
-                  I
-                </button>
-                <button
-                  type="button"
-                  title="Link"
-                  className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
-                  onClick={() => {
-                    const url = window.prompt("URL do link:");
-                    if (url !== null) applyTextFormat("a", url);
-                  }}
-                >
-                  🔗
-                </button>
+              <div className="mb-1">
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    title="Negrito"
+                    className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
+                    onClick={() => applyTextFormat("b")}
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    title="Itálico"
+                    className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary italic"
+                    onClick={() => applyTextFormat("i")}
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    title="Link"
+                    className={`px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary${showLinkInput ? ' bg-secondary' : ''}`}
+                    onClick={() => setShowLinkInput((v) => !v)}
+                  >
+                    🔗
+                  </button>
+                </div>
+                {showLinkInput && (
+                  <div className="flex gap-1 mt-1 items-center">
+                    <input
+                      type="url"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleLinkConfirm();
+                        if (e.key === 'Escape') handleLinkCancel();
+                      }}
+                      placeholder="https://..."
+                      autoFocus
+                      className="flex-1 h-7 px-2 text-xs rounded border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLinkConfirm}
+                      className="px-2 py-0.5 rounded text-xs font-bold border border-border hover:bg-secondary"
+                    >
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLinkCancel}
+                      className="px-2 py-0.5 rounded text-xs border border-border hover:bg-secondary text-muted-foreground"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <Textarea
