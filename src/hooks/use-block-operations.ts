@@ -27,17 +27,17 @@ interface UseBlockOperationsOptions {
 
 export function useBlockOperations({ link, updateLink, setLink }: UseBlockOperationsOptions) {
   const getNextOrder = useCallback(() => {
-    const maxBtnOrder = link.buttons.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
-    const maxBlkOrder = link.blocks.reduce((max, b) => Math.max(max, b.order ?? 0), -1);
-    return Math.max(maxBtnOrder, maxBlkOrder, link.buttons.length + link.blocks.length - 1) + 1;
+    const maxBtnOrder = (link.buttons ?? []).reduce((max, b) => Math.max(max, b.order ?? 0), -1);
+    const maxBlkOrder = (link.blocks ?? []).reduce((max, b) => Math.max(max, b.order ?? 0), -1);
+    return Math.max(maxBtnOrder, maxBlkOrder, (link.buttons ?? []).length + (link.blocks ?? []).length - 1) + 1;
   }, [link.buttons, link.blocks]);
 
   const insertBlockAt = useCallback(
     (type: BlockType, atIndex: number, extraDefaults?: Record<string, unknown>) => {
-      const updatedButtons = link.buttons.map((b) =>
+      const updatedButtons = (link.buttons ?? []).map((b) =>
         (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
       );
-      const updatedBlocks = link.blocks.map((b) =>
+      const updatedBlocks = (link.blocks ?? []).map((b) =>
         (b.order ?? 0) >= atIndex ? { ...b, order: (b.order ?? 0) + 1 } : b
       );
       if (type === 'button') {
@@ -61,10 +61,10 @@ export function useBlockOperations({ link, updateLink, setLink }: UseBlockOperat
       const nextOrder = getNextOrder();
       if (type === 'button') {
         updateLink({
-          buttons: [...link.buttons, { id: Date.now().toString(), ...NEW_BUTTON_DEFAULTS, order: nextOrder }],
+          buttons: [...(link.buttons ?? []), { id: Date.now().toString(), ...NEW_BUTTON_DEFAULTS, order: nextOrder }],
         });
       } else {
-        updateLink({ blocks: [...link.blocks, createBlockDefaults(type, nextOrder, extraDefaults)] });
+        updateLink({ blocks: [...(link.blocks ?? []), createBlockDefaults(type, nextOrder, extraDefaults)] });
       }
       toast.success(`${BLOCK_NAMES[type] || 'Bloco'} adicionado!`);
     },

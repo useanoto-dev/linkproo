@@ -64,7 +64,26 @@ export interface EditorStore {
   setAutosaveEnabled: (enabled: boolean) => void;
 }
 
-const EMPTY_LINK = {} as SmartLink;
+const EMPTY_LINK: SmartLink = {
+  id: '',
+  slug: '',
+  businessName: '',
+  tagline: '',
+  heroImage: '',
+  logoUrl: '',
+  backgroundColor: 'from-gray-50 to-white',
+  textColor: 'text-white',
+  accentColor: '#f59e0b',
+  buttons: [],
+  blocks: [],
+  pages: [],
+  badges: [],
+  floatingEmojis: [],
+  views: 0,
+  clicks: 0,
+  isActive: true,
+  createdAt: new Date().toISOString(),
+};
 
 export const useEditorStore = create<EditorStore>()(
   subscribeWithSelector((set, get) => ({

@@ -13,15 +13,17 @@ export type UnifiedItem =
   | { kind: "block"; id: string; data: LinkBlock };
 
 export function getUnifiedItems(link: SmartLink): UnifiedItem[] {
-  const buttonItems: UnifiedItem[] = link.buttons.map((b, i) => ({
+  const buttons = link.buttons ?? [];
+  const blocks = link.blocks ?? [];
+  const buttonItems: UnifiedItem[] = buttons.map((b, i) => ({
     kind: "button",
     id: b.id,
     data: { ...b, order: b.order ?? i },
   }));
-  const blockItems: UnifiedItem[] = link.blocks.map((b, i) => ({
+  const blockItems: UnifiedItem[] = blocks.map((b, i) => ({
     kind: "block",
     id: b.id,
-    data: { ...b, order: b.order ?? (link.buttons.length + i) },
+    data: { ...b, order: b.order ?? (buttons.length + i) },
   }));
   return [...buttonItems, ...blockItems].sort(
     (a, b) => (a.data.order ?? 0) - (b.data.order ?? 0)
@@ -30,7 +32,7 @@ export function getUnifiedItems(link: SmartLink): UnifiedItem[] {
 
 export function getUnifiedItemsForMode(link: SmartLink, subPageMode?: SubPageMode): UnifiedItem[] {
   if (subPageMode) {
-    return subPageMode.page.blocks
+    return (subPageMode.page.blocks ?? [])
       .map((b, i) => ({
         kind: "block" as const,
         id: b.id,

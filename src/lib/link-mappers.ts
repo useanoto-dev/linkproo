@@ -81,7 +81,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
   // Uses safeParse: logs errors but never throws, so callers are unaffected.
   const parsed = SmartLinkRowSchema.safeParse(row);
   if (!parsed.success) {
-    console.error('[link-mappers] rowToSmartLink validation failed:', parsed.error.flatten());
+    if (import.meta.env.DEV) {
+      console.warn('[link-mappers] rowToSmartLink validation failed:', parsed.error.flatten());
+    }
   }
 
   // Validate buttons array — skip individual items that don't conform.
@@ -89,7 +91,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
   const validatedButtons = rawButtons.filter((b: unknown) => {
     const result = SmartLinkButtonSchema.safeParse(b);
     if (!result.success) {
-      console.error('[link-mappers] invalid button skipped:', result.error.flatten());
+      if (import.meta.env.DEV) {
+        console.warn('[link-mappers] invalid button skipped:', result.error.flatten());
+      }
     }
     return result.success;
   }) as SmartLinkButton[];
@@ -99,7 +103,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
   const validatedBlocks = rawBlocks.filter((bl: unknown) => {
     const result = LinkBlockSchema.safeParse(bl);
     if (!result.success) {
-      console.error('[link-mappers] invalid block skipped:', result.error.flatten());
+      if (import.meta.env.DEV) {
+        console.warn('[link-mappers] invalid block skipped:', result.error.flatten());
+      }
     }
     return result.success;
   }) as SmartLink['blocks'];

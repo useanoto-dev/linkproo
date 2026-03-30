@@ -40,7 +40,7 @@ export function SmartLinkCard({ link, onDelete, onDuplicate, onToggleActive, sel
     window.open(`https://wa.me/?text=${encodeURIComponent(`Confira: ${shareUrl}`)}`, "_blank");
   };
 
-  const conversionRate = link.views > 0 ? Math.round((link.clicks / link.views) * 100) : 0;
+  const conversionRate = link.views > 0 ? Math.round(((link.clicks ?? 0) / link.views) * 100) : 0;
 
   return (
     <motion.div

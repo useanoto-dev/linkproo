@@ -39,8 +39,8 @@ function createFromTemplate(templateId: string): SmartLink | null {
   return {
     ...tpl.template, id: 'new-' + now, views: 0, clicks: 0, isActive: true,
     createdAt: new Date().toISOString(),
-    buttons: tpl.template.buttons.map((b, i) => ({ ...b, id: `${now}-btn-${i}`, order: i })),
-    blocks: tpl.template.blocks.map((b, i) => ({ ...b, id: `${now}-blk-${i}`, order: tpl.template.buttons.length + i })),
+    buttons: (tpl.template.buttons ?? []).map((b, i) => ({ ...b, id: `${now}-btn-${i}`, order: i })),
+    blocks: (tpl.template.blocks ?? []).map((b, i) => ({ ...b, id: `${now}-blk-${i}`, order: (tpl.template.buttons ?? []).length + i })),
     pages: tpl.template.pages || [],
   };
 }

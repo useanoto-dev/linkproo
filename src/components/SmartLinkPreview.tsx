@@ -91,7 +91,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
       {/* SVG clip-path definition for banner curve */}
       {link.heroImage && link.bannerCurve && (() => {
         // intensity 0 = flat (y=1.0), intensity 100 = very curved (y=0.55)
-        const intensity = link.bannerCurveIntensity ?? 50;
+        const intensity = Math.min(100, Math.max(0, link.bannerCurveIntensity ?? 50));
         const y = (1.0 - (intensity / 100) * 0.45).toFixed(3);
         return (
           <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden', pointerEvents: 'none' }}>

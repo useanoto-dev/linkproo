@@ -11,6 +11,7 @@ import { SmartLink } from '@/types/smart-link';
 const AUTOSAVE_DELAY_MS = 1500;
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let statusResetTimer: ReturnType<typeof setTimeout> | undefined;
 let currentUserId: string | null = null;
 let pendingLink: SmartLink | null = null;
 
@@ -39,7 +40,8 @@ async function performSave(link: SmartLink, userId: string): Promise<void> {
     store.setAutosaveStatus('saved');
 
     // Reset to idle after 2s
-    setTimeout(() => {
+    if (statusResetTimer) clearTimeout(statusResetTimer);
+    statusResetTimer = setTimeout(() => {
       const current = useEditorStore.getState();
       if (current.autosave.status === 'saved') {
         current.setAutosaveStatus('idle');
@@ -47,7 +49,8 @@ async function performSave(link: SmartLink, userId: string): Promise<void> {
     }, 2000);
   } catch {
     store.setAutosaveStatus('error');
-    setTimeout(() => {
+    if (statusResetTimer) clearTimeout(statusResetTimer);
+    statusResetTimer = setTimeout(() => {
       const current = useEditorStore.getState();
       if (current.autosave.status === 'error') {
         current.setAutosaveStatus('idle');
@@ -110,6 +113,10 @@ export function registerAutosaveSubscriber(userId: string): () => void {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
       debounceTimer = undefined;
+    }
+    if (statusResetTimer) {
+      clearTimeout(statusResetTimer);
+      statusResetTimer = undefined;
     }
   };
 }

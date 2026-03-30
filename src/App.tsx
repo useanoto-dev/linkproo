@@ -116,9 +116,11 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <Suspense fallback={<PageLoader />}>
-                  <AppRoutes />
-                </Suspense>
+                <ErrorBoundary>
+                  <Suspense fallback={<PageLoader />}>
+                    <AppRoutes />
+                  </Suspense>
+                </ErrorBoundary>
               </BrowserRouter>
             </TooltipProvider>
           </ThemeProvider>
