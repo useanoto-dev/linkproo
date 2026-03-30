@@ -11,7 +11,7 @@ import {
   DragStartEvent,
   DragOverlay,
 } from "@dnd-kit/core";
-import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
@@ -358,7 +358,7 @@ export const SortableList = memo(function SortableList({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Elementos</h3>
-      <DndContext sensors={sensors} collisionDetection={closestCorners} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} modifiers={[restrictToVerticalAxis]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext items={unifiedItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5">
             {unifiedItems.map((item, itemIndex) => {

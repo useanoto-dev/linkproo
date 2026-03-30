@@ -254,7 +254,7 @@ export default function LinkEditor() {
           />
           <div
             className="flex-1 overflow-y-auto custom-scroll p-4 lg:p-6"
-            style={{ contain: 'paint', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
             onPointerDown={() => { if (openDrawer) setUI({ openDrawer: null, editingSubPageId: null }); }}
           >
             <div className={`mx-auto ${showPreview ? 'max-w-3xl' : 'max-w-2xl'}`}>
