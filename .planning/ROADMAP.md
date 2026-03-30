@@ -181,6 +181,12 @@ Plans:
 ### Phase 10: Test Coverage
 **Directory:** `phases/10-test-coverage/`
 **Goal:** Cobrir editor, hooks criticos e rotas publicas com testes -- garantir que o v1.0 nao regride.
+**Plans:** 3 plans
+
+Plans:
+- [ ] 10-01-PLAN.md -- Coverage infra (@vitest/coverage-v8, vite.config.ts test block) + autosave-subscriber tests
+- [ ] 10-02-PLAN.md -- editor-store comprehensive tests (setLink skipHistory, updateLink, setUI, autosave mutations)
+- [ ] 10-03-PLAN.md -- PublicLinkPage component tests + coverage threshold verification
 
 **Deliverables:**
 - Testes unitarios para hooks: `useEditor`, `useAutoSave`, `useUndo`
@@ -210,4 +216,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-03-25 -- Phase 5 planned (4 plans, 2 waves)*
+*Last updated: 2026-03-29 -- Phase 10 planned (3 plans, 2 waves)*
