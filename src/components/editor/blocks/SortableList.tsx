@@ -2,7 +2,7 @@ import { memo, ComponentType } from "react";
 import { SmartLink, SmartLinkButton, LinkBlock, BlockType, SubPage } from "@/types/smart-link";
 import {
   DndContext,
-  closestCenter,
+  closestCorners,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -11,6 +11,7 @@ import {
   DragStartEvent,
   DragOverlay,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
@@ -254,8 +255,18 @@ export const SortableList = memo(function SortableList({
   const duplicateButton = useCallback((id: string) => {
     const btn = buttonsRef.current.find((b) => b.id === id);
     if (!btn) return;
-    const maxOrder = Math.max(...buttonsRef.current.map((b) => b.order ?? 0), ...blocksRef.current.map((b) => b.order ?? 0), 0);
-    onUpdateLink({ buttons: [...buttonsRef.current, { ...btn, id: `btn-${Date.now()}`, order: maxOrder + 1 }] });
+    const srcOrder = btn.order ?? 0;
+    const newOrder = srcOrder + 1;
+    const newButtons = buttonsRef.current.map((b) =>
+      b.id !== id && (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    const newBlocks = blocksRef.current.map((b) =>
+      (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    onUpdateLink({
+      buttons: [...newButtons, { ...btn, id: `btn-${Date.now()}`, order: newOrder }],
+      blocks: newBlocks,
+    });
   }, [onUpdateLink]);
   const updateBlock = useCallback((id: string, updates: Partial<LinkBlock>) => {
     updateBlocks(subPageBlocksRef.current.map((b) => (b.id === id ? { ...b, ...updates } : b)));
@@ -267,9 +278,26 @@ export const SortableList = memo(function SortableList({
     const blocks = subPageBlocksRef.current;
     const blk = blocks.find((b) => b.id === id);
     if (!blk) return;
-    const maxOrder = Math.max(...(isSubPage ? [] : buttonsRef.current.map((b) => b.order ?? 0)), ...blocks.map((b) => b.order ?? 0), 0);
-    updateBlocks([...blocks, { ...blk, id: `blk-${Date.now()}`, order: maxOrder + 1 }]);
-  }, [isSubPage, updateBlocks]);
+    const srcOrder = blk.order ?? 0;
+    const newOrder = srcOrder + 1;
+    if (isSubPage) {
+      const updatedBlocks = blocks.map((b) =>
+        b.id !== id && (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+      );
+      updateBlocks([...updatedBlocks, { ...blk, id: `blk-${Date.now()}`, order: newOrder }]);
+    } else {
+      const updatedButtons = buttonsRef.current.map((b) =>
+        (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+      );
+      const updatedBlocks = blocks.map((b) =>
+        b.id !== id && (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+      );
+      onUpdateLink({
+        buttons: updatedButtons,
+        blocks: [...updatedBlocks, { ...blk, id: `blk-${Date.now()}`, order: newOrder }],
+      });
+    }
+  }, [isSubPage, updateBlocks, onUpdateLink]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(String(event.active.id));
@@ -330,7 +358,7 @@ export const SortableList = memo(function SortableList({
   return (
     <div className="space-y-2">
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Elementos</h3>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCorners} modifiers={[restrictToVerticalAxis, restrictToParentElement]} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <SortableContext items={unifiedItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5">
             {unifiedItems.map((item, itemIndex) => {

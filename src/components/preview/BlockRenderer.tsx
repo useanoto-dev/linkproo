@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useCallback } from "react";
 import type React from "react";
 import { motion } from "framer-motion";
 import type { TargetAndTransition } from "framer-motion";
@@ -54,6 +54,10 @@ export const BlockRenderer = memo(function BlockRenderer({
 
   // Hook must be called unconditionally — BEFORE any early returns (Rules of Hooks)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [imgBlockError, setImgBlockError] = useState(false);
+  const [imgBtnError, setImgBtnError] = useState(false);
+  const handleImgBlockError = useCallback(() => setImgBlockError(true), []);
+  const handleImgBtnError = useCallback(() => setImgBtnError(true), []);
 
   // Scheduling visibility — hidden outside the configured window (skip in editor preview)
   if (!isNewLink && (block.visibleFrom || block.visibleUntil)) {
@@ -63,7 +67,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   }
 
   if (block.type === "image-button") {
-    if (!block.buttonImageUrl) {
+    if (!block.buttonImageUrl || imgBtnError) {
       if (!isNewLink) return null;
       return <EmptyBlockPlaceholder icon={ImagePlus} label="Adicione uma imagem no editor" />;
     }
@@ -88,7 +92,7 @@ export const BlockRenderer = memo(function BlockRenderer({
         >
           <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: `${block.buttonHeight ?? 148}px` }}>
             {/* alt uses button label; if absent, image is decorative since the link wraps the whole area */}
-            <img src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 148}px` }} />
+            <img src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" onError={handleImgBtnError} className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 148}px` }} />
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ boxShadow: `inset 0 0 30px rgba(255,255,255,0.1), 0 0 20px ${accent}30` }}
@@ -110,11 +114,11 @@ export const BlockRenderer = memo(function BlockRenderer({
     );
   }
 
-  if (block.type === "image" && block.imageUrl) {
+  if (block.type === "image" && block.imageUrl && !imgBlockError) {
     return (
       <motion.div className="px-4 py-2"
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.5 }}>
-        <img src={block.imageUrl} alt={block.content || 'Imagem de destaque'} className="w-full object-cover shadow-md" style={{ borderRadius: `${block.borderRadius ?? 12}px` }} />
+        <img src={block.imageUrl} alt={block.content || 'Imagem de destaque'} loading="lazy" onError={handleImgBlockError} className="w-full object-cover shadow-md" style={{ borderRadius: `${block.borderRadius ?? 12}px` }} />
       </motion.div>
     );
   }

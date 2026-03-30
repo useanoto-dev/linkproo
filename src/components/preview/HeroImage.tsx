@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { SmartLink } from "@/types/smart-link";
 
@@ -9,7 +10,8 @@ interface HeroImageProps {
 }
 
 export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroImageProps) {
-  if (!link.heroImage) return null;
+  const [imgError, setImgError] = useState(false);
+  if (!link.heroImage || imgError) return null;
 
   // Resolve height — new px value takes precedence over legacy enum
   const heightPx: number = link.heroImageHeightPx ?? 192;
@@ -34,6 +36,7 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
         loading="eager"
         fetchPriority="high"
         decoding="async"
+        onError={() => setImgError(true)}
         style={{
           height:         heightPx,
           objectFit,

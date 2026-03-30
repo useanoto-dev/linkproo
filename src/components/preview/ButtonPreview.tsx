@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { SmartLinkButton } from "@/types/smart-link";
 import { recordClick } from "@/hooks/use-links";
@@ -35,6 +35,7 @@ function resolvePrimaryColor(btn: SmartLinkButton, accent: string): string {
 }
 
 export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, entryVariants: ev, onOpenPage }: ButtonPreviewProps) {
+  const [btnImgError, setBtnImgError] = useState(false);
   const style = btn.buttonStyle || "card";
 
   const customGrad = btn.gradientColor?.startsWith("custom:") ? (() => {
@@ -268,10 +269,11 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
             className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ boxShadow: `inset 0 0 30px rgba(255,255,255,0.1), 0 0 20px ${accent}30` }}
           />
-          {btn.imageUrl && (
+          {btn.imageUrl && !btnImgError && (
             <img
               src={btn.imageUrl}
               alt=""
+              onError={() => setBtnImgError(true)}
               className={`absolute ${imgPos === "left" ? "left-0" : "right-0"} top-0 h-full object-cover`}
               style={{
                 width: imgSizeW,
