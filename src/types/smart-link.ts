@@ -243,6 +243,10 @@ export interface SmartLink {
   businessNameAlign?: "left" | "center" | "right"; // text alignment of business name, default center
   hideBusinessName?: boolean;  // default: false
   hideTagline?: boolean;       // default: false
+  businessNameGlass?: boolean; // frosted glass card atrás do nome
+  taglineGlass?: boolean;      // frosted glass card atrás do slogan
+  businessNameWidth?: number;  // % de largura, 30-100, default 100
+  taglineWidth?: number;       // % de largura, 30-100, default 100
   entryAnimation?: EntryAnimation;
   snowEffect?: SnowEffect;
   bubblesEffect?: BubblesEffect;

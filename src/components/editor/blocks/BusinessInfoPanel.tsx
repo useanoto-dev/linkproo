@@ -154,6 +154,60 @@ export const BusinessInfoPanel = memo(function BusinessInfoPanel({ link, onUpdat
         </div>
       </div>
 
+      {/* Glass effect toggles */}
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">Efeito Glass</Label>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="businessNameGlass"
+            checked={!!link.businessNameGlass}
+            onCheckedChange={(checked) => onUpdateLink({ businessNameGlass: checked })}
+          />
+          <Label htmlFor="businessNameGlass" className="text-xs text-muted-foreground cursor-pointer">Glass no nome</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="taglineGlass"
+            checked={!!link.taglineGlass}
+            onCheckedChange={(checked) => onUpdateLink({ taglineGlass: checked })}
+          />
+          <Label htmlFor="taglineGlass" className="text-xs text-muted-foreground cursor-pointer">Glass no slogan</Label>
+        </div>
+      </div>
+
+      {/* Width controls */}
+      <div className="space-y-3">
+        <Label className="text-xs text-muted-foreground">Largura</Label>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] text-muted-foreground">Largura do nome</Label>
+            <span className="text-[11px] font-mono text-foreground tabular-nums">{link.businessNameWidth ?? 100}%</span>
+          </div>
+          <Slider
+            value={[link.businessNameWidth ?? 100]}
+            onValueChange={([v]) => onUpdateLink({ businessNameWidth: v })}
+            min={30} max={100} step={5}
+          />
+          <div className="flex justify-between text-[9px] text-muted-foreground">
+            <span>30%</span><span>100%</span>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label className="text-[11px] text-muted-foreground">Largura do slogan</Label>
+            <span className="text-[11px] font-mono text-foreground tabular-nums">{link.taglineWidth ?? 100}%</span>
+          </div>
+          <Slider
+            value={[link.taglineWidth ?? 100]}
+            onValueChange={([v]) => onUpdateLink({ taglineWidth: v })}
+            min={30} max={100} step={5}
+          />
+          <div className="flex justify-between text-[9px] text-muted-foreground">
+            <span>30%</span><span>100%</span>
+          </div>
+        </div>
+      </div>
+
       {/* Slug */}
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Endereço da sua página</Label>
