@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 const BUCKET = "link-images";
 
 /**
+ * Convert a base64 data URL to a Blob without using fetch().
+ * fetch(dataUrl) is unreliable on iOS/Safari and some mobile browsers.
+ * atob() is universally supported.
+ */
+function dataUrlToBlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header.match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
+}
+
+/**
  * Upload an image (base64 data URL or blob) to Supabase Storage.
  * Returns the public URL of the uploaded image.
  */
@@ -19,6 +36,10 @@ export async function uploadImage(
     return dataUrl;
   }
 
+  if (!dataUrl.startsWith("data:")) {
+    throw new Error("Formato de imagem inválido. Selecione um arquivo PNG, JPG ou WebP.");
+  }
+
   // Deletar imagem antiga do Storage (se pertencer a este bucket)
   if (oldUrl && oldUrl.includes("/storage/v1/object/public/link-images/")) {
     try {
@@ -33,9 +54,8 @@ export async function uploadImage(
     }
   }
 
-  // Convert data URL to blob
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
+  // Convert data URL to blob — uses atob, not fetch(), for iOS/Safari compatibility
+  const blob = dataUrlToBlob(dataUrl);
 
   // Validate file size
   if (blob.size > MAX_FILE_SIZE) {
