@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: — Silicon Valley Quality Overhaul
 status: unknown
-stopped_at: Completed 10-test-coverage-04-PLAN.md
-last_updated: "2026-03-30T13:25:00.741Z"
+stopped_at: Completed 10-test-coverage-03-PLAN.md
+last_updated: "2026-03-30T13:26:39.330Z"
 progress:
   total_phases: 10
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 19
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # State: Sistema Link PRO
@@ -57,10 +57,11 @@ Plan: 4 of 4
 - [Phase 10-test-coverage]: Coverage include[] narrowed to 3 specific files (autosave-subscriber.ts, editor-store.ts, PublicLinkPage.tsx) to keep thresholds achievable without including untested files
 - [Phase 10-test-coverage]: vi.hoisted() pattern for Supabase mock variables — Vitest hoists vi.mock() calls so variables must be declared inside vi.hoisted() to avoid ReferenceError
 - [Phase 10-test-coverage]: 10-04: use-block-operations.test.ts was implemented in prior run (ff5b532) — 10 integration tests cover full add/insert/remove/reorder block data path via useBlockOperations hook + Zustand store
+- [Phase 10-test-coverage]: HelmetProvider required in test render wrapper for react-helmet-async; initProtection mock returns vi.fn() to match cleanup function return type
 
 ## Last Session
 
-- **Stopped at:** Completed 10-test-coverage-04-PLAN.md
+- **Stopped at:** Completed 10-test-coverage-03-PLAN.md
 - **Timestamp:** 2026-03-24T04:47:00Z
 
 ## Accumulated Context
