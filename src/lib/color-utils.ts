@@ -1,5 +1,6 @@
 // Centralized background color extraction utility
 export function extractBgColor(bg: string): string {
+  if (!bg) return "#000000";
   if (bg.startsWith("custom:")) return bg.split(":")[2];
   const colorMap: Record<string, string> = {
     "from-gray-50 to-white": "#ffffff",
@@ -28,7 +29,7 @@ export function extractBgColor(bg: string): string {
 }
 
 export function getCustomBgGradient(bg: string): string | undefined {
-  if (!bg.startsWith("custom:")) return undefined;
+  if (!bg || !bg.startsWith("custom:")) return undefined;
   const p = bg.split(":");
   return `linear-gradient(180deg, ${p[1]}, ${p[2]})`;
 }

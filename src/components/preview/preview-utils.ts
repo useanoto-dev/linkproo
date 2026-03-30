@@ -2,6 +2,7 @@ import { EntryAnimation } from "@/types/smart-link";
 import { getCustomBgGradient } from "@/lib/color-utils";
 
 export function isDarkBg(bg: string) {
+  if (!bg) return false;
   if (bg.startsWith("custom:")) {
     const hex = bg.split(":")[1];
     return isHexDark(hex);
