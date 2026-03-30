@@ -213,7 +213,7 @@ Plans:
 | 7 | Payments | High | 2, 4 |
 | 8 | Custom Domains | Medium | 7 |
 | 9 | 2/2 | Complete   | 2026-03-26 |
-| 10 | 4/4 | Complete   | 2026-03-30 |
+| 10 | 4/4 | Complete    | 2026-03-30 |
 
 ---
 

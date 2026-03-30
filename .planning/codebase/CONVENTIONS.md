@@ -1,174 +1,257 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-23
+**Analysis Date:** 2026-03-28
 
 ## Naming Patterns
 
 **Files:**
-- React components: PascalCase with `.tsx` extension — e.g., `BlockRenderer.tsx`, `ImageUploader.tsx`
-- React hooks: kebab-case prefixed with `use-` — e.g., `use-links.ts`, `use-autosave.ts`
-- Utility/lib files: kebab-case — e.g., `color-utils.ts`, `link-mappers.ts`, `slug-utils.ts`
-- Type definition files: kebab-case — e.g., `smart-link.ts`
-- Pages: PascalCase with `Page` suffix — e.g., `AnalyticsPage.tsx`, `LinksPage.tsx` (exception: `Dashboard.tsx`)
-- Admin pages: PascalCase with `Admin` prefix and `Page` suffix — e.g., `AdminUsersPage.tsx`
+- React components: PascalCase matching the exported component name — `BlockEditor.tsx`, `AnimatedButtonBlock.tsx`
+- Hooks: kebab-case prefixed with `use-` — `use-autosave.ts`, `use-editor-history.ts`, `use-plan-limits.ts`
+- Utilities: kebab-case — `block-utils.ts`, `color-utils.ts`, `link-mappers.ts`, `slug-utils.ts`
+- Constants/data files: kebab-case — `templates.ts`, `constants.ts`, `unified-items.ts`
+- Preview utilities grouped by domain: `preview-utils.ts` inside `src/components/preview/`
 
 **Functions:**
-- Regular functions: camelCase — e.g., `normalizeSlug`, `extractBgColor`, `getPublicLinkUrl`
-- React components: PascalCase — e.g., `ImageUploader`, `BlockRenderer`, `EmailCaptureBlock`
-- React hooks: camelCase prefixed with `use` — e.g., `useLinks`, `useAutosave`, `usePlanLimits`
-- Event handlers: `handle` prefix — e.g., `handleSubmit`, `handleUpload`
-- Boolean state variables: present-tense or past-tense descriptive — e.g., `submitted`, `loading`, `hasError`
+- Regular functions: camelCase — `extractBgColor`, `normalizeSlug`, `getVideoEmbedUrl`
+- React hooks: camelCase prefixed with `use` — `useAutosave`, `useEditorHistory`, `usePlanLimits`
+- Event handlers: camelCase prefixed with `handle` — `handleClick`, `onUpdate`, `onRemove`
+- Boolean returns: `is`/`can`/`has` prefix — `isAnimStyle`, `isDarkBg`, `canCreateLink`, `isAtLimit`
 
-**Variables:**
+**Variables/Constants:**
+- Module-level constants: SCREAMING_SNAKE_CASE — `MAX_HISTORY`, `THEMES`, `VALID_ANIM_STYLES`, `EDITORS`, `COLOR_PRESETS`, `FONT_LINKS`, `PUBLISHED_DOMAIN`
 - Local variables: camelCase
-- Constants (module-level): SCREAMING_SNAKE_CASE for pure data constants — e.g., `RESERVED_SLUGS`, `GENERIC_PRESETS`, `FULL_SMART_LINK` (in tests)
-- Exported constants used as config/data: SCREAMING_SNAKE_CASE — e.g., `COLOR_PRESETS`, `PUBLISHED_DOMAIN`
+- Unused parameters prefixed with `_` to satisfy the ESLint `argsIgnorePattern: "^_"` rule — `_id`, `_created_at`
 
-**Types/Interfaces:**
-- Interfaces: PascalCase — e.g., `SmartLink`, `AspectPreset`, `AuthContextType`
-- Type aliases: PascalCase — e.g., `LinkType`, `BlockType`, `SaveStatus`, `Mode`
-- Generic parameters: single uppercase letter — e.g., `<T>` in `toJsonb<T>`
-
-## Code Style
-
-**Formatting:**
-- Prettier is not explicitly configured (no `.prettierrc` found); formatting appears consistent with default TypeScript/ESLint conventions
-- 2-space indentation throughout
-- Double quotes for strings in JSX attributes; double quotes in TypeScript
-- Trailing commas in multi-line objects/arrays
-- Section dividers with ASCII art for long files — e.g., `// ─── Props ────────────────────────` and `// ─── Component ────────────────────`
-
-**Linting:**
-- ESLint 9 with flat config at `eslint.config.js`
-- Extends `@eslint/js` recommended + `typescript-eslint` recommended
-- Plugins: `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
-- `@typescript-eslint/no-unused-vars` is explicitly turned **off** — unused variables do not cause lint errors
-- React hooks rules are enforced at recommended level
-
-## Import Organization
-
-**Order (observed pattern — no auto-enforcer configured):**
-1. External library imports (React, framer-motion, lucide-react, third-party packages)
-2. Internal `@/` path alias imports — contexts, hooks, components, lib, types
-3. Relative sibling imports (`./ComponentName`)
-
-**Path Aliases:**
-- `@/` maps to `src/` — defined in both `vite.config.ts` (via `@vitejs/plugin-react-swc`) and `vitest.config.ts`
-- Used consistently throughout the codebase; no relative `../../` deep traversal
-
-**Import types:**
-- `import type` used for type-only imports — e.g., `import type { SmartLink } from "@/types/smart-link"`
-- Mixed value+type imports use inline `type` qualifier — e.g., `import { type Json } from "@/integrations/supabase/types"`
-
-## Error Handling
-
-**Patterns:**
-
-**User-facing errors — toast notifications via `sonner`:**
-```typescript
-import { toast } from "sonner";
-
-// Error feedback
-toast.error("E-mail ou senha incorretos");
-
-// Success feedback
-toast.success("Conta criada! Verifique seu e-mail.");
-
-// Inline in mutation callbacks
-onError: () => toast.error("Erro ao salvar FAQ"),
-onSuccess: () => toast.success("FAQ atualizada!"),
-```
-
-**Silent errors with console logging (non-critical paths):**
-```typescript
-// Analytics failures are swallowed — never block UX
-try {
-  await recordClick(...);
-} catch (err) {
-  console.error("[analytics] recordClick failed:", err);
-}
-```
-
-**Async mutation error handling:**
-- React Query `useMutation` is used with `onError`/`onSuccess` callbacks
-- Errors thrown in `queryFn` propagate to React Query's error state
-- Critical errors that should not block UX are caught and logged with `console.error`
-
-**ErrorBoundary:**
-- Class component `ErrorBoundary` wraps the entire app at `src/components/ErrorBoundary.tsx`
-- Catches runtime render errors; displays a Portuguese-language fallback UI with a reload button
-- Logs to `console.error("ErrorBoundary caught:", error, info)`
-
-**Validation pattern:**
-- Validation functions return `string | null` — `null` means valid, string is the error message
-- Example: `validateSlug(slug: string): string | null`
-
-## Logging
-
-**Framework:** Native `console` API only (no structured logging library)
-
-**Patterns:**
-- `console.error` for caught exceptions in non-critical paths — tagged with module prefix in brackets: `"[analytics]"`, `"[storage]"`, `"[EmailCapture]"`
-- `console.warn` for non-fatal degraded states — e.g., failed old image deletion
-- `console.error` in `ErrorBoundary.componentDidCatch` and `NotFound` 404 handler
-- No logging in the hot-path business logic (mappers, validators)
-
-## Comments
-
-**When to Comment:**
-- JSDoc-style block comments on exported functions with non-obvious behavior — e.g., `link-mappers.ts` documents the `toJsonb` helper and the "single source of truth" intent
-- Inline comments explain domain context and non-obvious decisions — e.g., reserved slugs list, Supabase SECURITY DEFINER note
-- Section dividers (`// ─── Section Name ───`) used in large component files to demarcate logical blocks
-- Portuguese-language comments are present in domain logic (project's working language is Brazilian Portuguese)
-- Test file headers use a horizontal rule + section name pattern: `// ---------------------------------------------------------------------------`
-
-**JSDoc/TSDoc:**
-- Used selectively on utility functions with important behavioral contracts
-- Not applied uniformly to all exports — only where behavior needs explanation
-
-## Function Design
-
-**Size:**
-- Utility functions are small and focused (`normalizeSlug`, `extractBgColor`, `validateSlug`)
-- Component functions can be large (e.g., `BlockRenderer.tsx` exports many block sub-components in one file)
-- Large files use section dividers (`// ───`) to manage readability
-
-**Parameters:**
-- Functions with many optional fields use a single object parameter with interface type — e.g., `ImageUploaderProps`
-- Hooks that need auth context retrieve it internally via `useAuth()` rather than receiving it as a prop
-- Optional parameters use `?` suffix in TypeScript — e.g., `excludeId?: string`
-
-**Return Values:**
-- Validation functions return `string | null` (null = valid, string = error message)
-- Async functions return `Promise<{ error: Error | null }>` for auth operations
-- Mapper functions return typed domain objects directly
-
-## Module Design
-
-**Exports:**
-- Pages use `export default function PageName()` as the primary export
-- Libraries/utils use named exports exclusively — no default exports in `src/lib/`
-- Hooks use named exports — e.g., `export function useLinks()`
-- Components in `src/components/` use both named exports (`export function ImageUploader`) and default exports
-- Re-exports used for backward compatibility — e.g., `use-links.ts` re-exports mapper functions
-
-**Barrel Files:**
-- Not used — no `index.ts` barrel files found in any directory
-- Imports reference specific file paths directly
+**Types:**
+- Interfaces: PascalCase suffixed with type context — `SmartLinkButton`, `BlockEditorProps`, `AnimatedButtonBlockProps`
+- Type aliases: PascalCase — `LinkType`, `BlockType`, `EntryAnimation`, `SaveStatus`, `AnimStyle`
+- Component prop interfaces: Named `<ComponentName>Props` and defined immediately above the component
 
 ## TypeScript Usage
 
-**Strict typing:**
-- TypeScript 5.8 with project-level tsconfig; no `any` suppression beyond interop with Supabase row shapes
-- Domain model in `src/types/smart-link.ts` as the canonical type source
-- Supabase-generated types in `src/integrations/supabase/types.ts`
-- Type assertions used at DB boundary: `(row.logo_shape as SmartLink['logoShape'])`
-- `row: any` accepted in mapper functions that work with raw DB rows
+**Strict Mode:** Enabled in `tsconfig.app.json` with `"strict": true`, `"noUnusedLocals": true`, `"noUnusedParameters": true`.
 
-**Utility types:**
-- `cn()` helper in `src/lib/utils.ts` combines `clsx` + `tailwind-merge` for conditional className composition
-- Used universally in components: `className={cn("base-classes", conditionalClass)}`
+**Type Definitions:**
+- All component props are typed via `interface <Name>Props` — never inline objects or `any`
+- Domain types centralized in `src/types/smart-link.ts` — `SmartLink`, `LinkBlock`, `BlockType`, `SmartLinkButton`, etc.
+- Supabase row types imported from `src/integrations/supabase/types.ts` — `Tables<"links">`, `TablesInsert<"links">`
+- Type narrowing via type guard functions: `function isAnimStyle(value: unknown): value is AnimStyle`
+- `as const` on readonly arrays for discriminated unions — `VALID_ANIM_STYLES as readonly AnimStyle[]`
+- `satisfies Config` used in `tailwind.config.ts` for type-checked config objects
+- `unknown` used for catch clause errors; cast to `Error` before accessing `.message`
+- `ReturnType<typeof hookFn>` used in test mocks for accurate typing — `ReturnType<typeof useProfile>`
+
+**Import Aliases:**
+- `@/` maps to `src/` — used consistently across all files: `import { cn } from "@/lib/utils"`
+- No relative `../..` paths — all cross-directory imports use the `@/` alias
+
+## Import Organization
+
+**Order (observed pattern):**
+1. React and React primitives — `import React, { memo, useState, useCallback } from "react"`
+2. Third-party libraries — `framer-motion`, `@tanstack/react-query`, `sonner`, `lucide-react`, `react-icons`
+3. Internal `@/` imports — types, hooks, components, utilities, integrations
+4. Relative imports — sibling/child files within the same directory
+
+**Named exports only from utilities and hooks** — no default exports from `src/lib/` or `src/hooks/`. Default exports are used only for pages (required by `React.lazy`).
+
+## Component Patterns
+
+**Functional components with named export:**
+```typescript
+export function PageTransition({ children, className }: PageTransitionProps) { ... }
+```
+
+**`memo` with named function for DevTools display:**
+```typescript
+export const BlockRenderer = memo(function BlockRenderer({ ... }: BlockRendererProps) { ... });
+export const ButtonPreview = memo(function ButtonPreview({ ... }: ButtonPreviewProps) { ... });
+```
+Applied broadly to editor sub-panels, preview blocks, and list items where re-renders are expensive.
+
+**`React.lazy` for route-level and heavy editor modules:**
+```typescript
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const TextBlockEditor = React.lazy(() =>
+  import("./blocks/TextBlockEditor").then(m => ({ default: m.TextBlockEditor }))
+);
+```
+All pages and large editor group panels are lazy-loaded. Named exports from lazy modules require the `.then(m => ({ default: m.X }))` re-wrap.
+
+**Class components reserved for error boundaries only:**
+- `src/components/ErrorBoundary.tsx` — top-level, wraps entire app
+- `src/components/editor/blocks/BlockErrorBoundary.tsx` — per-block isolation in the editor
+
+**Stable module-level objects to prevent memo invalidation:**
+```typescript
+// Stable object — created once at module level so SortableList never re-renders
+const EDITORS = { TextBlockEditor, MediaBlockEditor, ... } as const;
+```
+
+## Tailwind CSS Usage
+
+**Utility-first with `cn()` for conditional classes:**
+```typescript
+import { cn } from "@/lib/utils";
+// cn() = twMerge(clsx(...)) — resolves Tailwind class conflicts
+className={cn("base-classes", condition && "conditional-class", className)}
+```
+
+**Semantic tokens via CSS variables** — never hard-code colors in Tailwind for themed UI:
+- `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, `border-destructive`
+- Custom tokens: `bg-surface`, `bg-surface-hover`, `text-surface-foreground`, `bg-glow`
+
+**Inline `style` props for dynamic/runtime values** — Tailwind classes only for static layout:
+```typescript
+// Dynamic colors from user config → inline style
+style={{ background: theme.bg, minHeight: minH, color: theme.textColor }}
+// Static layout → Tailwind
+className="flex items-center justify-center flex-shrink-0"
+```
+
+**Custom Tailwind extensions defined in `tailwind.config.ts`:**
+- Custom keyframes: `float`, `pulse-glow`, `accordion-down`, `accordion-up`
+- Extended `backdropBlur` scale: `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`
+- Design tokens: `surface`, `glow`, `success`, `warning`, `sidebar.*`
+- Border radius via CSS vars: `rounded-lg`, `rounded-md`, `rounded-sm` → `--radius`
+
+**Dark mode:** Class-based (`darkMode: ["class"]`). All colors use `hsl(var(--token))` CSS variables that swap automatically.
+
+## Framer Motion Animation Patterns
+
+**Page transitions via `<PageTransition>` wrapper** (`src/components/PageTransition.tsx`):
+```typescript
+<motion.div
+  initial={{ opacity: 0, y: 8 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -4 }}
+  transition={{ duration: 0.2, ease: "easeOut" }}
+>
+```
+
+**Entry animations via `getEntryVariants()` in `src/components/preview/preview-utils.ts`** — returns `{ initial, animate, transition }` spread onto `<motion.div>`. Supports: `none`, `fade-up`, `slide-left`, `slide-right`, `scale`, `bounce`. Spring physics used for most variants.
+
+**Continuous looping animations on animated blocks:**
+```typescript
+animate={{ boxShadow: cardShadow }}
+transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+// Shimmer sweep
+animate={{ x: ["-100%", "250%"] }}
+transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 4.5, ease: "easeInOut" }}
+// Floating icon bob
+animate={{ y: [0, -7, 0] }}
+transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+```
+
+**`whileHover` / `whileTap` for interactive feedback:**
+```typescript
+whileHover={{ scale: 1.015, transition: { duration: 0.2 } }}
+whileTap={{ scale: 0.985, transition: { duration: 0.1 } }}
+```
+
+**`AnimatePresence` with `mode="wait"` for route transitions** in `src/App.tsx` — keyed by `location.pathname`.
+
+## State Management
+
+**Server state via TanStack Query** (`@tanstack/react-query`):
+- Query keys follow `["entity", id?]` pattern — `["links", user?.id]`, `["link", id]`, `["public-link", slug]`
+- Mutations centralized in `src/hooks/use-links.ts` — not co-located with components
+- `onSuccess` handlers call `queryClient.invalidateQueries` to refresh related queries
+- `onError` handlers call `toast.error(err.message || "fallback message")`
+- Global config: `staleTime: 2min`, `gcTime: 10min`, `refetchOnWindowFocus: false`, `retry: 1`
+
+**Editor undo/redo state via `useEditorHistory`** (`src/hooks/use-editor-history.ts`):
+- `set(state | updater)` — pushes current state to past, clears future
+- `undo()` / `redo()` — navigate history stack (max 50 entries)
+- `reset(state)` — clears history entirely (used on initial load)
+- Returns stable object via `useMemo` to avoid unnecessary re-renders
+
+**Autosave debounce via `useAutosave`** (`src/hooks/use-autosave.ts`):
+- Status: `'idle' | 'saving' | 'saved' | 'error'`
+- Volatile fields (`views`, `clicks`, `createdAt`) excluded from dirty-check serialization
+- `initializeRef(link)` must be called after initial data load to prevent immediate save
+- `flush()` saves immediately, bypassing the debounce timer
+
+**Context providers** (in `src/contexts/`): `AuthContext` (Supabase session), `ThemeContext` (dark/light)
+
+## Error Handling
+
+**Async errors in mutations — surfaced via `toast.error()`:**
+```typescript
+onError: (err: Error) => {
+  toast.error(err.message || "Erro ao salvar o link. Tente novamente.");
+}
+```
+The `||` fallback Portuguese string is the standard pattern for user-facing errors.
+
+**Async errors in queries — thrown and handled by React Query** (not manually caught).
+
+**Fire-and-forget analytics — silent `try/catch` with `console.error`:**
+```typescript
+try {
+  await supabase.from("link_views").insert({ ... });
+} catch (err) {
+  console.error("[analytics] recordView failed:", err);
+}
+```
+
+**Catch clauses for non-critical paths omit the variable entirely:**
+```typescript
+try { ... } catch { /* Erro de rede — padrão é "free" */ }
+```
+
+**React error boundaries** — two tiers:
+1. `<ErrorBoundary>` in `src/components/ErrorBoundary.tsx` — wraps entire app, shows full-page reload UI
+2. `<BlockErrorBoundary>` in `src/components/editor/blocks/BlockErrorBoundary.tsx` — wraps each block editor, shows inline remove button
+
+**Security — user HTML sanitized via DOMPurify** before render; user iframe HTML runs in `sandbox="allow-scripts"` to prevent parent DOM access.
+
+## shadcn/ui Component Usage
+
+**Pattern — import from `@/components/ui/` barrel:**
+```typescript
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
+```
+
+**`cva` + `cn` for variant composition** (as seen in `src/components/ui/button.tsx`):
+```typescript
+const buttonVariants = cva("base-classes", { variants: { variant: {...}, size: {...} }, defaultVariants: {...} });
+// Consumer:
+<Comp className={cn(buttonVariants({ variant, size, className }))} />
+```
+
+**Radix primitives used directly** for patterns not covered by shadcn components — e.g., `@radix-ui/react-slot` via shadcn Button's `asChild` prop.
+
+**Lucide React for icons** — `lucide-react` package. `react-icons` (`FaWhatsapp`, `FaInstagram`, etc.) used for brand/social icons.
+
+## Comments
+
+**JSDoc-style block comments on exported utility functions and hooks:**
+```typescript
+/** Fetch all links for current user (with aggregated view/click counts via RPC) */
+export function useLinks() { ... }
+/** Returns the full public URL for a published link slug — always uses current origin */
+export function getPublicLinkUrl(slug: string): string { ... }
+```
+
+**Inline section dividers for long files:**
+```typescript
+// ─── Queries ────────────────────────────────────────────────
+// ─── Mutations ──────────────────────────────────────────────
+// ─── Analytics Helpers ──────────────────────────────────────
+```
+
+**Context comments on non-obvious decisions:**
+```typescript
+// useRef gives a stable ID that never triggers useMemo/useEffect deps changes
+// Stable object — created once at module level so SortableList never re-renders
+// No PageTransition here — these use getEntryVariants stagger per D-03
+```
+
+**Portuguese comments** appear in domain-logic explaining business rules; English used for technical/architectural comments.
 
 ---
 
-*Convention analysis: 2026-03-23*
+*Convention analysis: 2026-03-28*

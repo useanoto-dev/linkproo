@@ -1,223 +1,229 @@
 # Architecture
 
-**Analysis Date:** 2026-03-23
+**Analysis Date:** 2026-03-28
 
 ## Pattern Overview
 
-**Overall:** Single-Page Application (SPA) with client-side rendering, Supabase BaaS backend, and feature-sliced layering by concern.
+**Overall:** Feature-sliced SPA with React Query as server-state cache and React Context for auth/theme. No Zustand/Redux — local component state is lifted up to the page-level orchestrator (`LinkEditor`). Two distinct rendering modes exist for the editor preview: List mode (drag-reorder via `@dnd-kit`) and Canvas mode (free-position via `react-moveable`).
 
 **Key Characteristics:**
-- All data access is centralized in custom React Query hooks (`src/hooks/`) — no direct Supabase calls in pages or components
-- Domain model (`SmartLink`) is the single canonical type that flows through every layer; DB rows are mapped at the boundary via `src/lib/link-mappers.ts`
-- Editor state is managed entirely in React local state (`useEditorHistory` + `useAutosave`); no global store (no Redux/Zustand)
-- Public pages (`/:slug`) and app pages (`/dashboard`, etc.) share routes in the same SPA; app routes take priority via route ordering in `src/App.tsx`
-- Role-based access control uses two guard components: `ProtectedRoute` (auth check) and `AdminRoute` (auth + role check)
+- All pages are lazy-loaded via `React.lazy` + `Suspense` (tree-shaking + code splitting)
+- Supabase is the exclusive backend — no custom API server
+- Data access is encapsulated in hooks under `src/hooks/` which wrap `useQuery`/`useMutation` from `@tanstack/react-query`
+- The `SmartLink` TypeScript type is the canonical domain model; DB rows are mapped in/out via `src/lib/link-mappers.ts`
+- Editor preview is debounced (50 ms) so `previewLink` lags slightly behind `link` state, avoiding re-render on every keystroke
 
 ## Layers
 
-**Entry / Bootstrap:**
-- Purpose: Mount React app, initialize protection, attach Vercel Speed Insights
-- Location: `src/main.tsx`, `index.html`
-- Contains: Root render, `initProtection()` call
-- Depends on: `src/App.tsx`, `src/lib/protect.ts`
-- Used by: Browser
-
-**Routing / Provider Shell:**
-- Purpose: Declare all routes, wrap app in global providers
+**Routing / Shell:**
+- Purpose: Declare all routes, inject global providers, guard protected/admin routes
 - Location: `src/App.tsx`
-- Contains: `QueryClientProvider`, `AuthProvider`, `ThemeProvider`, `BrowserRouter`, all `<Route>` definitions with lazy-loaded page components
-- Depends on: All context providers, `ProtectedRoute`, `AdminRoute`, page components
-- Used by: `src/main.tsx`
+- Contains: `BrowserRouter`, `Routes`, provider wrappers (`QueryClientProvider`, `AuthProvider`, `ThemeProvider`), `AnimatePresence` for page transitions
+- Depends on: all context providers
+- Used by: `src/main.tsx` (root render)
 
-**Pages (Views):**
-- Purpose: Compose UI from layout and feature components; orchestrate hook data into rendered output
-- Location: `src/pages/`, `src/pages/admin/`
-- Contains: Page-level components (Dashboard, LinkEditor, PublicLinkPage, AnalyticsPage, etc.)
-- Depends on: Hooks, layout components, editor/preview components
-- Used by: React Router route definitions in `src/App.tsx`
+**Page Layer:**
+- Purpose: Compose features into full-screen views; own page-level state
+- Location: `src/pages/`
+- Contains: `Dashboard.tsx`, `LinksPage.tsx`, `LinkEditor.tsx`, `PublicLinkPage.tsx`, `AnalyticsPage.tsx`, `PlansPage.tsx`, `SettingsPage.tsx`, `VideoaulasPage.tsx`, `SupportPage.tsx`, `AuthPage.tsx`, `ResetPasswordPage.tsx`, `LandingPage.tsx`, `NotFound.tsx`; admin pages in `src/pages/admin/`
+- Depends on: hooks, contexts, layout components, domain types
+- Used by: `src/App.tsx` route definitions
 
-**Layout:**
-- Purpose: Authenticated shell (sidebar + header) wrapping all protected pages
+**Layout Layer:**
+- Purpose: Authenticated shell with sidebar navigation; wraps all protected pages
 - Location: `src/components/DashboardLayout.tsx`, `src/components/AppSidebar.tsx`
-- Contains: `SidebarProvider`, `AppSidebar`, sticky header with `SidebarTrigger`; calls `useDeviceFingerprint()` on every authenticated mount
-- Depends on: `src/components/ui/sidebar.tsx`, `src/hooks/use-device-fingerprint.ts`
-- Used by: Every protected page
+- Contains: `SidebarProvider`, `AppSidebar` (nav items, user avatar, theme toggle), sticky header with `SidebarTrigger`
+- Depends on: `AuthContext`, `ThemeContext`, `use-profile`, `use-user-role`
+- Used by: every protected page except `LinkEditor` (which uses full-width layout)
 
-**Editor Feature:**
-- Purpose: Visual SmartLink builder — panels, drag-and-drop blocks, live preview pane
-- Location: `src/components/editor/`
-- Contains: `BlockEditor.tsx` (1944 lines, main editor panel), `ElementsSidebar.tsx`, `ThemePanel.tsx`, `EffectsPanel.tsx`, `SubPageEditor.tsx`, `DeviceFrame.tsx`, `ImageUploader.tsx`, `ButtonBlockEditor.tsx`, `CropEditor.tsx`
-- Depends on: `src/types/smart-link.ts`, `src/hooks/use-autosave.ts`, `src/hooks/use-editor-history.ts`, `@dnd-kit/*`
-- Used by: `src/pages/LinkEditor.tsx`
+**Editor Layer:**
+- Purpose: Interactive link builder — manages editor state, autosave, undo/redo, drag-and-drop, canvas mode
+- Location: `src/pages/LinkEditor.tsx` (orchestrator), `src/components/editor/`
+- Contains:
+  - `LinkEditor.tsx` — page-level state owner (link state, autosave, history, canvas mode toggle)
+  - `BlockEditor.tsx` — renders `BusinessInfoPanel` + `SortableList` of unified buttons/blocks
+  - `ElementsSidebar.tsx` — block type catalog with drag-to-add and click-to-add
+  - `ThemePanel.tsx`, `EffectsPanel.tsx`, `SubPageEditor.tsx` — side panels for styling and sub-pages
+  - `DeviceFrame.tsx` — renders a pixel-accurate phone shell (iPhone 15, Pixel 8, Galaxy S24) around the preview
+  - `CanvasToolbar.tsx`, `CanvasPropertiesPanel.tsx` — canvas mode controls
+  - `blocks/SortableList.tsx` — `@dnd-kit` drag-and-drop list of `UnifiedItem` (buttons and blocks unified by `order` field)
+  - `blocks/` — group editors: `TextBlockEditor`, `MediaBlockEditor`, `LayoutBlockEditor`, `InteractiveBlockEditor`, `ListBlockEditor` (all lazy-loaded)
+- Depends on: `use-links`, `use-autosave`, `use-editor-history`, `AuthContext`, `link-mappers`, `block-utils`
+- Used by: routes `/links/new` and `/links/:id/edit`
 
-**Preview Feature:**
-- Purpose: Render a SmartLink for display (both live in editor and on public page)
-- Location: `src/components/SmartLinkPreview.tsx`, `src/components/preview/`
-- Contains: `SmartLinkPreview.tsx` (root renderer), `BlockRenderer.tsx` (renders individual blocks), `ButtonPreview.tsx`, `AnimatedButtonBlock.tsx`, `CountdownBlock.tsx`, `FaqAccordionItem.tsx`, `FloatingEmoji.tsx`, `preview-utils.ts`
-- Depends on: `src/types/smart-link.ts`, `src/hooks/use-links.ts` (for `recordClick`), `src/hooks/use-email-captures.ts`
-- Used by: `src/pages/LinkEditor.tsx` (preview pane), `src/pages/PublicLinkPage.tsx`
+**Preview Layer:**
+- Purpose: Render the public-facing link page appearance — shared between editor preview and actual public page
+- Location: `src/components/SmartLinkPreview.tsx` (main), `src/components/preview/`
+- Contains:
+  - `SmartLinkPreview.tsx` — full page renderer (background effects, hero image, logo, title, button list, blocks, floating emojis, WhatsApp float, SubPage modal)
+  - `BlockRenderer.tsx` — switch-dispatches each `BlockType` to its visual output; includes `FreeHtmlBlock` (sandboxed iframe for user HTML)
+  - `ButtonPreview.tsx` — renders an individual `SmartLinkButton`
+  - `CanvasPreview.tsx` — canvas mode viewer using `react-moveable` for drag/resize/rotate; renders elements via `createPortal` to escape `overflow:hidden` in `DeviceFrame`
+  - `preview-utils.ts` — pure helpers: `isDarkBg`, `getVideoEmbedUrl`, `getMapEmbedUrl`, `getSpotifyEmbedUrl`, `getEntryVariants`, Google Font loader
+  - Background effects as standalone components: `SnowEffect`, `BubblesEffect`, `FirefliesEffect`, `MatrixEffect`, `StarsEffect`, `BgHtmlEffect` (in `src/components/`)
+- Depends on: `types/smart-link`, `lib/color-utils`, `use-links` (for `recordClick`), `use-email-captures`
+- Used by: `LinkEditor` (debounced preview inside `DeviceFrame`) and `PublicLinkPage`
 
-**Visual Effects:**
-- Purpose: Animated background overlays rendered on top of SmartLink pages
-- Location: `src/components/SnowEffect.tsx`, `BubblesEffect.tsx`, `FirefliesEffect.tsx`, `MatrixEffect.tsx`, `StarsEffect.tsx`, `BgHtmlEffect.tsx`
-- Depends on: Props from `SmartLink` effect fields
-- Used by: `src/components/SmartLinkPreview.tsx`
-
-**Hooks (Data Access Layer):**
-- Purpose: All Supabase queries and mutations; enforce plan limits; abstract domain logic from UI
+**Data / Hook Layer:**
+- Purpose: Wrap all Supabase calls; expose typed React Query hooks
 - Location: `src/hooks/`
-- Contains: `use-links.ts` (CRUD + analytics), `use-profile.ts`, `use-plan-limits.ts`, `use-admin.ts`, `use-autosave.ts`, `use-editor-history.ts`, `use-user-role.ts`, `use-device-fingerprint.ts`, `use-email-captures.ts`, `use-course.ts`, `use-support.ts`
-- Depends on: `src/integrations/supabase/client.ts`, `src/contexts/AuthContext.tsx`, `@tanstack/react-query`
-- Used by: Pages and feature components
+- Contains:
+  - `use-links.ts` — `useLinks`, `useLink`, `usePublicLink`, `useSaveLink`, `useDeleteLink`, `useDuplicateLink`, `useToggleLinkActive`, `useLinkStats`, `recordView`, `recordClick`
+  - `use-autosave.ts` — debounced background save with status tracking (`idle | saving | saved | error`) and `flush()` for immediate save on tab hide / unmount
+  - `use-editor-history.ts` — undo/redo stack (max 50 snapshots) using `past/present/future` pattern
+  - `use-profile.ts` — fetches `profiles` row (display name, avatar, plan)
+  - `use-plan-limits.ts` — derives link creation limits from plan (`free:3 / pro:50 / business:∞`)
+  - `use-user-role.ts` — admin check
+  - `use-device-fingerprint.ts` — silent device tracking on authenticated pages
+  - `use-mobile.tsx` — responsive breakpoint hook
+  - `use-autosave.ts`, `use-course.ts`, `use-email-captures.ts`, `use-support.ts`
+- Depends on: `supabase` client, `AuthContext`, `link-mappers`
+- Used by: page components, editor components
 
-**Contexts:**
-- Purpose: Global React state shared across all components
-- Location: `src/contexts/`
-- Contains: `AuthContext.tsx` (session, user, auth methods), `ThemeContext.tsx` (dark/light mode)
-- Depends on: `src/integrations/supabase/client.ts`
-- Used by: All pages and hooks that need auth state
-
-**Lib (Pure Utilities):**
-- Purpose: Stateless helper functions with no React dependencies
+**Library / Utility Layer:**
+- Purpose: Pure functions, mappers, and utilities with no React dependencies
 - Location: `src/lib/`
-- Contains: `link-mappers.ts` (DB row ↔ SmartLink conversion), `block-utils.ts` (block defaults), `slug-utils.ts` (validation + availability check), `color-utils.ts`, `image-utils.ts`, `storage-utils.ts`, `device-fingerprint.ts`, `protect.ts`, `utils.ts` (Tailwind `cn()`)
-- Depends on: `src/types/smart-link.ts`
-- Used by: Hooks, pages, editor components
+- Contains:
+  - `link-mappers.ts` — `rowToSmartLink` and `smartLinkToRow` — bidirectional mapping between DB rows and the `SmartLink` domain type; also exports `SmartLinkRow` manual interface (Supabase generated types are stale)
+  - `block-utils.ts` — `createBlockDefaults(type)` — factory for new block instances with type-specific defaults
+  - `slug-utils.ts` — `validateSlug`, `checkSlugAvailability`
+  - `color-utils.ts` — background gradient parsing, dark/light detection
+  - `image-utils.ts`, `storage-utils.ts` — Supabase Storage helpers
+  - `device-fingerprint.ts` — browser fingerprint collection
+  - `protect.ts` — `initProtection()` — blocks devtools shortcuts + right-click on public pages
+  - `utils.ts` — shadcn `cn()` class merger
+- Depends on: `supabase` client (storage utils only), `types/smart-link`
+- Used by: hooks, editor components, preview components
 
-**Supabase Integration:**
-- Purpose: Typed Supabase client and generated DB types
+**Context Layer:**
+- Purpose: App-wide shared state that does not fit React Query (auth session, UI theme)
+- Location: `src/contexts/`
+- Contains:
+  - `AuthContext.tsx` — wraps Supabase `onAuthStateChange`; exposes `session`, `user`, `loading`, `signUp`, `signIn`, `signInWithOAuth`, `signOut`, `resetPassword`
+  - `ThemeContext.tsx` — `light | dark` toggle, persisted to `localStorage` as `linkpro_theme`, applies `dark` class to `document.documentElement`
+- Depends on: `supabase` client
+- Used by: `App.tsx` (providers), `ProtectedRoute`, `AdminRoute`, all pages that need auth/theme
+
+**Integration Layer:**
+- Purpose: Supabase client singleton with typed schema
 - Location: `src/integrations/supabase/`
-- Contains: `client.ts` (singleton `supabase` export), `types.ts` (auto-generated `Database` type)
+- Contains: `client.ts` (instantiates `createClient<Database>`), `types.ts` (generated Supabase types — partially stale, see `link-mappers.ts` note)
 - Depends on: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` env vars
-- Used by: All hooks and `AuthContext`
 
-**Domain Types:**
-- Purpose: TypeScript source-of-truth for the core domain model
+**Type Layer:**
+- Purpose: Canonical domain model definitions
 - Location: `src/types/smart-link.ts`
-- Contains: `SmartLink`, `SmartLinkButton`, `LinkBlock`, `BlockType`, `SubPage`, all effect interfaces, supporting item types (`FaqItem`, `GalleryImage`, `StatItem`, `ContactItem`, etc.)
-- Depends on: Nothing (pure types)
-- Used by: Every layer
-
-**Static Data:**
-- Purpose: Hardcoded configuration that does not live in the DB
-- Location: `src/data/`
-- Contains: `templates.ts` (link templates), `plans.ts` (plan definitions and feature lists), `brand-icons.ts`, `mock-links.ts`
-- Used by: Pages, editor components
-
-**Supabase Edge Functions:**
-- Purpose: Server-side logic that cannot run in the browser
-- Location: `supabase/functions/og/`
-- Contains: OG image generation endpoint
+- Contains: `SmartLink`, `SmartLinkButton`, `LinkBlock`, `BlockType` (union of 24 types), `SubPage`, `ContactItem`, `BadgeItem`, `EntryAnimation`, effect interfaces (`SnowEffect`, `BubblesEffect`, etc.)
 
 ## Data Flow
 
-**Creating / Editing a SmartLink:**
+**Editor — Loading an Existing Link:**
 
-1. User opens `/links/new` or `/links/:id/edit` → `src/pages/LinkEditor.tsx`
-2. `useLink(id)` fetches row from `links` table via Supabase; `rowToSmartLink()` in `src/lib/link-mappers.ts` maps to `SmartLink` domain object
-3. `useEditorHistory` (`src/hooks/use-editor-history.ts`) wraps state with undo/redo (max 50 steps)
-4. User edits via `BlockEditor`, `ThemePanel`, `EffectsPanel` (all in `src/components/editor/`)
-5. `useAutosave` (`src/hooks/use-autosave.ts`) debounces changes (1500ms) and calls `useSaveLink()` mutation
-6. `useSaveLink` calls `smartLinkToRow()` to serialize, then upserts to `links` table; invalidates `["links"]` and `["link"]` query keys
+1. User navigates to `/links/:id/edit` → `LinkEditor` mounts
+2. `useLink(id)` fires a React Query fetch: `supabase.from("links").select("*").eq("id", id)`
+3. Response row passes through `rowToSmartLink()` → typed `SmartLink`
+4. `reset(existingLink)` loads it into `useEditorHistory` (clears undo stack); `initializeRef(existingLink)` primes `useAutosave` to skip the first save
+5. Editor state lives in `useEditorHistory.present` (`link`); mutations call `setLink()` which pushes a snapshot to `past[]`
 
-**Viewing a Public Link:**
+**Editor — Autosave:**
 
-1. Visitor navigates to `/:slug` → `src/pages/PublicLinkPage.tsx`
-2. `usePublicLink(slug)` queries `links` table (no auth); calls `get_link_owner_plan` RPC to resolve watermark visibility
-3. `rowToSmartLink()` maps DB row including `ownerPlan`
-4. `SmartLinkPreview` renders the link with `BlockRenderer` for blocks, `ButtonPreview` for buttons, effects overlaid
-5. `recordView(linkId)` fires once (ref guard) inserting into `link_views` table
-6. Button clicks call `recordClick(linkId, buttonId)` inserting into `link_clicks` table
+1. `link` state changes → `useAutosave` effect detects serialized diff vs `lastSavedRef`
+2. Debounced 1500 ms timer fires → `smartLinkToRow(link, user.id)` serializes to DB shape
+3. `supabase.from("links").update(row).eq("id").eq("user_id")` executes
+4. `status` transitions: `idle → saving → saved → idle` (with 2 s display window)
+5. On tab hide / unmount: `flush()` bypasses debounce for immediate save
 
-**Authentication Flow:**
+**Editor — Block Drag-and-Drop (List Mode):**
 
-1. `AuthProvider` calls `supabase.auth.getSession()` on mount and subscribes to `onAuthStateChange`
-2. `ProtectedRoute` reads `{ user, loading }` from `useAuth()`; redirects to `/auth` if unauthenticated
-3. `AdminRoute` additionally calls `useUserRole()` which queries the `profiles` table for a `role` field; redirects to `/` if not admin
-4. OAuth (Google/GitHub) and email/password sign-in are both supported via `signInWithOAuth` and `signIn` in `AuthContext`
+1. `ElementsSidebar` dispatches `block-drag-start` CustomEvent with `type`
+2. `LinkEditor` listens via `window.addEventListener` and stores type in `dragTypeRef`
+3. User drops onto preview area → `setGhostBlockType` cleared, block inserted at drop position
+4. Inside `SortableList`, `@dnd-kit` handles reorder via `arrayMove` on `UnifiedItem[]`
+5. Reordered items write back to `link.buttons` and `link.blocks` via `onUpdateLink`
 
-**Plan Limits Enforcement:**
+**Editor — Canvas Mode:**
 
-1. `usePlanLimits()` (`src/hooks/use-plan-limits.ts`) derives limits from `profile.plan` and current link count
-2. Frontend: `canCreateLink` flag gates the create button
-3. Backend: `useSaveLink` mutation re-checks plan + count server-side before insert (free: 3, pro: 50, business: unlimited)
+1. User clicks canvas toggle → `handleToggleCanvasMode`
+2. `assignInitialCanvasPositions()` stamps `canvasX/Y/W/H` on all items that lack them
+3. `CanvasPreview` renders inside `DeviceFrame`; `react-moveable` wraps each element
+4. `Moveable` uses `createPortal` to the `document.body` to escape `overflow:hidden` clip
+5. Drag/resize/rotate events call `onUpdateElement(id, { canvasX, canvasY, canvasW, canvasH, canvasRotation })`
+6. Autosave persists canvas coordinates alongside other link data
+
+**Public Page — View Flow:**
+
+1. Visitor hits `/:slug` → `PublicLinkPage` mounts
+2. `usePublicLink(slug)` fetches `links` row filtered by `slug` and `is_active = true`
+3. Parallel RPC call `get_link_owner_plan` determines if watermark should show
+4. `rowToSmartLink(data, 0, 0, ownerPlan)` → `SmartLink`
+5. `recordView(link.id)` fires once (guarded by `viewRecorded` ref) → inserts into `link_views`
+6. `SmartLinkPreview` renders the full page; `initProtection()` blocks devtools shortcuts
+7. Button click → `recordClick(linkId, buttonId)` inserts into `link_clicks`
 
 ## Key Abstractions
 
-**SmartLink (Domain Model):**
-- Purpose: Canonical representation of a user's link page — used throughout UI, editor state, preview rendering, and DB serialization
-- File: `src/types/smart-link.ts`
-- Pattern: Plain TypeScript interface; never mutated directly — always replaced via state setter or history hook
+**SmartLink:**
+- Purpose: The single domain entity that models a complete bio-link page
+- Examples: `src/types/smart-link.ts`
+- Pattern: Flat TypeScript interface; `buttons[]` and `blocks[]` share the same `order` field to produce a unified sorted list; canvas positioning fields (`canvasX/Y/W/H/Rotation`) are optional overrides on both arrays
 
-**rowToSmartLink / smartLinkToRow (Mapper Pair):**
-- Purpose: Single point of transformation between Supabase DB snake_case rows and camelCase domain objects
-- File: `src/lib/link-mappers.ts`
-- Pattern: Pure functions called only by `src/hooks/use-links.ts`
+**UnifiedItem:**
+- Purpose: Merge `SmartLinkButton` and `LinkBlock` into a single sortable list by `order`
+- Examples: `src/components/editor/blocks/unified-items.ts`
+- Pattern: Tagged union `{ kind: "button" | "block"; id: string; data: SmartLinkButton | LinkBlock }`; `getUnifiedItemsForMode()` returns sub-page blocks when in sub-page editing mode
 
-**BlockType + LinkBlock (Block System):**
-- Purpose: Extensible content block system; each `BlockType` string maps to a specific editor form in `BlockEditor` and a renderer in `BlockRenderer`
-- Files: `src/types/smart-link.ts` (type), `src/lib/block-utils.ts` (defaults), `src/components/editor/BlockEditor.tsx` (edit), `src/components/preview/BlockRenderer.tsx` (render)
-- Pattern: Discriminated by `type` string; switching on type is the convention for both edit and render paths
+**BlockType:**
+- Purpose: Discriminant for all content block varieties
+- Examples: `src/types/smart-link.ts` (union of 24 string literals), `src/lib/block-utils.ts` (`createBlockDefaults`), `src/components/preview/BlockRenderer.tsx` (switch dispatch)
+- Pattern: String literal union; each value corresponds to a visual renderer in `BlockRenderer` and an editor group in `SortableList`
 
-**useEditorHistory (Undo/Redo):**
-- Purpose: Tracks past/present/future snapshots of the entire `SmartLink` object for undo/redo
-- File: `src/hooks/use-editor-history.ts`
-- Pattern: Immutable snapshot stack; max 50 entries; `set()` accepts functional updater like React setState
-
-**useAutosave (Debounced Persistence):**
-- Purpose: Automatically saves the link after 1500ms of inactivity
-- File: `src/hooks/use-autosave.ts`
-- Pattern: Serializes SmartLink to JSON, compares to last saved snapshot; exposes `flush()` for manual save on exit
+**rowToSmartLink / smartLinkToRow:**
+- Purpose: Type-safe serialization boundary between Supabase DB rows and the `SmartLink` domain type
+- Examples: `src/lib/link-mappers.ts`
+- Pattern: Manual mapping (not auto-generated) because Supabase generated types are stale relative to recent migrations; `SmartLinkRow` is the manually maintained superset interface
 
 ## Entry Points
 
-**Browser Bootstrap:**
+**`src/main.tsx`:**
 - Location: `src/main.tsx`
-- Triggers: Browser loads `index.html`, `<script type="module" src="/src/main.tsx">`
-- Responsibilities: Call `initProtection()`, mount React root, inject `SpeedInsights`
+- Triggers: Browser loads the app
+- Responsibilities: Mounts React root into `#root`; injects `SpeedInsights`
 
-**App Shell:**
+**`src/App.tsx`:**
 - Location: `src/App.tsx`
-- Triggers: Mounted by `src/main.tsx`
-- Responsibilities: Provide QueryClient, AuthProvider, ThemeProvider; declare all routes with lazy loading
+- Triggers: Rendered by `main.tsx`
+- Responsibilities: Declares provider tree (`ErrorBoundary → QueryClientProvider → AuthProvider → ThemeProvider → TooltipProvider → BrowserRouter`); defines all routes with lazy loading; wraps pages in `AnimatePresence` + `PageTransition` for animated transitions; enforces `ProtectedRoute` / `AdminRoute` guards
 
-**Public Link Entry:**
-- Location: `src/pages/PublicLinkPage.tsx`
-- Triggers: Route `/:slug` or `/:slug/:pageSlug`
-- Responsibilities: Fetch link by slug, render `SmartLinkPreview`, record view, manage sub-page modal, inject SEO meta tags
-
-**Dashboard Entry:**
-- Location: `src/pages/Dashboard.tsx`
-- Triggers: Route `/dashboard` (protected)
-- Responsibilities: Show stats overview, template gallery, quick-create flow
-
-**Link Editor Entry:**
+**`src/pages/LinkEditor.tsx`:**
 - Location: `src/pages/LinkEditor.tsx`
-- Triggers: Routes `/links/new` and `/links/:id/edit` (protected)
-- Responsibilities: Initialize state from existing link or template, orchestrate editor panels and preview, manage autosave and history
+- Triggers: Routes `/links/new` and `/links/:id/edit`
+- Responsibilities: Single orchestrator for entire editor; owns `link` state via `useEditorHistory`; manages autosave, canvas mode, drag-drop detection, preview debouncing, keyboard shortcuts
+
+**`src/pages/PublicLinkPage.tsx`:**
+- Location: `src/pages/PublicLinkPage.tsx`
+- Triggers: Routes `/:slug` and `/:slug/:pageSlug`
+- Responsibilities: Fetches public link data; records view; injects SEO meta tags dynamically; initializes content protection; renders `SmartLinkPreview` with optional `SubPageModal` for deep-linked sub-pages
 
 ## Error Handling
 
-**Strategy:** Class-based `ErrorBoundary` wraps the entire app; individual data errors surface via `sonner` toast notifications.
+**Strategy:** Layered — top-level class-based `ErrorBoundary` catches render crashes; React Query handles async errors via `onError` mutation callbacks with `toast.error()`; individual block renders are wrapped in `BlockErrorBoundary` inside `SortableList`
 
 **Patterns:**
-- `src/components/ErrorBoundary.tsx` catches uncaught render errors app-wide; shows reload prompt
-- React Query mutations call `toast.error(err.message)` in `onError` callbacks (see `src/hooks/use-links.ts`)
-- Async utilities (e.g., `recordView`, `recordClick`, `saveEmailCapture`) use try/catch with `console.error` — failures are silent to UX
-- Auth errors return `{ error }` objects rather than throwing, for caller inspection
+- `src/components/ErrorBoundary.tsx` — catches any unhandled render error app-wide; shows reload prompt
+- `src/components/editor/blocks/BlockErrorBoundary.tsx` — per-block error isolation; a single broken block does not crash the whole editor
+- All `useMutation` hooks in `use-links.ts` use `onError: (err) => toast.error(err.message)` for user feedback
+- Supabase errors bubble up to React Query and are surfaced as loading/error states in components
 
 ## Cross-Cutting Concerns
 
-**Toasts/Notifications:** `sonner` library; imported as `toast` from `"sonner"` throughout hooks and pages. A `<Sonner />` component is mounted in `src/App.tsx`.
+**Logging:** `console.error` only; no third-party error tracking detected. `ErrorBoundary.componentDidCatch` logs to console. Analytics hooks log failures silently (`[analytics] recordView failed:`).
 
-**Validation:** Slug validation via `validateSlug` / `checkSlugAvailability` in `src/lib/slug-utils.ts`. No form validation library — inline logic per field.
+**Validation:** Slug validation via `src/lib/slug-utils.ts` (`validateSlug`, `checkSlugAvailability`). Plan limit enforcement in `useSaveLink` mutation (queries count before insert) and `use-plan-limits.ts` (client-side gate for UI).
 
-**Authentication:** `useAuth()` hook from `src/contexts/AuthContext.tsx` is the single access point. Never import `supabase.auth` directly in pages or components.
+**Authentication:** `AuthContext` provides `user` / `session` / `loading`. `ProtectedRoute` redirects unauthenticated users to `/auth`. `AdminRoute` additionally checks `useUserRole().isAdmin`. All Supabase mutations include `.eq("user_id", user.id)` row-level security.
 
-**Device Fingerprinting:** `useDeviceFingerprint()` is called silently in `src/components/DashboardLayout.tsx` on every authenticated page mount, writing to a `device_fingerprints` table.
-
-**HTML Sanitization:** `dompurify` is used in `src/components/preview/BlockRenderer.tsx` for the `html` block type to sanitize user-provided HTML before rendering.
+**Content Security:** `DOMPurify` sanitizes user HTML before rendering in `SmartLinkPreview` (title HTML) and user block HTML runs in sandboxed iframes (`sandbox="allow-scripts"`) in `BlockRenderer.FreeHtmlBlock`.
 
 ---
 
-*Architecture analysis: 2026-03-23*
+*Architecture analysis: 2026-03-28*

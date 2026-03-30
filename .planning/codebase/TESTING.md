@@ -1,82 +1,115 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-23
+**Analysis Date:** 2026-03-28
 
 ## Test Framework
 
 **Runner:**
 - Vitest 3.x
-- Config: `vitest.config.ts`
-- Environment: jsdom (browser simulation)
-- Globals: enabled (`globals: true` — `describe`, `it`, `expect`, `vi` available without imports, though tests import them explicitly)
+- Config: `vitest.config.ts` (project root)
+- Environment: `jsdom` (DOM simulation for browser APIs)
+- Globals: `true` — `describe`, `it`, `expect` available without import (but files still import explicitly from `"vitest"`)
 
 **Assertion Library:**
-- Vitest built-in assertions (`expect`)
-- `@testing-library/jest-dom` matchers extended via setup file (`src/test/setup.ts`)
+- Vitest built-in (`expect`) — compatible with Jest API
+- `@testing-library/jest-dom` — extends `expect` with DOM matchers (`toBeInTheDocument`, etc.); imported in setup file
+
+**Render/Hook utilities:**
+- `@testing-library/react` — `renderHook`, `act`
 
 **Run Commands:**
 ```bash
-npm run test          # Run all tests once (vitest run)
+npm test              # Run all tests once (vitest run)
 npm run test:watch    # Watch mode (vitest)
-# Coverage: not configured — no --coverage script present
+# No coverage script defined — run manually: npx vitest run --coverage
 ```
 
 ## Test File Organization
 
-**Location:**
-- Centralized in `src/test/` — NOT co-located with source files
+**Location:** All tests in `src/test/` — centralized, NOT co-located with source files.
 
-**Naming:**
-- `{module-name}.test.ts` — e.g., `slug-utils.test.ts`, `color-utils.test.ts`, `link-mappers.test.ts`
-- Extension: `.test.ts` for pure utility tests (no JSX); `.test.tsx` would be used for component tests (none currently exist)
+**Naming:** `<subject>.test.ts` — matches the module/hook name it tests, using kebab-case.
 
-**Structure:**
+**Current test files:**
 ```
-src/
-└── test/
-    ├── setup.ts              # Global test setup
-    ├── example.test.ts       # Sanity checks for basic utils
-    ├── color-utils.test.ts   # Tests for src/lib/color-utils.ts
-    ├── link-mappers.test.ts  # Tests for src/lib/link-mappers.ts
-    └── slug-utils.test.ts    # Tests for src/lib/slug-utils.ts
+src/test/
+├── setup.ts                    # Global setup (jest-dom + matchMedia mock)
+├── example.test.ts             # Sanity checks for slug-utils and color-utils
+├── block-scheduling.test.ts    # Block visibility logic (visibleFrom/visibleUntil)
+├── color-utils.test.ts         # extractBgColor, getCustomBgGradient, COLOR_PRESETS
+├── link-mappers.test.ts        # rowToSmartLink / smartLinkToRow roundtrip
+├── slug-utils.test.ts          # normalizeSlug, validateSlug, async slug uniqueness
+├── use-autosave.test.ts        # useAutosave hook — debounce, flush, status states
+├── use-editor-history.test.ts  # useEditorHistory hook — undo/redo/reset
+├── use-plan-limits.test.ts     # usePlanLimits hook — plan logic, admin override
+└── whatsapp-url.test.ts        # WhatsApp URL generation logic (extracted from component)
 ```
 
 ## Test Structure
 
-**Suite Organization:**
+**Suite and case organization:**
 ```typescript
-// Explicit imports even though globals are enabled
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { functionUnderTest } from "@/lib/module-name";
+import { describe, it, expect } from "vitest";
 
-// Section dividers for grouping within a file
-// ---------------------------------------------------------------------------
-// functionName
-// ---------------------------------------------------------------------------
-describe("functionName", () => {
-  it("description in Portuguese of what it does", () => {
-    expect(functionUnderTest(input)).toBe(expectedOutput);
-  });
-
-  it("description of edge case", () => {
-    expect(functionUnderTest(edgeInput)).toBeNull();
+describe("subjectName", () => {
+  it("describes expected behavior in Portuguese", () => {
+    expect(result).toBe(expected);
   });
 });
 ```
 
-**Patterns:**
-- Multiple `describe` blocks per file — one per function or exported member
-- Test descriptions written in **Brazilian Portuguese**
-- One assertion focus per `it` block (though some verify multiple related properties)
-- Setup: `beforeEach(() => { vi.clearAllMocks(); })` used when tests share mock state
-- Teardown: not used (mocks cleared via `beforeEach`)
-- Roundtrip tests to verify bidirectional data integrity — see `link-mappers.test.ts` "roundtrip" describe block
+**Test descriptions are in Portuguese**, matching the project's language convention.
+
+**Multiple `describe` blocks per file** for grouping related functionality:
+```typescript
+describe("extractBgColor", () => { ... });
+describe("getCustomBgGradient", () => { ... });
+describe("COLOR_PRESETS", () => { ... });
+```
+
+**Setup/Teardown patterns for timer-dependent tests:**
+```typescript
+describe("useAutosave", () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+  // ...
+});
+```
+
+**Fixtures defined at file scope** — reusable `BASE` SmartLink object:
+```typescript
+const BASE: SmartLink = {
+  id: "test-id",
+  slug: "test-slug",
+  businessName: "Empresa",
+  // ... all required fields
+};
+```
 
 ## Mocking
 
-**Framework:** Vitest's built-in `vi` mock utilities
+**Framework:** Vitest built-in (`vi`)
 
-**Module-level mock (top of file):**
+**Module-level mocks** declared before any imports of the mocked module (required for hoisting):
+```typescript
+// Mocks declarados antes do import do módulo
+vi.mock("@/hooks/use-profile", () => ({ useProfile: vi.fn() }));
+vi.mock("@/hooks/use-links",   () => ({ useLinks: vi.fn() }));
+vi.mock("@/hooks/use-user-role", () => ({ useUserRole: vi.fn() }));
+
+import { usePlanLimits } from "@/hooks/use-plan-limits";
+import { useProfile } from "@/hooks/use-profile";
+```
+
+**`vi.mocked()` for typed mock access:**
+```typescript
+vi.mocked(useProfile).mockReturnValue({ data: { plan } } as ReturnType<typeof useProfile>);
+vi.mocked(useLinks).mockReturnValue({ data: links } as ReturnType<typeof useLinks>);
+```
+
+**Casting to `ReturnType<typeof hookFn>`** is the pattern for preserving TypeScript type safety while mocking TanStack Query hook returns.
+
+**Supabase client mocked via `vi.mock` with chained builder pattern:**
 ```typescript
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
@@ -90,139 +123,84 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 ```
+Per-test overrides use `vi.mocked(supabase.from).mockReturnValue(...)`.
 
-**Inline spy construction (per-test overrides):**
+**`vi.fn()` for callback/function props** — passed directly to `renderHook` or component under test:
 ```typescript
-it("encadeia .neq quando excludeId é fornecido", async () => {
-  const { supabase } = await import("@/integrations/supabase/client");
-  const neqSpy = vi.fn().mockResolvedValue({ count: 0, error: null });
-  const eqSpy = vi.fn().mockReturnValue({ neq: neqSpy });
-  const selectSpy = vi.fn().mockReturnValue({ eq: eqSpy });
-  vi.mocked(supabase.from).mockReturnValue({ select: selectSpy } as any);
-
-  await checkSlugAvailability("meu-link", "some-id-123");
-  expect(neqSpy).toHaveBeenCalledWith("id", "some-id-123");
-});
+const saveFn = vi.fn().mockResolvedValue(undefined);
+renderHook(() => useAutosave(BASE, saveFn, true));
+expect(saveFn).toHaveBeenCalledOnce();
 ```
 
-**Mock reset:**
+**What to mock:**
+- Supabase client when testing hooks that depend on it
+- Peer hooks when testing a hook that composes others (e.g., `usePlanLimits` mocks `useProfile`, `useLinks`, `useUserRole`)
+- Async callback functions passed as arguments to hooks
+
+**What NOT to mock:**
+- The hook/utility under test itself
+- Pure utility functions with no I/O (`extractBgColor`, `normalizeSlug`, etc.) — tested directly without mocking
+
+## Hook Testing
+
+**`renderHook` + `act` pattern** for stateful hooks:
 ```typescript
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+import { renderHook, act } from "@testing-library/react";
+import { useEditorHistory } from "@/hooks/use-editor-history";
+
+const { result } = renderHook(() => useEditorHistory(BASE));
+
+act(() => { result.current.set({ ...BASE, businessName: "V2" }); });
+expect(result.current.state.businessName).toBe("V2");
+expect(result.current.canUndo).toBe(true);
 ```
 
-**What to Mock:**
-- External service clients — Supabase client (`@/integrations/supabase/client`) is the primary mock target
-- Any function that makes network calls or has side effects
-
-**What NOT to Mock:**
-- Pure utility functions under test (e.g., `normalizeSlug`, `extractBgColor`)
-- Domain logic that can be tested with plain inputs/outputs
-
-## Fixtures and Factories
-
-**Test Data:**
+**Async `act` with fake timers** for debounce/delay testing:
 ```typescript
-// Module-level fixture constant (SCREAMING_SNAKE_CASE)
-const FULL_SMART_LINK: SmartLink = {
-  id: "test-id-001",
-  slug: "empresa-teste",
-  businessName: "Empresa Teste",
-  // ... all fields populated
-};
+beforeEach(() => { vi.useFakeTimers(); });
 
-// Spread to create variants
-const linkWithBubbles: SmartLink = {
-  ...FULL_SMART_LINK,
-  bubblesEffect: { enabled: true, intensity: 60, color: "#00ff00" },
-};
+await act(async () => { vi.advanceTimersByTime(800); });
+expect(saveFn).not.toHaveBeenCalled();  // before debounce fires
 
-// Minimal fixture for default-value tests
-const minimalLink: SmartLink = {
-  id: "min-id",
-  slug: "minimal",
-  // only required fields
-};
+await act(async () => { vi.advanceTimersByTime(300); });
+expect(saveFn).toHaveBeenCalledOnce(); // after debounce fires
 ```
 
-**Location:**
-- Fixtures defined inline at the top of each test file (no shared fixture directory)
-- Constant name: `FULL_{TYPE_NAME}` for complete fixtures (e.g., `FULL_SMART_LINK`)
-
-## Coverage
-
-**Requirements:** Not enforced — no coverage script, no threshold configuration
-
-**View Coverage:**
-```bash
-npx vitest run --coverage   # Not configured; would need @vitest/coverage-v8
+**`rerender` for prop changes** on hooks:
+```typescript
+const { result, rerender } = renderHook(
+  ({ link }) => useAutosave(link, saveFn, true, 1000),
+  { initialProps: { link: BASE } }
+);
+rerender({ link: { ...BASE, businessName: "Novo Nome" } });
 ```
 
-## Test Types
+## Pure Logic Testing
 
-**Unit Tests:**
-- All 4 test files are pure unit tests
-- Scope: individual exported functions from `src/lib/` utilities
-- No component rendering tests (no `@testing-library/react` usage in existing tests)
-- No integration tests against real Supabase
-
-**Integration Tests:**
-- Not present — Supabase interactions are unit-tested with mocks
-
-**E2E Tests:**
-- Not used — no Playwright, Cypress, or similar tool configured
-
-## Common Patterns
-
-**Async Testing:**
+**Inline re-implementation pattern** — for testing logic extracted from components where the function is not directly exported:
 ```typescript
-it("retorna true quando o banco devolve count 0 (slug disponível)", async () => {
-  const result = await checkSlugAvailability("slug-disponivel");
-  expect(result).toBe(true);
-});
+// Espelha exatamente a função generateUrl do ButtonBlockEditor.tsx (linha 36-45)
+function generateWhatsAppUrl(phone: string, message?: string): string {
+  const base = `https://wa.me/${phone.replace(/\D/g, "")}`;
+  return message?.trim()
+    ? `${base}?text=${encodeURIComponent(message.trim())}`
+    : base;
+}
+// Tests then exercise this inline implementation
 ```
+Used in `whatsapp-url.test.ts` and `block-scheduling.test.ts`.
 
-**Error Testing (non-throw pattern):**
+**Direct unit testing of pure utils:**
 ```typescript
-// Validate that validation returns an error message string
-it("retorna mensagem de erro para slug vazio", () => {
-  expect(validateSlug("")).not.toBeNull();
-});
-
-// Validate that no exception is thrown
-it("não lança erro com row totalmente vazio", () => {
-  expect(() => rowToSmartLink({})).not.toThrow();
-});
-```
-
-**Exhaustive preset/array validation:**
-```typescript
-// Loop over all known values to assert consistent behavior
-it("retorna todos os presets do colorMap sem retornar #000000", () => {
-  const knownPresets = ["from-gray-50 to-white", "from-slate-950 to-slate-900", ...];
-  for (const preset of knownPresets) {
-    const result = extractBgColor(preset);
-    expect(result, `Preset "${preset}" deveria ter uma cor mapeada`).not.toBe("#000000");
-    expect(result).toMatch(/^#[0-9a-f]{6}$/i);
-  }
-});
-```
-
-**Spy call assertions:**
-```typescript
-// Verify a function was NOT called (fail-fast guard)
-expect(supabase.from).not.toHaveBeenCalled();
-
-// Verify called with specific args
-expect(neqSpy).toHaveBeenCalledWith("id", "some-id-123");
+expect(extractBgColor("from-gray-50 to-white")).toBe("#ffffff");
+expect(normalizeSlug("Meu Link Incrível")).toBe("meu-link-incrivel");
+expect(getCustomBgGradient("custom:#ff6b6b:#4ecdc4"))
+  .toBe("linear-gradient(180deg, #ff6b6b, #4ecdc4)");
 ```
 
 ## Global Test Setup
 
 **File:** `src/test/setup.ts`
-
-Imports `@testing-library/jest-dom` for extended matchers and polyfills `window.matchMedia` for jsdom compatibility:
 
 ```typescript
 import "@testing-library/jest-dom";
@@ -242,17 +220,50 @@ Object.defineProperty(window, "matchMedia", {
 });
 ```
 
-## Coverage Gaps
+Referenced in `vitest.config.ts` via `setupFiles: ["./src/test/setup.ts"]`.
 
-All 4 existing test files cover only `src/lib/` utilities. The following areas have zero test coverage:
+## Coverage
 
-- All React components (`src/components/`)
-- All pages (`src/pages/`)
-- All hooks (`src/hooks/`) — including `use-links.ts`, `use-autosave.ts`, `use-plan-limits.ts`
-- All contexts (`src/contexts/AuthContext.tsx`, `src/contexts/ThemeContext.tsx`)
-- `src/lib/block-utils.ts`, `src/lib/image-utils.ts`, `src/lib/storage-utils.ts`, `src/lib/device-fingerprint.ts`
-- Supabase integrations (`src/integrations/supabase/`)
+**Requirements:** None enforced — no `coverage` threshold configured.
+
+**View coverage:**
+```bash
+npx vitest run --coverage
+```
+
+## Test Types
+
+**Unit Tests (all current tests):**
+- Pure utility functions in `src/lib/`
+- Custom React hooks in `src/hooks/`
+- Isolated logic extracted inline from components
+
+**Integration Tests:** Not present.
+
+**E2E Tests:** Not used — no Playwright/Cypress configuration found.
+
+**Component render tests:** Not present — `@testing-library/react` is installed but no component tests exist yet. Setup is ready (`renderHook` is used for hooks; component `render` is available).
+
+## Vitest Configuration
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  plugins: [react()],           // SWC-based React plugin
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+  },
+  resolve: {
+    alias: { "@": path.resolve(__dirname, "./src") },  // mirrors tsconfig paths
+  },
+});
+```
+
+The `@/` alias must be declared in both `tsconfig.app.json` AND `vitest.config.ts` to work in tests.
 
 ---
 
-*Testing analysis: 2026-03-23*
+*Testing analysis: 2026-03-28*
