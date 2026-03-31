@@ -1,0 +1,123 @@
+/* ─── Text Effects — applied directly to the text element ────────────────── */
+
+/* 1. Glass Text — the text itself looks like frosted glass */
+.te-glass {
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 4px rgba(255,255,255,0.4), 0 0 20px rgba(255,255,255,0.15), 0 0 2px rgba(255,255,255,0.8);
+  -webkit-text-stroke: 0.8px rgba(255, 255, 255, 0.7);
+}
+
+/* 2. Neon Glow */
+@keyframes te-neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 4px currentColor, 0 0 11px currentColor, 0 0 19px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
+  }
+  20%, 24%, 55% { text-shadow: none; }
+}
+.te-neon {
+  color: #39ff14 !important;
+  text-shadow: 0 0 4px #39ff14, 0 0 11px #39ff14, 0 0 19px #39ff14, 0 0 40px #39ff14, 0 0 80px #39ff14;
+  animation: te-neon-flicker 3.5s infinite;
+}
+
+/* 3. Chrome Metallic */
+.te-chrome {
+  background: linear-gradient(180deg, #ffffff 0%, #c0c0c0 35%, #808080 55%, #c8c8c8 75%, #ffffff 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* 4. Gradient Animated */
+@keyframes te-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.te-gradient {
+  background: linear-gradient(90deg, #ff0080, #7928ca, #0070f3, #00dfd8, #ff0080) !important;
+  background-size: 300% 300% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: te-gradient-shift 4s linear infinite;
+}
+
+/* 5. Metallic Gold */
+.te-metallic {
+  background: linear-gradient(135deg, #8B6914 0%, #FFD700 28%, #FFF4A0 50%, #FFD700 72%, #8B6914 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+}
+
+/* 6. Holographic */
+@keyframes te-holographic {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.te-holographic {
+  background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff88, #0088ff, #8800ff, #ff0088, #ff0000) !important;
+  background-size: 400% 400% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: te-holographic 3.5s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(180, 80, 255, 0.5));
+}
+
+/* 7. Frosted White */
+.te-frosted {
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-shadow: 0 0 12px rgba(255,255,255,0.35), 0 0 30px rgba(255,255,255,0.12), 0 1px 2px rgba(0,0,0,0.18);
+  -webkit-text-stroke: 0.6px rgba(255, 255, 255, 0.5);
+}
+
+/* 8. 3D Depth */
+.te-3d {
+  color: #ffffff !important;
+  text-shadow:
+    1px 1px 0 rgba(170,170,170,0.9),
+    2px 2px 0 rgba(140,140,140,0.8),
+    3px 3px 0 rgba(110,110,110,0.7),
+    4px 4px 0 rgba(80,80,80,0.6),
+    5px 5px 0 rgba(50,50,50,0.5),
+    6px 6px 8px rgba(0,0,0,0.45);
+}
+
+/* 9. Shadow Depth */
+.te-shadow {
+  color: #ffffff !important;
+  text-shadow:
+    0 1px 0 rgba(200,200,200,0.9),
+    0 2px 0 rgba(175,175,175,0.8),
+    0 3px 0 rgba(150,150,150,0.7),
+    0 4px 0 rgba(125,125,125,0.5),
+    0 5px 0 rgba(100,100,100,0.4),
+    0 6px 1px rgba(0,0,0,0.1),
+    0 0 5px rgba(0,0,0,0.1),
+    0 1px 3px rgba(0,0,0,0.3),
+    0 3px 5px rgba(0,0,0,0.2),
+    0 5px 10px rgba(0,0,0,0.25),
+    0 10px 10px rgba(0,0,0,0.2),
+    0 20px 20px rgba(0,0,0,0.15);
+}
+
+/* 10. Gradient Glass */
+.te-gradient-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(200,225,255,0.85) 40%, rgba(255,255,255,0.98) 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15)) drop-shadow(0 0 10px rgba(180,210,255,0.4));
+}
+
+/* ─── Accessibility: respect reduced motion ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .te-neon { animation: none; }
+  .te-gradient { animation: none; background-position: 0% 50% !important; }
+  .te-holographic { animation: none; background-position: 0% 50% !important; }
+}

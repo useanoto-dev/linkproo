@@ -1,8 +1,30 @@
 import { type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import DOMPurify from "dompurify";
-import { SmartLink } from "@/types/smart-link";
+import { SmartLink, TextBgBox } from "@/types/smart-link";
 import { HtmlTitle } from "@/components/preview/HtmlTitle";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = (hex || "#000000").replace("#", "");
+  const r = parseInt(clean.slice(0, 2), 16) || 0;
+  const g = parseInt(clean.slice(2, 4), 16) || 0;
+  const b = parseInt(clean.slice(4, 6), 16) || 0;
+  return `rgba(${r},${g},${b},${(alpha / 100).toFixed(2)})`;
+}
+
+function getBgBoxStyle(box: TextBgBox): CSSProperties {
+  return {
+    display: "inline-block",
+    background: hexToRgba(box.bgColor, box.bgOpacity),
+    border: `${box.borderWidth}px solid ${hexToRgba(box.borderColor, box.borderOpacity)}`,
+    borderRadius: `${box.borderRadius}px`,
+    padding: `${box.padding}px`,
+  };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface BusinessInfoProps {
   link: SmartLink;
@@ -83,21 +105,14 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
         )}
 
         {!link.hideBusinessName && (() => {
-          const isDark = link.textColor?.includes('white') ?? false;
-          const glassStyle: CSSProperties = {
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.35)',
-            border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)',
-            borderRadius: '12px',
-            padding: '8px 18px',
-            display: 'inline-block',
-            maxWidth: `${link.businessNameWidth ?? 100}%`,
-          };
-          const noGlassStyle: CSSProperties = {
-            maxWidth: `${link.businessNameWidth ?? 100}%`,
-            display: 'inline-block',
-          };
+          const bgBoxStyle = link.businessNameBgBox?.enabled
+            ? getBgBoxStyle(link.businessNameBgBox)
+            : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
+
+          const wrapperStyle: CSSProperties = link.businessNameBgBox?.enabled
+            ? bgBoxStyle
+            : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
+
           const inner = link.businessNameHtml ? (
             <HtmlTitle
               html={link.businessName || "<p>Nome do Negócio</p>"}
@@ -107,8 +122,12 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
             />
           ) : (
             <h1
-              className="font-bold leading-tight break-words"
-              style={{ color: link.titleColor || accent, fontSize: `${link.businessNameFontSize ?? 24}px`, fontFamily }}
+              className={`font-bold leading-tight break-words${link.businessNameEffect ? ` ${link.businessNameEffect}` : ''}`}
+              style={{
+                color: link.businessNameEffect ? undefined : (link.titleColor || accent),
+                fontSize: `${link.businessNameFontSize ?? 24}px`,
+                fontFamily,
+              }}
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(link.businessName || "Nome do Negócio", {
                   ALLOWED_TAGS: ["b", "i", "em", "strong", "span", "br", "sup", "sub", "u", "s", "mark"],
@@ -117,30 +136,19 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
               }}
             />
           );
-          return link.businessNameGlass ? (
-            <div style={glassStyle}>{inner}</div>
-          ) : (
-            <div style={noGlassStyle}>{inner}</div>
-          );
+          return <div style={wrapperStyle}>{inner}</div>;
         })()}
 
         {link.tagline && !link.hideTagline && (() => {
-          const isDark = link.textColor?.includes('white') ?? false;
-          const glassStyle: CSSProperties = {
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            background: isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.35)',
-            border: isDark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.08)',
-            borderRadius: '12px',
-            padding: '8px 18px',
-            display: 'inline-block',
-            maxWidth: `${link.taglineWidth ?? 100}%`,
-          };
+          const bgBoxStyle = link.taglineBgBox?.enabled
+            ? getBgBoxStyle(link.taglineBgBox)
+            : { maxWidth: `${link.taglineWidth ?? 100}%`, display: 'inline-block' };
+
           const tagline = (
             <p
-              className={`mt-1 italic${link.taglineColor ? '' : ` ${subtextClass}`}`}
+              className={`mt-1 italic${link.taglineEffect ? ` ${link.taglineEffect}` : ''}${!link.taglineEffect && !link.taglineColor ? ` ${subtextClass}` : ''}`}
               style={{
-                color: link.taglineColor || undefined,
+                color: link.taglineEffect ? undefined : (link.taglineColor || undefined),
                 fontSize: `${link.taglineFontSize ?? 13}px`,
                 fontFamily,
               }}
@@ -148,11 +156,7 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
               {link.tagline}
             </p>
           );
-          return link.taglineGlass ? (
-            <div style={glassStyle}>{tagline}</div>
-          ) : (
-            <div style={{ maxWidth: `${link.taglineWidth ?? 100}%`, display: 'inline-block' }}>{tagline}</div>
-          );
+          return <div style={bgBoxStyle}>{tagline}</div>;
         })()}
       </motion.div>
     </>

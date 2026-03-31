@@ -1,4 +1,4 @@
-import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect, WhatsAppFloat, SmartLinkButton } from "@/types/smart-link";
+import { SmartLink, EntryAnimation, SnowEffect, BubblesEffect, FirefliesEffect, MatrixEffect, StarsEffect, BgHtmlEffect, WhatsAppFloat, SmartLinkButton, TextBgBox } from "@/types/smart-link";
 import type { Json } from "@/integrations/supabase/types";
 import { SmartLinkRowSchema, SmartLinkButtonSchema, LinkBlockSchema } from './schemas';
 
@@ -63,6 +63,12 @@ export interface SmartLinkRow {
     bgHtml?: unknown;
     whatsappFloat?: unknown;
     logoBorderWidth?: unknown;
+    businessNameWidth?: unknown;
+    taglineWidth?: unknown;
+    businessNameBgBox?: unknown;
+    taglineBgBox?: unknown;
+    businessNameEffect?: unknown;
+    taglineEffect?: unknown;
   } | null;
   buttons?: unknown;
   pages?: unknown;
@@ -135,6 +141,12 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     bannerCurveIntensity: row.banner_curve_intensity ? Number(row.banner_curve_intensity) : undefined,
     logoBorderColor: row.logo_border_color ?? undefined,
     logoBorderWidth: (row.bg_effects?.logoBorderWidth as number | undefined) ?? undefined,
+    businessNameWidth: (row.bg_effects?.businessNameWidth as number | undefined) ?? undefined,
+    taglineWidth: (row.bg_effects?.taglineWidth as number | undefined) ?? undefined,
+    businessNameBgBox: (row.bg_effects?.businessNameBgBox as TextBgBox | undefined) ?? undefined,
+    taglineBgBox: (row.bg_effects?.taglineBgBox as TextBgBox | undefined) ?? undefined,
+    businessNameEffect: (row.bg_effects?.businessNameEffect as string | undefined) ?? undefined,
+    taglineEffect: (row.bg_effects?.taglineEffect as string | undefined) ?? undefined,
     titleColor: row.title_color ?? undefined,
     taglineColor: row.tagline_color ?? undefined,
     taglineFontSize: row.tagline_font_size ? Number(row.tagline_font_size) : undefined,
@@ -217,7 +229,7 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     entry_animation: link.entryAnimation || "fade-up",
     // SnowEffect is a structured object that maps to JSONB in the DB
     snow_effect: toJsonb(link.snowEffect ?? null),
-    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml || link.whatsappFloat || link.logoBorderWidth != null) ? toJsonb({
+    bg_effects: toJsonb({
       bubbles: link.bubblesEffect ?? null,
       fireflies: link.firefliesEffect ?? null,
       matrix: link.matrixEffect ?? null,
@@ -225,6 +237,12 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
       bgHtml: link.bgHtml ?? null,
       whatsappFloat: link.whatsappFloat ?? null,
       logoBorderWidth: link.logoBorderWidth ?? null,
-    }) : null,
+      businessNameWidth: link.businessNameWidth ?? null,
+      taglineWidth: link.taglineWidth ?? null,
+      businessNameBgBox: link.businessNameBgBox ?? null,
+      taglineBgBox: link.taglineBgBox ?? null,
+      businessNameEffect: link.businessNameEffect ?? null,
+      taglineEffect: link.taglineEffect ?? null,
+    }),
   };
 }

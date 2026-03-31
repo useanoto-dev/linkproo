@@ -156,6 +156,18 @@ export interface BadgeItem {
 
 export type EntryAnimation = 'none' | 'fade-up' | 'slide-left' | 'slide-right' | 'scale' | 'bounce';
 
+/** Configurable background box rendered behind a text element */
+export interface TextBgBox {
+  enabled: boolean;
+  borderWidth: number;    // 0–16 px
+  borderColor: string;    // hex
+  borderOpacity: number;  // 0–100
+  borderRadius: number;   // 0–40 px
+  padding: number;        // 4–40 px
+  bgColor: string;        // hex
+  bgOpacity: number;      // 0–100
+}
+
 export interface SnowEffect {
   enabled: boolean;
   intensity: number;
@@ -243,10 +255,12 @@ export interface SmartLink {
   businessNameAlign?: "left" | "center" | "right"; // text alignment of business name, default center
   hideBusinessName?: boolean;  // default: false
   hideTagline?: boolean;       // default: false
-  businessNameGlass?: boolean; // frosted glass card atrás do nome
-  taglineGlass?: boolean;      // frosted glass card atrás do slogan
-  businessNameWidth?: number;  // % de largura, 30-100, default 100
-  taglineWidth?: number;       // % de largura, 30-100, default 100
+  businessNameWidth?: number;     // % de largura, 30-100, default 100
+  taglineWidth?: number;          // % de largura, 30-100, default 100
+  businessNameBgBox?: TextBgBox;  // caixa de fundo configurável atrás do nome
+  taglineBgBox?: TextBgBox;       // caixa de fundo configurável atrás do slogan
+  businessNameEffect?: string;    // chave de efeito de texto (te-glass, te-neon, etc.)
+  taglineEffect?: string;         // chave de efeito de texto para o slogan
   entryAnimation?: EntryAnimation;
   snowEffect?: SnowEffect;
   bubblesEffect?: BubblesEffect;

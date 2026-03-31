@@ -30,7 +30,10 @@ function FloatingEmojisSection({ emojis, onUpdate }: { emojis: string[]; onUpdat
         </div>
         <Switch
           checked={emojis.length > 0}
-          onCheckedChange={(v) => { if (!v) onUpdate([]); }}
+          onCheckedChange={(v) => {
+            if (v) { if (emojis.length === 0) onUpdate(["✨"]); }
+            else onUpdate([]);
+          }}
         />
       </div>
       <p className="text-[9px] text-muted-foreground">Emojis que flutuam sobre o banner. Clique no ✕ para remover individualmente.</p>
