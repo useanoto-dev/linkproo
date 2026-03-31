@@ -15,7 +15,7 @@ export function BackgroundEffects({ link }: BackgroundEffectsProps) {
   return (
     <>
       {link.bgHtml?.enabled && link.bgHtml.html && (
-        <BgHtmlEffect html={link.bgHtml.html} />
+        <BgHtmlEffect key={link.bgHtml.html} html={link.bgHtml.html} />
       )}
       {link.bgHtml?.enabled && (link.bgHtml.overlay ?? 0) > 0 && (
         <div

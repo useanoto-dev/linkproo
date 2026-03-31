@@ -5,19 +5,6 @@ interface Props { html: string; }
 export function BgHtmlEffect({ html }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    return () => {
-      // Stop scripts in the iframe on unmount
-      try {
-        if (iframeRef.current?.contentWindow) {
-          iframeRef.current.contentWindow.stop?.();
-        }
-      } catch {
-        // Cross-origin errors are expected in some cases, ignore
-      }
-    };
-  }, []);
-
   const srcDoc = useMemo(() => {
     const patchedHtml = html
       .replace(/window\.innerWidth/g, '(document.documentElement.clientWidth||400)')
@@ -39,6 +26,36 @@ export function BgHtmlEffect({ html }: Props) {
     }
     return doc;
   }, [html]);
+
+  // Imperatively reload iframe when srcDoc changes — changing srcDoc attribute
+  // in-place doesn't always restart canvas scripts in all browsers.
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const load = () => {
+      try {
+        const doc = iframe.contentDocument;
+        if (doc) { doc.open(); doc.write(srcDoc); doc.close(); }
+      } catch { /* sandboxed cross-origin, ignore */ }
+    };
+    // If already loaded, write immediately; otherwise wait for load event
+    if (iframe.contentDocument?.readyState === 'complete' || iframe.contentDocument?.readyState === 'interactive') {
+      load();
+    } else {
+      iframe.addEventListener('load', load, { once: true });
+      return () => iframe.removeEventListener('load', load);
+    }
+  }, [srcDoc]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.stop?.();
+        }
+      } catch { /* ignore */ }
+    };
+  }, []);
 
   return (
     <iframe
