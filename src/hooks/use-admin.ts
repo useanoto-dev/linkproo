@@ -13,6 +13,8 @@ export interface AdminUser {
   last_sign_in_at?: string | null;
   duplicate_device_count?: number;
   link_count?: number;
+  country?: string | null;
+  timezone?: string | null;
 }
 
 export interface AdminUserLink {

@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
-import { Users, Link, Eye, MousePointerClick, ArrowRight } from "lucide-react";
+import { Users, Link, Eye, MousePointerClick, ArrowRight, Globe } from "lucide-react";
 import { useAdminStats, useAdminUsers } from "@/hooks/use-admin";
 import { Link as RouterLink } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,6 +72,51 @@ export default function AdminDashboardPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Regional distribution */}
+        {!usersLoading && users.length > 0 && (() => {
+          const counts: Record<string, number> = {};
+          for (const u of users) {
+            const key = u.country || "Desconhecido";
+            counts[key] = (counts[key] ?? 0) + 1;
+          }
+          const sorted = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+          const total = users.length;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="p-5 rounded-2xl border border-border/50 bg-card"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-bold text-foreground">Distribuição por Região</h2>
+              </div>
+              <div className="space-y-2.5">
+                {sorted.map(([region, count]) => {
+                  const pct = Math.round((count / total) * 100);
+                  return (
+                    <div key={region}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="text-foreground font-medium">{region}</span>
+                        <span className="text-muted-foreground">{count} ({pct}%)</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Recent users */}
         <div>

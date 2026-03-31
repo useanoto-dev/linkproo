@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAdminUsers, useUpdateUserPlan, useDeleteUser, useAdminUserLinks, AdminUserLink } from "@/hooks/use-admin";
-import { Users, Loader2, Search, Mail, Clock, Trash2, Smartphone, AlertTriangle, Link2, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Loader2, Search, Mail, Clock, Trash2, Smartphone, AlertTriangle, Link2, ExternalLink, ChevronDown, ChevronUp, Globe } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const REGIONS = ["Todos", "Brasil", "América", "Europa", "Ásia", "África", "Pacífico", "Outro"];
 
 const PLAN_STYLES: Record<string, string> = {
   business: "bg-amber-500/10 text-amber-600",
@@ -114,6 +116,7 @@ export default function AdminUsersPage() {
   const deleteUser = useDeleteUser();
   const [inputValue, setInputValue] = useState("");
   const [search, setSearch] = useState("");
+  const [regionFilter, setRegionFilter] = useState("Todos");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
@@ -122,12 +125,15 @@ export default function AdminUsersPage() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  const filtered = users.filter(
-    (u) =>
+  const filtered = users.filter((u) => {
+    const matchesSearch =
       (u.display_name || "").toLowerCase().includes(search.toLowerCase()) ||
       (u.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (u.company || "").toLowerCase().includes(search.toLowerCase())
-  );
+      (u.company || "").toLowerCase().includes(search.toLowerCase());
+    const matchesRegion =
+      regionFilter === "Todos" || (u.country || "Outro") === regionFilter;
+    return matchesSearch && matchesRegion;
+  });
 
   // Count active in last 24h
   const activeToday = users.filter((u) => {
@@ -187,14 +193,27 @@ export default function AdminUsersPage() {
               </span>
             )}
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Buscar por nome, email..."
-              className="pl-10 h-10"
-            />
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
+              <SelectTrigger className="h-10 w-[140px] text-xs">
+                <Globe className="h-3.5 w-3.5 mr-1 text-muted-foreground shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {REGIONS.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Buscar por nome, email..."
+                className="pl-10 h-10"
+              />
+            </div>
           </div>
         </div>
 
@@ -224,6 +243,9 @@ export default function AdminUsersPage() {
                       Cadastro
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      País
+                    </th>
+                    <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Dispositivo
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -236,7 +258,7 @@ export default function AdminUsersPage() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={9}
                         className="text-center py-8 text-muted-foreground"
                       >
                         Nenhum usuário encontrado
@@ -350,6 +372,18 @@ export default function AdminUsersPage() {
                             {new Date(u.created_at).toLocaleDateString("pt-BR")}
                           </td>
 
+                          {/* Country */}
+                          <td className="px-5 py-3">
+                            {u.country ? (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Globe className="h-3 w-3 shrink-0" />
+                                {u.country}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/40">—</span>
+                            )}
+                          </td>
+
                           {/* Device duplicate indicator */}
                           <td className="px-5 py-3">
                             {hasDuplicate ? (
@@ -436,7 +470,7 @@ export default function AdminUsersPage() {
 
                         {/* Sub-row com links do usuário */}
                         {expandedUserId === u.user_id && (
-                          <UserLinksRow userId={u.user_id} colSpan={8} />
+                          <UserLinksRow userId={u.user_id} colSpan={9} />
                         )}
                         </>
                       );
