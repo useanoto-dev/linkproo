@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useDeviceFingerprint } from "@/hooks/use-device-fingerprint";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -39,6 +40,7 @@ export function DashboardLayout({ children, title, noPadding }: DashboardLayoutP
           </main>
         </div>
       </div>
+      <OnboardingTour />
     </SidebarProvider>
   );
 }
