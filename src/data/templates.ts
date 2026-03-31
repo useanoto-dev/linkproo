@@ -1909,71 +1909,11 @@ export const templates: LinkTemplate[] = [
       textColor: "text-slate-900",
       accentColor: "#3b82f6",
       fontFamily: "Inter",
-      buttons: [
-        { id: "1", label: "Baixar Currículo PDF", subtitle: "Versão completa atualizada 📄", url: "", icon: "", gradientColor: "from-blue-600 to-blue-800", iconEmoji: "📄", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", imagePosition: "right" as const, imageOpacity: 70, imageSize: 45 },
-        { id: "2", label: "LinkedIn", subtitle: "Histórico e recomendações 🔗", url: "", icon: "", gradientColor: "from-blue-700 to-indigo-800", iconEmoji: "🔗", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
-        { id: "3", label: "Agendar Entrevista", subtitle: "Calendly disponível 📅", url: "", icon: "", gradientColor: "from-green-600 to-emerald-800", iconEmoji: "📅", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 68, imageSize: 38 },
-        { id: "4", label: "E-mail Profissional", subtitle: "Resposta em até 2h ✉️", url: "", icon: "", gradientColor: "from-slate-600 to-slate-800", iconEmoji: "✉️", linkType: "email", linkValue: "", imagePosition: "right" as const, imageOpacity: 65, imageSize: 38 },
-        { id: "5", label: "GitHub", subtitle: "Projetos e código 💻", url: "", icon: "", gradientColor: "from-zinc-600 to-zinc-900", iconEmoji: "💻", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 62, imageSize: 36 },
-      ],
-      badges: [],
-      floatingEmojis: ["💼", "🏆", "⭐", "🎯"],
-      blocks: [
-        { id: "b1", type: "stats", order: 0, statItems: [
-          { id: "s1", value: "10 anos", label: "De experiência" },
-          { id: "s2", value: "40+", label: "Projetos entregues" },
-          { id: "s3", value: "PMP", label: "Certificado PMI" },
-        ]},
-        { id: "b2", type: "badges", order: 1, badges: [
-          { id: "1", label: "Gestão de Projetos", emoji: "📊", color: "bg-blue-700" },
-          { id: "2", label: "Scrum Master", emoji: "⚡", color: "bg-indigo-700" },
-          { id: "3", label: "Liderança Técnica", emoji: "👥", color: "bg-slate-600" },
-          { id: "4", label: "Product Owner", emoji: "🎯", color: "bg-cyan-700" },
-        ]},
-      ],
-      pages: [],
-    },
-  },
-
-  // ══════════════════════ CATEGORIA: ENTRETENIMENTO ══════════════════
-
-  // ─── STREAMER / GAMER ────────────────────────────────────────────
-  {
-    id: "tpl-streamer",
-    category: "entretenimento",
-    categoryEmoji: "🎮",
-    name: "Streamer & Gamer",
-    description: "Visual gamer neon para streamers de Twitch, YouTube Gaming e criadores de conteúdo de games",
-    template: {
-      slug: "",
-      businessName: "xKingStream",
-      tagline: "GG WP • Full Time Streamer • Top 0.1%",
-      heroImage: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80",
-      logoUrl: "",
-      backgroundColor: "from-slate-950 to-purple-950",
-      textColor: "text-white",
-      accentColor: "#a855f7",
-      fontFamily: "Space Grotesk",
       bgHtml: {
         enabled: true,
-        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:#030309;overflow:hidden}@keyframes scan{0%{transform:translateY(-100vh)}100%{transform:translateY(200vh)}}@keyframes pulse{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.3;transform:scale(1.08)}}@keyframes flicker{0%,100%{opacity:.04}48%{opacity:.04}50%{opacity:.15}52%{opacity:.04}}.sc{position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.4),rgba(167,139,250,.6),rgba(139,92,246,.4),transparent);animation:scan 8s linear infinite}.gd{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(139,92,246,.015) 3px,rgba(139,92,246,.015) 4px);animation:flicker 3s ease-in-out infinite}.o{position:fixed;border-radius:50%;filter:blur(80px);animation:pulse ease-in-out infinite}</style><div class="gd"></div><div class="sc"></div><div class="sc" style="animation-delay:-4s;animation-duration:11s"></div><div class="o" style="width:300px;height:300px;background:rgba(139,92,246,.15);top:-60px;left:-50px;animation-duration:8s"></div><div class="o" style="width:260px;height:260px;background:rgba(167,139,250,.12);bottom:-50px;right:-40px;animation-duration:11s;animation-delay:-5s"></div> businessName: "xKingStream",
-      tagline: "GG WP • Full Time Streamer • Top 0.1%",
-      heroImage: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80",
-      logoUrl: "",
-      backgroundColor: "from-slate-950 to-purple-950",
-      textColor: "text-white",
-      accentColor: "#a855f7",
-      fontFamily: "Space Grotesk",
-      bgHtml: {
-        enabled: true,
-        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:transparent;overflow:hidden}@keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.1}50%{transform:translateY(-14px) scale(1.04);opacity:.22}}@keyframes sparkle{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1);opacity:.5}}.o{position:fixed;border-radius:50%;filter:blur(50px);animation:float ease-in-out infinite}.s{position:fixed;width:3px;height:3px;border-radius:50%;background:rgba(100,116,139,.4);animation:sparkle ease-in-out infinite}</style><div class="o" style="width:260px;height:260px;background:rgba(148,163,184,.1);top:-50px;left:-40px;animation-duration:14s"></div><div class="o" style="width:220px;height:220px;background:rgba(100,116,139,.08);bottom:-40px;right:-30px;animation-duration:18s;animation-delay:-8s"></div><div class="o" style="width:150px;height:150px;background:rgba(148,163,184,.07);top:40%;left:50%;animation-duration:11s;animation-delay:-4s"></div><div class="s" style="top:18%;left:25%;animation-duration:3s"></div><div class="s" style="top:42%;left:72%;animation-duration:4s;animation-delay:-1.5s"></div><div class="s" style="top:65%;left:18%;animation-duration:3.5s;animation-delay:-2s"></div><div class="s" style="top:28%;left:60%;animation-duration:5s;animation-delay:-.8s"></div><div class="s" style="top:78%;left:48%;animation-duration:4s;animation-delay:-3s"></div> businessName: "Lucas Ferreira",
-      tagline: "Gerente de Projetos • PMP Certificado • 10 anos de experiência em tecnologia",
-      heroImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
-      logoUrl: "",
-      backgroundColor: "from-slate-50 to-white",
-      textColor: "text-slate-900",
-      accentColor: "#3b82f6",
-      fontFamily: "Inter",
+        html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:transparent;overflow:hidden}@keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.1}50%{transform:translateY(-14px) scale(1.04);opacity:.22}}@keyframes sparkle{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1);opacity:.5}}.o{position:fixed;border-radius:50%;filter:blur(50px);animation:float ease-in-out infinite}.s{position:fixed;width:3px;height:3px;border-radius:50%;background:rgba(100,116,139,.4);animation:sparkle ease-in-out infinite}</style><div class="o" style="width:260px;height:260px;background:rgba(148,163,184,.1);top:-50px;left:-40px;animation-duration:14s"></div><div class="o" style="width:220px;height:220px;background:rgba(100,116,139,.08);bottom:-40px;right:-30px;animation-duration:18s;animation-delay:-8s"></div><div class="o" style="width:150px;height:150px;background:rgba(148,163,184,.07);top:40%;left:50%;animation-duration:11s;animation-delay:-4s"></div><div class="s" style="top:18%;left:25%;animation-duration:3s"></div><div class="s" style="top:42%;left:72%;animation-duration:4s;animation-delay:-1.5s"></div><div class="s" style="top:65%;left:18%;animation-duration:3.5s;animation-delay:-2s"></div><div class="s" style="top:28%;left:60%;animation-duration:5s;animation-delay:-.8s"></div><div class="s" style="top:78%;left:48%;animation-duration:4s;animation-delay:-3s"></div>`,
+        overlay: 0,
+      },
       buttons: [
         { id: "1", label: "Baixar Currículo PDF", subtitle: "Versão completa atualizada 📄", url: "", icon: "", gradientColor: "from-blue-600 to-blue-800", iconEmoji: "📄", linkType: "external", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", imagePosition: "right" as const, imageOpacity: 70, imageSize: 45 },
         { id: "2", label: "LinkedIn", subtitle: "Histórico e recomendações 🔗", url: "", icon: "", gradientColor: "from-blue-700 to-indigo-800", iconEmoji: "🔗", linkType: "external", linkValue: "", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
@@ -2190,6 +2130,11 @@ export const templates: LinkTemplate[] = [
       textColor: "text-slate-900",
       accentColor: "#1d4ed8",
       fontFamily: "Inter",
+      bgHtml: {
+        enabled: true,
+        html: `<style>*{margin:0;padding:0;box-sizing:border-box}@keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.18}50%{transform:translateY(-16px) scale(1.04);opacity:.4}}@keyframes ring{0%,100%{transform:scale(1);opacity:.1}50%{transform:scale(1.08);opacity:.24}}.o{position:fixed;border-radius:50%;filter:blur(40px);animation:float ease-in-out infinite}.r{position:fixed;border-radius:50%;border:1.5px solid;animation:ring ease-in-out infinite}</style><div class="o" style="width:210px;height:210px;background:radial-gradient(circle,rgba(100,116,139,.15),transparent);top:4%;right:6%;animation-duration:10s"></div><div class="o" style="width:160px;height:160px;background:radial-gradient(circle,rgba(59,130,246,.12),transparent);bottom:9%;left:5%;animation-duration:13s;animation-delay:-5s"></div><div class="o" style="width:140px;height:140px;background:radial-gradient(circle,rgba(100,116,139,.1),transparent);top:48%;left:42%;animation-duration:11s;animation-delay:-3s"></div><div class="r" style="width:200px;height:200px;border-color:rgba(100,116,139,.14);top:6%;left:4%;animation-duration:9s"></div><div class="r" style="width:130px;height:130px;border-color:rgba(59,130,246,.12);bottom:12%;right:7%;animation-duration:11s;animation-delay:-4s"></div>`,
+        overlay: 0,
+      },
       buttons: [
         { id: "1", label: "Direito do Consumidor", subtitle: "Cobranças abusivas, recalls 🛡️", url: "", icon: "", gradientColor: "from-violet-700 to-purple-900", iconEmoji: "🛡️", linkType: "whatsapp", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1453733190371-0a9bedd82893?w=400&q=80", imagePosition: "right" as const, imageOpacity: 75, imageSize: 42 },
         { id: "2", label: "Contratos & Imóveis", subtitle: "Revisão e elaboração 🏠", url: "", icon: "", gradientColor: "from-purple-700 to-indigo-900", iconEmoji: "🏠", linkType: "whatsapp", linkValue: "", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", imagePosition: "right" as const, imageOpacity: 70, imageSize: 40 },
