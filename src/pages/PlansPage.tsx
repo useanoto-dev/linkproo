@@ -1,85 +1,61 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
-import { useProfile } from "@/hooks/use-profile";
-import { plans } from "@/data/plans";
+import { Zap, Gift, Link, LifeBuoy } from "lucide-react";
 
 export default function PlansPage() {
-  const { data: profile } = useProfile();
-  const currentPlan = profile?.plan || "free";
-
   return (
     <DashboardLayout title="Planos">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-display font-bold text-foreground">Escolha seu plano</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Upgrade para desbloquear recursos avançados
+      <div className="max-w-2xl mx-auto py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center"
+        >
+          <div className="flex items-center justify-center mb-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <Gift className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+            Plataforma gratuita por 1 ano
+          </h2>
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto mb-8">
+            Durante nosso período de lançamento, o LinkPro está disponível gratuitamente para todos os usuários. Aproveite e crie seu link inteligente sem nenhum custo.
           </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {plans.map((plan, i) => {
-            const isCurrentPlan = currentPlan === plan.key;
-            return (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className={`rounded-xl border ${plan.border} bg-card p-6 relative ${plan.popular ? "ring-2 ring-primary/30" : ""}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
-                    Popular
-                  </div>
-                )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 mt-0.5">
+                <Zap className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Plano de lançamento</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Gratuito por 12 meses a partir do cadastro</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 mt-0.5">
+                <Link className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">1 link inteligente</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Personalizável, com analytics e domínio LinkPro</p>
+              </div>
+            </div>
+          </div>
 
-                {isCurrentPlan && (
-                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold">
-                    Seu plano
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 mb-4">
-                  <plan.icon className={`h-5 w-5 ${plan.color}`} />
-                  <h3 className="font-display font-bold text-foreground">{plan.name}</h3>
-                </div>
-
-                <div className="mb-6">
-                  <span className="text-3xl font-display font-bold text-foreground">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground">{plan.period}</span>
-                </div>
-
-                <ul className="space-y-2.5 mb-6">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                      <Check className={`h-4 w-4 shrink-0 ${plan.color}`} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  disabled={isCurrentPlan}
-                  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                    isCurrentPlan
-                      ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                      : plan.popular
-                      ? "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20"
-                      : "bg-secondary text-foreground border border-border hover:bg-secondary/80"
-                  }`}
-                >
-                  {isCurrentPlan ? plan.cta : plan.ctaUpgrade}
-                </button>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          💳 O pagamento será processado de forma segura via Stripe. Cancele a qualquer momento.
-        </p>
+          <div className="rounded-xl border border-border bg-card p-5 text-left">
+            <div className="flex items-center gap-2 mb-2">
+              <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm font-semibold text-foreground">Precisa de mais recursos?</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Se você precisar de links adicionais ou funcionalidades avançadas, entre em contato com nossa equipe de suporte e encontraremos a melhor solução para você.
+            </p>
+          </div>
+        </motion.div>
       </div>
     </DashboardLayout>
   );

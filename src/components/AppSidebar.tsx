@@ -1,10 +1,12 @@
-import { Link, Plus, LayoutDashboard, Settings, Zap, LogOut, BarChart3, CreditCard, GraduationCap, HelpCircle, Shield, Users, Sun, Moon, PlayCircle, LifeBuoy } from "lucide-react";
+import { Link, Plus, LayoutDashboard, Settings, Zap, LogOut, BarChart3, GraduationCap, HelpCircle, Shield, Users, Sun, Moon, PlayCircle, LifeBuoy, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/use-profile";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import {
   Sidebar,
   SidebarContent,
@@ -32,7 +34,6 @@ const communityItems = [
 
 const settingsItems = [
   { title: "Configurações", url: "/settings", icon: Settings },
-  { title: "Planos", url: "/plans", icon: CreditCard },
 ];
 
 const adminItems = [
@@ -43,6 +44,16 @@ const adminItems = [
   { title: "Suporte", url: "/admin/suporte", icon: LifeBuoy },
 ];
 
+const HIGHLIGHT_MAP: Record<string, string> = {
+  '/': 'dashboard',
+  '/links': 'meus-links',
+  '/links/new': 'criar-link',
+  '/analytics': 'analytics',
+  '/videoaulas': 'videoaulas',
+  '/suporte': 'suporte',
+  '/settings': 'configuracoes',
+};
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -51,6 +62,8 @@ export function AppSidebar() {
   const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const highlight = useOnboardingStore((s) => s.currentHighlight());
+  const { reset, start } = useOnboardingStore();
 
   const displayName = profile?.display_name || user?.user_metadata?.display_name || "";
   const avatarUrl = profile?.avatar_url || "";
@@ -63,6 +76,46 @@ export function AppSidebar() {
     await signOut();
     navigate("/auth");
   };
+
+  const renderHighlightableGroup = (label: string, items: typeof mainItems) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-sidebar-foreground/50 uppercase text-[10px] tracking-widest">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => {
+            const isHighlighted = highlight !== null && HIGHLIGHT_MAP[item.url] === highlight;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <div className="relative">
+                  {isHighlighted && (
+                    <motion.div
+                      layoutId="onboarding-highlight"
+                      className="absolute inset-0 rounded-lg bg-primary/10 ring-1 ring-primary/40"
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  )}
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200 cursor-pointer"
+                      activeClassName="bg-sidebar-accent text-primary font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </div>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 
   const renderMenuGroup = (label: string, items: typeof mainItems) => (
     <SidebarGroup>
@@ -106,9 +159,9 @@ export function AppSidebar() {
           )}
         </div>
 
-        {renderMenuGroup("Menu", mainItems)}
-        {renderMenuGroup("Comunidade", communityItems)}
-        {renderMenuGroup("Sistema", settingsItems)}
+        {renderHighlightableGroup("Menu", mainItems)}
+        {renderHighlightableGroup("Comunidade", communityItems)}
+        {renderHighlightableGroup("Sistema", settingsItems)}
 
         {isAdmin && renderMenuGroup("Administração", adminItems)}
       </SidebarContent>
@@ -136,6 +189,20 @@ export function AppSidebar() {
             )}
           </button>
         </div>
+
+        {/* Refazer tour button */}
+        {!collapsed && (
+          <div className="px-3 pb-1">
+            <button
+              type="button"
+              onClick={() => { reset(); start(); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Refazer tour
+            </button>
+          </div>
+        )}
 
         <div className={`flex items-center ${collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2"}`}>
           {avatarUrl ? (

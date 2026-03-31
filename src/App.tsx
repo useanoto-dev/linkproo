@@ -24,7 +24,6 @@ const AuthPage = lazy(() => import("./pages/AuthPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
-const PlansPage = lazy(() => import("./pages/PlansPage"));
 const VideoaulasPage = lazy(() => import("./pages/VideoaulasPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -84,7 +83,7 @@ function AppRoutes() {
         <Route path="/links/:id/edit" element={<ProtectedRoute><PageTransition><LinkEditor /></PageTransition></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><PageTransition><SettingsPage /></PageTransition></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><PageTransition><AnalyticsPage /></PageTransition></ProtectedRoute>} />
-        <Route path="/plans" element={<ProtectedRoute><PageTransition><PlansPage /></PageTransition></ProtectedRoute>} />
+        <Route path="/plans" element={<Navigate to="/" replace />} />
         <Route path="/videoaulas" element={<ProtectedRoute><PageTransition><VideoaulasPage /></PageTransition></ProtectedRoute>} />
         <Route path="/suporte" element={<ProtectedRoute><PageTransition><SupportPage /></PageTransition></ProtectedRoute>} />
 

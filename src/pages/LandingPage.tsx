@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Zap, ArrowRight, Palette, BarChart3, MousePointerClick,
-  Smartphone, Globe, Shield, Star, Check, Sparkles,
+  Smartphone, Globe, Shield, Star, Sparkles,
   ChevronRight, Layers
 } from "lucide-react";
 
@@ -47,18 +47,6 @@ const features = [
   },
 ];
 
-// Use centralized plans data
-import { plans as planDefs } from "@/data/plans";
-const landingPlans = planDefs.map((p) => ({
-  name: p.name,
-  price: p.price,
-  period: p.period,
-  desc: p.desc,
-  features: p.features,
-  cta: p.ctaUpgrade === "Plano Free" ? "Começar Grátis" : p.ctaUpgrade === "Assinar Business" ? "Falar com Vendas" : p.ctaUpgrade,
-  popular: p.popular,
-}));
-
 const testimonials = [
   {
     name: "Marina Costa",
@@ -101,7 +89,6 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-white/60">
             <a href="#features" className="hover:text-white transition-colors">Recursos</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Preços</a>
             <a href="#testimonials" className="hover:text-white transition-colors">Depoimentos</a>
           </div>
           <div className="flex items-center gap-3">
@@ -302,82 +289,6 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-base font-bold mb-2">{f.title}</h3>
                 <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ PRICING ═══════════ */}
-      <section id="pricing" className="relative py-24 md:py-32">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/8 rounded-full blur-[120px]" />
-        </div>
-        <div className="relative max-w-5xl mx-auto px-6">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
-          >
-            <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-medium mb-4">
-              <Sparkles className="h-3 w-3" />
-              Preços
-            </motion.div>
-            <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-              Simples e transparente
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={2} className="text-white/40 max-w-lg mx-auto">
-              Comece grátis. Escale quando precisar.
-            </motion.p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {landingPlans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-50px" }}
-                variants={fadeUp}
-                custom={i}
-                className={`relative rounded-2xl p-6 border transition-all duration-300 ${
-                  plan.popular
-                    ? "bg-gradient-to-b from-violet-950/60 to-violet-950/20 border-violet-500/30 shadow-xl shadow-violet-600/10"
-                    : "bg-white/[0.02] border-white/5 hover:border-white/10"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-[11px] font-bold uppercase tracking-wider shadow-lg">
-                    Mais Popular
-                  </div>
-                )}
-                <div className="mb-6 pt-2">
-                  <h3 className="text-lg font-bold mb-1">{plan.name}</h3>
-                  <p className="text-xs text-white/40">{plan.desc}</p>
-                </div>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-sm text-white/30">{plan.period}</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/70">
-                      <Check className="h-4 w-4 text-violet-400 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => navigate("/auth")}
-                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-95 ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-600/25 hover:shadow-violet-500/40"
-                      : "bg-white/5 hover:bg-white/10 border border-white/10"
-                  }`}
-                >
-                  {plan.cta}
-                </button>
               </motion.div>
             ))}
           </div>

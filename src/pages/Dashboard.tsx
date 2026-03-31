@@ -2,14 +2,14 @@ import { motion } from "framer-motion";
 import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, Layout } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { templates, templateCategories } from "@/data/templates";
 import { useLinks, useLinkStats } from "@/hooks/use-links";
-import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlanLimits } from "@/hooks/use-plan-limits";
 import { toast } from "sonner";
 import type { LinkTemplate } from "@/data/templates";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 
 /** Derives a CSS background style for the template card preview area. */
 function getTemplateBgStyle(tpl: LinkTemplate, skipHeroImage = false): React.CSSProperties {
@@ -178,6 +178,14 @@ const Dashboard = () => {
   const { data: links = [], isLoading: linksLoading } = useLinks();
   const { data: stats, isLoading: statsLoading } = useLinkStats();
   const { isAtLimit, limits, totalLinks } = usePlanLimits();
+  const { completed, isActive, start } = useOnboardingStore();
+
+  useEffect(() => {
+    if (!completed && !isActive) {
+      const t = setTimeout(() => start(), 800);
+      return () => clearTimeout(t);
+    }
+  }, [completed, isActive, start]);
 
   const isLoading = linksLoading || statsLoading;
   const totalViews = stats?.totalViews ?? 0;
@@ -202,8 +210,6 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title="Dashboard">
-      <OnboardingDialog />
-
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         {statCards.map((stat, i) => (
@@ -242,7 +248,7 @@ const Dashboard = () => {
           onClick={() => {
             if (isAtLimit) {
               toast.error(
-                `Limite atingido! Plano ${limits.label} permite até ${limits.maxLinks} links. Faça upgrade para continuar.`
+                "Você já possui seu link inteligente gratuito. Contate o suporte para mais informações."
               );
               return;
             }
