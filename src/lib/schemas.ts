@@ -62,7 +62,8 @@ export const SmartLinkButtonSchema = z.object({
 export const LinkBlockSchema = z.object({
   id: z.string(),
   type: BlockTypeSchema,
-  order: z.number(),
+  // .catch(0) — accepts null/undefined/NaN from legacy data without dropping the block
+  order: z.number().catch(0),
 }).passthrough();
 
 // ---------------------------------------------------------------------------

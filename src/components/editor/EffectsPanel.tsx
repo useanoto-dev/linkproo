@@ -73,6 +73,7 @@ const WA_POS_OPTIONS: { value: WhatsAppFloat["position"]; label: string }[] = [
   { value: "bottom-left", label: "Esquerda" },
 ];
 
+
 export function EffectsPanel({ link, onUpdateLink }: EffectsPanelProps) {
   const snow = useMemo(
     () => link.snowEffect ?? { enabled: false, intensity: 40, color: "#ffffff" },

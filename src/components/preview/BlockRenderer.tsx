@@ -56,8 +56,16 @@ export const BlockRenderer = memo(function BlockRenderer({
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [imgBlockError, setImgBlockError] = useState(false);
   const [imgBtnError, setImgBtnError] = useState(false);
+  const [imgBtnRetryKey, setImgBtnRetryKey] = useState(0);
   const handleImgBlockError = useCallback(() => setImgBlockError(true), []);
-  const handleImgBtnError = useCallback(() => setImgBtnError(true), []);
+  // Retry after 4s on transient failure; keeps block visible instead of vanishing permanently
+  const handleImgBtnError = useCallback(() => {
+    setImgBtnError(true);
+    setTimeout(() => {
+      setImgBtnError(false);
+      setImgBtnRetryKey((k) => k + 1);
+    }, 4000);
+  }, []);
 
   // Scheduling visibility — hidden outside the configured window (skip in editor preview)
   if (!isNewLink && (block.visibleFrom || block.visibleUntil)) {
@@ -92,7 +100,7 @@ export const BlockRenderer = memo(function BlockRenderer({
         >
           <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: `${block.buttonHeight ?? 148}px` }}>
             {/* alt uses button label; if absent, image is decorative since the link wraps the whole area */}
-            <img src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" onError={handleImgBtnError} className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 148}px` }} />
+            <img key={imgBtnRetryKey} src={block.buttonImageUrl} alt={block.content || ""} loading="lazy" onError={handleImgBtnError} className="w-full h-full object-cover" style={{ minHeight: `${block.buttonHeight ?? 148}px` }} />
             <div
               className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{ boxShadow: `inset 0 0 30px rgba(255,255,255,0.1), 0 0 20px ${accent}30` }}

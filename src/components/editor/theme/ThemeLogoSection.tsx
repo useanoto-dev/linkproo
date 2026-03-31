@@ -114,11 +114,22 @@ export function ThemeLogoSection({
               </div>
 
               {link.headerStyle === "bio" && (
-                <ColorPicker
-                  label="Cor da borda do avatar"
-                  value={link.logoBorderColor ?? "#ffffff"}
-                  onChange={(v) => onUpdateLink({ logoBorderColor: v })}
-                />
+                <div className="space-y-2">
+                  <ColorPicker
+                    label="Cor da borda do avatar"
+                    value={link.logoBorderColor ?? "#ffffff"}
+                    onChange={(v) => onUpdateLink({ logoBorderColor: v })}
+                  />
+                  <SliderRow
+                    label="Espessura da borda"
+                    value={link.logoBorderWidth ?? 4}
+                    min={0}
+                    max={20}
+                    step={1}
+                    unit="px"
+                    onChange={(v) => onThrottle({ logoBorderWidth: v })}
+                  />
+                </div>
               )}
             </div>
           )}

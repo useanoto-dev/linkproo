@@ -37,6 +37,7 @@ export interface SmartLinkRow {
   logo_shadow?: boolean | null;
   header_style?: string | null;
   banner_curve?: boolean | null;
+  banner_curve_intensity?: number | null;
   logo_border_color?: string | null;
   title_color?: string | null;
   tagline_color?: string | null;
@@ -51,6 +52,7 @@ export interface SmartLinkRow {
   business_name_align?: string | null;
   hide_business_name?: boolean | null;
   hide_tagline?: boolean | null;
+  tagline_font_size?: number | string | null;
   entry_animation?: string | null;
   snow_effect?: unknown;
   bg_effects?: {
@@ -60,6 +62,7 @@ export interface SmartLinkRow {
     stars?: unknown;
     bgHtml?: unknown;
     whatsappFloat?: unknown;
+    logoBorderWidth?: unknown;
   } | null;
   buttons?: unknown;
   pages?: unknown;
@@ -129,7 +132,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     logoShadow: row.logo_shadow ?? true,
     headerStyle: (row.header_style as SmartLink['headerStyle']) ?? undefined,
     bannerCurve: row.banner_curve ?? undefined,
+    bannerCurveIntensity: row.banner_curve_intensity ? Number(row.banner_curve_intensity) : undefined,
     logoBorderColor: row.logo_border_color ?? undefined,
+    logoBorderWidth: (row.bg_effects?.logoBorderWidth as number | undefined) ?? undefined,
     titleColor: row.title_color ?? undefined,
     taglineColor: row.tagline_color ?? undefined,
     taglineFontSize: row.tagline_font_size ? Number(row.tagline_font_size) : undefined,
@@ -212,13 +217,14 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     entry_animation: link.entryAnimation || "fade-up",
     // SnowEffect is a structured object that maps to JSONB in the DB
     snow_effect: toJsonb(link.snowEffect ?? null),
-    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml || link.whatsappFloat) ? toJsonb({
+    bg_effects: (link.bubblesEffect || link.firefliesEffect || link.matrixEffect || link.starsEffect || link.bgHtml || link.whatsappFloat || link.logoBorderWidth != null) ? toJsonb({
       bubbles: link.bubblesEffect ?? null,
       fireflies: link.firefliesEffect ?? null,
       matrix: link.matrixEffect ?? null,
       stars: link.starsEffect ?? null,
       bgHtml: link.bgHtml ?? null,
       whatsappFloat: link.whatsappFloat ?? null,
+      logoBorderWidth: link.logoBorderWidth ?? null,
     }) : null,
   };
 }

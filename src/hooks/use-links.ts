@@ -85,8 +85,8 @@ export function usePublicLink(slug?: string) {
       return rowToSmartLink(data, 0, 0, ownerPlan);
     },
     enabled: !!slug,
-    staleTime: 1000 * 60 * 5,  // 5 min — páginas públicas mudam pouco
-    gcTime: 1000 * 60 * 15,    // 15 min no cache
+    staleTime: 0,               // sempre refetch ao montar — evita dados stale após salvar
+    gcTime: 1000 * 60 * 5,     // 5 min no cache
   });
 }
 

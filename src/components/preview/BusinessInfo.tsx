@@ -20,7 +20,7 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
       {isBioMode && link.logoUrl && (() => {
         const avatarSize = Math.max(80, link.logoSizePx ?? 80);
         const borderColor = link.logoBorderColor ?? '#ffffff';
-        const borderPx = 4;
+        const borderPx = link.logoBorderWidth ?? 4;
         const shape = link.logoShape ?? 'circle';
         const radius = shape === 'circle' ? '50%' : shape === 'square' ? '0' : '16px';
         return (

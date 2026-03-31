@@ -274,6 +274,8 @@ export interface SmartLink {
   bannerCurveIntensity?: number;
   /** Em modo bio: cor da borda/anel do avatar (padrão: '#ffffff') */
   logoBorderColor?: string;
+  /** Em modo bio: espessura da borda/anel do avatar em px (padrão: 4) */
+  logoBorderWidth?: number;
   /** Cor independente para o nome/título do negócio (fallback: accentColor) */
   titleColor?: string;
   /** Cor independente para o slogan/tagline (fallback: automático por tema claro/escuro) */
