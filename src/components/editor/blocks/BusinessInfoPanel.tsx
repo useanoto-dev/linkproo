@@ -287,8 +287,8 @@ function TextEffectsSection({
               style={{ background: "linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)" }}
             >
               <span
-                className="text-xs font-bold"
-                style={effect.previewStyle as React.CSSProperties}
+                className={`text-xs font-bold${effect.animClass ? ` ${effect.animClass}` : ''}`}
+                style={effect.style}
               >
                 {effect.name}
               </span>

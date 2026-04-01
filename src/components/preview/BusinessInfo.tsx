@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import DOMPurify from "dompurify";
 import { SmartLink, TextBgBox } from "@/types/smart-link";
 import { HtmlTitle } from "@/components/preview/HtmlTitle";
+import { TEXT_EFFECTS } from "@/lib/text-effects-registry";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,14 @@ interface BusinessInfoProps {
 }
 
 export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtextClass }: BusinessInfoProps) {
+  // Resolve effects once — undefined when no effect is selected
+  const nameEffect = link.businessNameEffect
+    ? TEXT_EFFECTS.find((e) => e.key === link.businessNameEffect)
+    : undefined;
+  const tagEffect = link.taglineEffect
+    ? TEXT_EFFECTS.find((e) => e.key === link.taglineEffect)
+    : undefined;
+
   return (
     <>
       {/* Bio mode: avatar overlapping the banner bottom */}
@@ -79,7 +88,7 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        {/* Classic logo — hidden in bio mode (avatar shown above) */}
+        {/* Classic logo — hidden in bio mode */}
         {!isBioMode && link.logoUrl && (
           <motion.div
             className="relative inline-block mb-2"
@@ -104,13 +113,10 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
           </motion.div>
         )}
 
+        {/* ── Business name ─────────────────────────────────────────────── */}
         {!link.hideBusinessName && (() => {
-          const bgBoxStyle = link.businessNameBgBox?.enabled
-            ? getBgBoxStyle(link.businessNameBgBox)
-            : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
-
           const wrapperStyle: CSSProperties = link.businessNameBgBox?.enabled
-            ? bgBoxStyle
+            ? getBgBoxStyle(link.businessNameBgBox)
             : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
 
           const inner = link.businessNameHtml ? (
@@ -122,9 +128,14 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
             />
           ) : (
             <h1
-              className={`font-bold leading-tight break-words${link.businessNameEffect ? ` ${link.businessNameEffect}` : ''}`}
+              // animClass is the only className needed — carries animation binding only
+              className={`font-bold leading-tight break-words${nameEffect?.animClass ? ` ${nameEffect.animClass}` : ''}`}
               style={{
-                color: link.businessNameEffect ? undefined : (link.titleColor || accent),
+                // Effect inline styles applied first; fontSize/fontFamily override last
+                // so they always come from link config, not the effect.
+                ...(nameEffect
+                  ? nameEffect.style
+                  : { color: link.titleColor || accent }),
                 fontSize: `${link.businessNameFontSize ?? 24}px`,
                 fontFamily,
               }}
@@ -139,16 +150,21 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
           return <div style={wrapperStyle}>{inner}</div>;
         })()}
 
+        {/* ── Tagline ───────────────────────────────────────────────────── */}
         {link.tagline && !link.hideTagline && (() => {
-          const bgBoxStyle = link.taglineBgBox?.enabled
+          const wrapperStyle: CSSProperties = link.taglineBgBox?.enabled
             ? getBgBoxStyle(link.taglineBgBox)
             : { maxWidth: `${link.taglineWidth ?? 100}%`, display: 'inline-block' };
 
           const tagline = (
             <p
-              className={`mt-1 italic${link.taglineEffect ? ` ${link.taglineEffect}` : ''}${!link.taglineEffect && !link.taglineColor ? ` ${subtextClass}` : ''}`}
+              className={`mt-1 italic${tagEffect?.animClass ? ` ${tagEffect.animClass}` : ''}${!tagEffect && !link.taglineColor ? ` ${subtextClass}` : ''}`}
               style={{
-                color: link.taglineEffect ? undefined : (link.taglineColor || undefined),
+                ...(tagEffect
+                  ? tagEffect.style
+                  : link.taglineColor
+                    ? { color: link.taglineColor }
+                    : {}),
                 fontSize: `${link.taglineFontSize ?? 13}px`,
                 fontFamily,
               }}
@@ -156,7 +172,7 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
               {link.tagline}
             </p>
           );
-          return <div style={bgBoxStyle}>{tagline}</div>;
+          return <div style={wrapperStyle}>{tagline}</div>;
         })()}
       </motion.div>
     </>
