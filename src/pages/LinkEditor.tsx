@@ -66,8 +66,6 @@ export default function LinkEditor() {
   const updatePreviewLink = useEditorStore((s) => s.updatePreviewLink);
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
-  const openDrawer = useEditorStore((s) => s.ui.openDrawer);
-  const editingSubPageId = useEditorStore((s) => s.ui.editingSubPageId);
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
   const setUI = useEditorStore((s) => s.setUI);
 
@@ -100,7 +98,7 @@ export default function LinkEditor() {
   }, [link, updateLink, selectedElementId, setUI]);
 
   // Block operations
-  const { insertBlockAt, addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
+  const { addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
     useBlockOperations({ link, updateLink, setLink });
 
   // Initialize store on first mount
@@ -228,7 +226,7 @@ export default function LinkEditor() {
     return (
       <DashboardLayout title="Editor de Link" noPadding>
         <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-          <div className="w-80 shrink-0 border-r border-border bg-card p-4 space-y-4 overflow-hidden">
+          <div className="w-[280px] shrink-0 border-r border-border bg-card p-4 space-y-4 overflow-hidden">
             <Skeleton className="h-8 w-full rounded-lg" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (

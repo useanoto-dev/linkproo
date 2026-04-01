@@ -1,6 +1,21 @@
 import { useState, useMemo, useCallback } from "react";
-import { SmartLink } from "@/types/smart-link";
+import { SmartLink, SmartLinkButton, LinkBlock } from "@/types/smart-link";
 import { useEditorStore } from "@/stores/editor-store";
+import {
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Palette, Sparkles, FileText, Plus, ChevronDown,
   Zap, MousePointerClick, ImagePlus, Heading, Type,
@@ -8,7 +23,7 @@ import {
   MessageSquare, Timer, Star, BarChart3, ShoppingBag,
   Mail, Megaphone, Users, Music, MapPin, HelpCircle,
   Award, Space, Minus as MinusIcon, Trash2, ArrowUp, ArrowDown,
-  Info,
+  Info, Copy, GripVertical,
 } from "lucide-react";
 import { getUnifiedItems, UnifiedItem } from "./blocks/unified-items";
 import { BLOCK_LABELS } from "./blocks/constants";
@@ -75,6 +90,107 @@ interface EditorLeftPanelProps {
   onRemoveItem: (id: string, kind: 'button' | 'block') => void;
 }
 
+// ─── Sortable Item ────────────────────────────────────────────────────────────
+
+interface SortableBlockItemProps {
+  item: UnifiedItem;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+  onMoveBlock: (id: string, direction: 'up' | 'down') => void;
+  onRemoveItem: (id: string, kind: 'button' | 'block') => void;
+  onDuplicate: (id: string, kind: 'button' | 'block') => void;
+}
+
+function SortableBlockItem({
+  item, isSelected, onSelect, onMoveBlock, onRemoveItem, onDuplicate,
+}: SortableBlockItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: isDragging ? 'relative' : undefined,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  const Icon = getItemIcon(item);
+  const label = getItemLabel(item);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={() => onSelect(item.id)}
+      className={`group relative flex items-center gap-1 px-1 h-8 cursor-pointer select-none transition-colors ${
+        isSelected
+          ? 'bg-primary/12 border-l-2 border-primary text-foreground'
+          : 'hover:bg-secondary/30 border-l-2 border-transparent text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+        className="opacity-0 group-hover:opacity-40 hover:!opacity-80 shrink-0 flex items-center justify-center h-4 w-4 rounded cursor-grab active:cursor-grabbing transition-opacity touch-none"
+        title="Arrastar para reordenar"
+      >
+        <GripVertical className="h-3 w-3" />
+      </button>
+
+      <Icon className={`h-3 w-3 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
+      <span className="flex-1 text-[10px] truncate min-w-0 pr-1">
+        {label}
+      </span>
+
+      {/* Actions on hover */}
+      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDuplicate(item.id, item.kind); }}
+          className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
+          title="Duplicar"
+        >
+          <Copy className="h-2.5 w-2.5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'up'); }}
+          className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
+          title="Mover para cima"
+        >
+          <ArrowUp className="h-2.5 w-2.5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'down'); }}
+          className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
+          title="Mover para baixo"
+        >
+          <ArrowDown className="h-2.5 w-2.5" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onRemoveItem(item.id, item.kind); }}
+          className="h-4 w-4 flex items-center justify-center rounded hover:bg-destructive/20 hover:text-destructive transition-colors"
+          title="Remover"
+        >
+          <Trash2 className="h-2.5 w-2.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem }: EditorLeftPanelProps) {
@@ -84,6 +200,12 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
   const setUI = useEditorStore((s) => s.setUI);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
   const selectItem = useCallback((id: string) => {
     setUI({ selectedElementId: id, openDrawer: null });
   }, [setUI]);
@@ -91,6 +213,44 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
   const selectPanel = useCallback((panel: 'theme' | 'effects' | 'pages' | 'elements') => {
     setUI({ openDrawer: panel, selectedElementId: null });
   }, [setUI]);
+
+  const duplicateItem = useCallback((id: string, kind: 'button' | 'block') => {
+    const now = Date.now();
+
+    // Find original item order so the duplicate lands right below it
+    const allItems = getUnifiedItems(link);
+    const original = allItems.find((i) => i.id === id);
+    if (!original) return;
+
+    const insertOrder = (original.data.order ?? 0) + 1;
+
+    // Shift every item that sits at or after the insert position
+    const bumpedButtons = link.buttons.map((b) =>
+      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    const bumpedBlocks = link.blocks.map((b) =>
+      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+
+    if (kind === 'button') {
+      const btn = link.buttons.find((b) => b.id === id);
+      if (!btn) return;
+      onUpdateLink({
+        buttons: [
+          ...bumpedButtons,
+          { ...btn, id: `${now}`, order: insertOrder, label: (btn.label || '') + ' (cópia)' },
+        ],
+        blocks: bumpedBlocks,
+      });
+    } else {
+      const block = link.blocks.find((b) => b.id === id);
+      if (!block) return;
+      onUpdateLink({
+        buttons: bumpedButtons,
+        blocks: [...bumpedBlocks, { ...block, id: `${now}`, order: insertOrder }],
+      });
+    }
+  }, [link, onUpdateLink]);
 
   // Build grouped block list
   const unifiedItems = useMemo(() => getUnifiedItems(link), [link]);
@@ -113,6 +273,36 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
     return ordered;
   }, [unifiedItems]);
 
+  // Flat display order for SortableContext (matches visual rendering order)
+  const flatDisplayItems = useMemo(
+    () => Array.from(groupedItems.values()).flat(),
+    [groupedItems]
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const fromIdx = flatDisplayItems.findIndex((i) => i.id === active.id);
+    const toIdx = flatDisplayItems.findIndex((i) => i.id === over.id);
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const newItems = arrayMove(flatDisplayItems, fromIdx, toIdx);
+    const withOrders = newItems.map((item, idx) => ({
+      ...item,
+      data: { ...item.data, order: idx },
+    }));
+
+    onUpdateLink({
+      buttons: withOrders
+        .filter((i) => i.kind === 'button')
+        .map((i) => i.data as SmartLinkButton),
+      blocks: withOrders
+        .filter((i) => i.kind === 'block')
+        .map((i) => i.data as LinkBlock),
+    });
+  }, [flatDisplayItems, onUpdateLink]);
+
   const navItems = [
     { key: 'theme' as const, icon: Palette, label: 'Tema' },
     { key: 'effects' as const, icon: Sparkles, label: 'Efeitos' },
@@ -120,7 +310,7 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
   ];
 
   return (
-    <div className="hidden lg:flex w-[180px] shrink-0 h-full flex-col border-r border-border bg-secondary/10">
+    <div className="hidden lg:flex w-[280px] shrink-0 h-full flex-col border-r border-border bg-secondary/10">
 
       {/* ── Info do Negócio ──────────────────────────── */}
       <div className="shrink-0 border-b border-border/50">
@@ -204,71 +394,38 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
         </button>
       </div>
 
-      {/* ── Block list ───────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto custom-scroll pb-2 min-h-0">
-        {groupedItems.size === 0 ? (
-          <div className="px-2.5 py-4 text-center space-y-1">
-            <p className="text-[10px] text-muted-foreground/50">Nenhum elemento.</p>
-            <p className="text-[9px] text-muted-foreground/35">Clique em + para adicionar.</p>
+      {/* ── Block list with drag-to-reorder ─────────── */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={flatDisplayItems.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+          <div className="flex-1 overflow-y-auto custom-scroll pb-2 min-h-0">
+            {groupedItems.size === 0 ? (
+              <div className="px-2.5 py-4 text-center space-y-1">
+                <p className="text-[10px] text-muted-foreground/50">Nenhum elemento.</p>
+                <p className="text-[9px] text-muted-foreground/35">Clique em + para adicionar.</p>
+              </div>
+            ) : (
+              Array.from(groupedItems.entries()).map(([cat, items]) => (
+                <div key={cat}>
+                  <p className={`px-2.5 pt-2 pb-0.5 text-[8px] font-bold uppercase tracking-widest ${CATEGORY_COLORS[cat] || 'text-muted-foreground'}`}>
+                    {cat}
+                  </p>
+                  {items.map((item) => (
+                    <SortableBlockItem
+                      key={item.id}
+                      item={item}
+                      isSelected={selectedElementId === item.id}
+                      onSelect={selectItem}
+                      onMoveBlock={onMoveBlock}
+                      onRemoveItem={onRemoveItem}
+                      onDuplicate={duplicateItem}
+                    />
+                  ))}
+                </div>
+              ))
+            )}
           </div>
-        ) : (
-          Array.from(groupedItems.entries()).map(([cat, items]) => (
-            <div key={cat}>
-              <p className={`px-2.5 pt-2 pb-0.5 text-[8px] font-bold uppercase tracking-widest ${CATEGORY_COLORS[cat] || 'text-muted-foreground'}`}>
-                {cat}
-              </p>
-              {items.map((item) => {
-                const Icon = getItemIcon(item);
-                const isSelected = selectedElementId === item.id;
-                const label = getItemLabel(item);
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => selectItem(item.id)}
-                    className={`group relative flex items-center gap-1.5 px-2 h-8 cursor-pointer select-none transition-colors ${
-                      isSelected
-                        ? 'bg-primary/12 border-l-2 border-primary text-foreground'
-                        : 'hover:bg-secondary/30 border-l-2 border-transparent text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className={`h-3 w-3 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
-                    <span className="flex-1 text-[10px] truncate">
-                      {label}
-                    </span>
-                    {/* Actions on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'up'); }}
-                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
-                        title="Mover para cima"
-                      >
-                        <ArrowUp className="h-2.5 w-2.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'down'); }}
-                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
-                        title="Mover para baixo"
-                      >
-                        <ArrowDown className="h-2.5 w-2.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); onRemoveItem(item.id, item.kind); }}
-                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-destructive/20 hover:text-destructive transition-colors"
-                        title="Remover"
-                      >
-                        <Trash2 className="h-2.5 w-2.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
