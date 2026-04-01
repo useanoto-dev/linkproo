@@ -18,6 +18,12 @@ export interface EditorUIState {
   device: DeviceType;
   isDraggingOverPreview: boolean;
   ghostBlockType: BlockType | null;
+  contextMenu: {
+    x: number;
+    y: number;
+    itemId: string;
+    itemKind: 'button' | 'block';
+  } | null;
 }
 
 export interface EditorStore {
@@ -106,6 +112,7 @@ export const useEditorStore = create<EditorStore>()(
       device: 'iphone15' as DeviceType,
       isDraggingOverPreview: false,
       ghostBlockType: null,
+      contextMenu: null,
     },
     canUndo: false,
     canRedo: false,
