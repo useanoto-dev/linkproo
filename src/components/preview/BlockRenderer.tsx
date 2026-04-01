@@ -95,8 +95,7 @@ export const BlockRenderer = memo(function BlockRenderer({
           animate={bev.animate}
           transition={bev.transition}
           whileHover={{ scale: 1.04, y: -3, transition: { duration: 0.2 } }}
-          className="block w-full rounded-2xl shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
-          style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.15))" }}
+          className="block w-full rounded-2xl shadow-md transition-shadow hover:shadow-xl relative overflow-hidden group"
         >
           <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: `${block.buttonHeight ?? 148}px` }}>
             {/* alt uses button label; if absent, image is decorative since the link wraps the whole area */}
