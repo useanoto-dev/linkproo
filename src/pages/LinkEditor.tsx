@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorDrawer } from '@/components/editor/EditorDrawer';
@@ -6,6 +6,7 @@ import { EditorPreview } from '@/components/editor/EditorPreview';
 import { EditorLeftPanel } from '@/components/editor/EditorLeftPanel';
 import { EditorRightPanel } from '@/components/editor/EditorRightPanel';
 import { ShortcutsModal } from '@/components/editor/ShortcutsModal';
+import { EditorContextMenu } from '@/components/editor/EditorContextMenu';
 import { SmartLink, BlockType, LinkBlock, SmartLinkButton } from '@/types/smart-link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -125,6 +126,25 @@ export default function LinkEditor() {
       });
     }
   }, [link, updateLink]);
+
+  // Context menu handlers
+  const handleElementContextMenu = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    const kind = link.buttons.some((b) => b.id === id) ? 'button' : 'block';
+    setUI({ contextMenu: { x: e.clientX, y: e.clientY, itemId: id, itemKind: kind } });
+  }, [link.buttons, setUI]);
+
+  const handleContextEditProperties = useCallback((id: string) => {
+    setUI({ selectedElementId: id, openDrawer: null, contextMenu: null });
+  }, [setUI]);
+
+  const handleContextMoveUp = useCallback((id: string) => {
+    moveBlock(id, 'up');
+  }, [moveBlock]);
+
+  const handleContextMoveDown = useCallback((id: string) => {
+    moveBlock(id, 'down');
+  }, [moveBlock]);
 
   // Block operations
   const { addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
@@ -315,6 +335,7 @@ export default function LinkEditor() {
             previewLink={previewLink} link={link}
             onDragOver={handlePreviewDragOver} onDragEnter={handlePreviewDragEnter}
             onDragLeave={handlePreviewDragLeave} onDrop={handlePreviewDrop}
+            onElementContextMenu={handleElementContextMenu}
           />
 
           {/* Zone 3: Properties panel (desktop) */}
@@ -329,6 +350,14 @@ export default function LinkEditor() {
         </div>
 
         <ShortcutsModal />
+
+        <EditorContextMenu
+          onDuplicate={duplicateItem}
+          onRemove={removeItem}
+          onEditProperties={handleContextEditProperties}
+          onMoveUp={handleContextMoveUp}
+          onMoveDown={handleContextMoveDown}
+        />
       </div>
     </DashboardLayout>
   );
