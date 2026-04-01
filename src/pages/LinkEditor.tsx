@@ -97,6 +97,35 @@ export default function LinkEditor() {
     if (selectedElementId === id) setUI({ selectedElementId: null });
   }, [link, updateLink, selectedElementId, setUI]);
 
+  const duplicateItem = useCallback((id: string, kind: 'button' | 'block') => {
+    const now = Date.now();
+    const allItems = getUnifiedItems(link);
+    const original = allItems.find((i) => i.id === id);
+    if (!original) return;
+    const insertOrder = (original.data.order ?? 0) + 1;
+    const bumpedButtons = link.buttons.map((b) =>
+      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    const bumpedBlocks = link.blocks.map((b) =>
+      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
+    );
+    if (kind === 'button') {
+      const btn = link.buttons.find((b) => b.id === id);
+      if (!btn) return;
+      updateLink({
+        buttons: [...bumpedButtons, { ...btn, id: `${now}`, order: insertOrder, label: (btn.label || '') + ' (cópia)' }],
+        blocks: bumpedBlocks,
+      });
+    } else {
+      const block = link.blocks.find((b) => b.id === id);
+      if (!block) return;
+      updateLink({
+        buttons: bumpedButtons,
+        blocks: [...bumpedBlocks, { ...block, id: `${now}`, order: insertOrder }],
+      });
+    }
+  }, [link, updateLink]);
+
   // Block operations
   const { addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
     useBlockOperations({ link, updateLink, setLink });
@@ -275,6 +304,7 @@ export default function LinkEditor() {
             onUpdateLink={updateLink}
             onMoveBlock={moveBlock}
             onRemoveItem={removeItem}
+            onDuplicateItem={duplicateItem}
           />
 
           {/* Mobile: drawer (hidden on lg) */}

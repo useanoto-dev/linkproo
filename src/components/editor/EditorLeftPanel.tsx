@@ -88,6 +88,7 @@ interface EditorLeftPanelProps {
   onUpdateLink: (updates: Partial<SmartLink>) => void;
   onMoveBlock: (id: string, direction: 'up' | 'down') => void;
   onRemoveItem: (id: string, kind: 'button' | 'block') => void;
+  onDuplicateItem: (id: string, kind: 'button' | 'block') => void;
 }
 
 // ─── Sortable Item ────────────────────────────────────────────────────────────
@@ -193,7 +194,7 @@ function SortableBlockItem({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem }: EditorLeftPanelProps) {
+export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem, onDuplicateItem }: EditorLeftPanelProps) {
   const [infoOpen, setInfoOpen] = useState(false);
 
   const openDrawer = useEditorStore((s) => s.ui.openDrawer);
@@ -213,44 +214,6 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
   const selectPanel = useCallback((panel: 'theme' | 'effects' | 'pages' | 'elements') => {
     setUI({ openDrawer: panel, selectedElementId: null });
   }, [setUI]);
-
-  const duplicateItem = useCallback((id: string, kind: 'button' | 'block') => {
-    const now = Date.now();
-
-    // Find original item order so the duplicate lands right below it
-    const allItems = getUnifiedItems(link);
-    const original = allItems.find((i) => i.id === id);
-    if (!original) return;
-
-    const insertOrder = (original.data.order ?? 0) + 1;
-
-    // Shift every item that sits at or after the insert position
-    const bumpedButtons = link.buttons.map((b) =>
-      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
-    );
-    const bumpedBlocks = link.blocks.map((b) =>
-      (b.order ?? 0) >= insertOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
-    );
-
-    if (kind === 'button') {
-      const btn = link.buttons.find((b) => b.id === id);
-      if (!btn) return;
-      onUpdateLink({
-        buttons: [
-          ...bumpedButtons,
-          { ...btn, id: `${now}`, order: insertOrder, label: (btn.label || '') + ' (cópia)' },
-        ],
-        blocks: bumpedBlocks,
-      });
-    } else {
-      const block = link.blocks.find((b) => b.id === id);
-      if (!block) return;
-      onUpdateLink({
-        buttons: bumpedButtons,
-        blocks: [...bumpedBlocks, { ...block, id: `${now}`, order: insertOrder }],
-      });
-    }
-  }, [link, onUpdateLink]);
 
   // Build grouped block list
   const unifiedItems = useMemo(() => getUnifiedItems(link), [link]);
@@ -417,7 +380,7 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem 
                       onSelect={selectItem}
                       onMoveBlock={onMoveBlock}
                       onRemoveItem={onRemoveItem}
-                      onDuplicate={duplicateItem}
+                      onDuplicate={onDuplicateItem}
                     />
                   ))}
                 </div>
