@@ -15,6 +15,13 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${(alpha / 100).toFixed(2)})`;
 }
 
+function applyIntensity(style: CSSProperties, intensity: number): CSSProperties {
+  if (intensity >= 100) return style;
+  const frac = (intensity / 100).toFixed(2);
+  const existingFilter = (style.filter as string) || '';
+  return { ...style, filter: `opacity(${frac})${existingFilter ? ` ${existingFilter}` : ''}` };
+}
+
 function getBgBoxStyle(box: TextBgBox): CSSProperties {
   return {
     display: "inline-block",
@@ -38,11 +45,18 @@ interface BusinessInfoProps {
 
 export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtextClass }: BusinessInfoProps) {
   // Resolve effects once — undefined when no effect is selected
-  const nameEffect = link.businessNameEffect
+  const nameEffectDef = link.businessNameEffect
     ? TEXT_EFFECTS.find((e) => e.key === link.businessNameEffect)
     : undefined;
-  const tagEffect = link.taglineEffect
+  const nameEffect = nameEffectDef
+    ? { ...nameEffectDef, style: applyIntensity(nameEffectDef.style, link.businessNameEffectIntensity ?? 100) }
+    : undefined;
+
+  const tagEffectDef = link.taglineEffect
     ? TEXT_EFFECTS.find((e) => e.key === link.taglineEffect)
+    : undefined;
+  const tagEffect = tagEffectDef
+    ? { ...tagEffectDef, style: applyIntensity(tagEffectDef.style, link.taglineEffectIntensity ?? 100) }
     : undefined;
 
   return (

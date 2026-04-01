@@ -259,8 +259,10 @@ export interface SmartLink {
   taglineWidth?: number;          // % de largura, 30-100, default 100
   businessNameBgBox?: TextBgBox;  // caixa de fundo configurável atrás do nome
   taglineBgBox?: TextBgBox;       // caixa de fundo configurável atrás do slogan
-  businessNameEffect?: string;    // chave de efeito de texto (te-glass, te-neon, etc.)
-  taglineEffect?: string;         // chave de efeito de texto para o slogan
+  businessNameEffect?: string;          // chave de efeito de texto (te-glass, te-neon, etc.)
+  businessNameEffectIntensity?: number; // 0–100, default 100
+  taglineEffect?: string;               // chave de efeito de texto para o slogan
+  taglineEffectIntensity?: number;      // 0–100, default 100
   entryAnimation?: EntryAnimation;
   snowEffect?: SnowEffect;
   bubblesEffect?: BubblesEffect;

@@ -68,7 +68,9 @@ export interface SmartLinkRow {
     businessNameBgBox?: unknown;
     taglineBgBox?: unknown;
     businessNameEffect?: unknown;
+    businessNameEffectIntensity?: unknown;
     taglineEffect?: unknown;
+    taglineEffectIntensity?: unknown;
   } | null;
   buttons?: unknown;
   pages?: unknown;
@@ -146,7 +148,9 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     businessNameBgBox: (row.bg_effects?.businessNameBgBox as TextBgBox | undefined) ?? undefined,
     taglineBgBox: (row.bg_effects?.taglineBgBox as TextBgBox | undefined) ?? undefined,
     businessNameEffect: (row.bg_effects?.businessNameEffect as string | undefined) ?? undefined,
+    businessNameEffectIntensity: (row.bg_effects?.businessNameEffectIntensity as number | undefined) ?? undefined,
     taglineEffect: (row.bg_effects?.taglineEffect as string | undefined) ?? undefined,
+    taglineEffectIntensity: (row.bg_effects?.taglineEffectIntensity as number | undefined) ?? undefined,
     titleColor: row.title_color ?? undefined,
     taglineColor: row.tagline_color ?? undefined,
     taglineFontSize: row.tagline_font_size ? Number(row.tagline_font_size) : undefined,
@@ -242,7 +246,9 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
       businessNameBgBox: link.businessNameBgBox ?? null,
       taglineBgBox: link.taglineBgBox ?? null,
       businessNameEffect: link.businessNameEffect ?? null,
+      businessNameEffectIntensity: link.businessNameEffectIntensity ?? null,
       taglineEffect: link.taglineEffect ?? null,
+      taglineEffectIntensity: link.taglineEffectIntensity ?? null,
     }),
   };
 }
