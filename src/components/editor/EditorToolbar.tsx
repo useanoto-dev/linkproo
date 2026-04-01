@@ -37,31 +37,34 @@ export function EditorToolbar({
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-card shrink-0 overflow-x-auto custom-scroll min-w-0">
-      {(
-        [
-          { key: 'elements' as const, icon: Layers, label: 'Elementos' },
-          { key: 'theme' as const, icon: Palette, label: 'Tema' },
-          { key: 'effects' as const, icon: Sparkles, label: 'Efeitos' },
-          { key: 'pages' as const, icon: FileText, label: 'Páginas' },
-        ] as const
-      ).map(({ key, icon: Icon, label }) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => setUI({ openDrawer: openDrawer === key ? null : key })}
-          className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
-            openDrawer === key
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30'
-          }`}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
+      {/* Mobile-only: drawer buttons (hidden on lg where sidebar is always visible) */}
+      <div className="flex items-center gap-1 lg:hidden">
+        {(
+          [
+            { key: 'elements' as const, icon: Layers, label: 'Elementos' },
+            { key: 'theme' as const, icon: Palette, label: 'Tema' },
+            { key: 'effects' as const, icon: Sparkles, label: 'Efeitos' },
+            { key: 'pages' as const, icon: FileText, label: 'Páginas' },
+          ] as const
+        ).map(({ key, icon: Icon, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setUI({ openDrawer: openDrawer === key ? null : key })}
+            className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap shrink-0 ${
+              openDrawer === key
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        ))}
+      </div>
 
       {/* Undo / Redo */}
-      <div className="flex items-center gap-0.5 ml-1">
+      <div className="flex items-center gap-0.5">
         <button
           type="button"
           onClick={undo}

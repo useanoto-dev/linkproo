@@ -1,15 +1,12 @@
-import { motion } from 'framer-motion';
-import { EyeOff, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { SmartLinkPreview } from '@/components/SmartLinkPreview';
 import { SubPagePreview } from '@/components/SubPagePreview';
 import { DeviceFrame, DeviceType, DEVICE_LABELS } from '@/components/editor/DeviceFrame';
 import { SmartLink } from '@/types/smart-link';
 import { useEditorStore } from '@/stores/editor-store';
-import { useIsMobile } from '@/hooks/use-mobile';
 import {
   EDITOR_PREVIEW_SCALE,
   EDITOR_PREVIEW_SCALE_OFFSET_PX,
-  EDITOR_PREVIEW_PANEL_WIDTH,
 } from '@/lib/editor-constants';
 
 export interface EditorPreviewProps {
@@ -35,34 +32,15 @@ export function EditorPreview({
   const ghostBlockType = useEditorStore((s) => s.ui.ghostBlockType);
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
   const setUI = useEditorStore((s) => s.setUI);
-  const isMobile = useIsMobile();
 
   const subPage = editingSubPageId
     ? (link.pages || []).find((p) => p.id === editingSubPageId)
     : null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 16 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 16 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
-      style={{ width: isMobile ? '100%' : EDITOR_PREVIEW_PANEL_WIDTH }}
-      className={`shrink-0 border-l border-border flex flex-col items-center justify-center overflow-hidden relative ${
-        isMobile
-          ? 'fixed inset-0 z-50 bg-background'
-          : 'bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]'
-      }`}
+    <div
+      className="flex-1 min-w-0 flex flex-col items-center justify-center overflow-hidden relative bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]"
     >
-      {isMobile && (
-        <button
-          type="button"
-          onClick={() => setUI({ showPreview: false })}
-          className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-secondary border border-border cursor-pointer"
-        >
-          <EyeOff className="h-4 w-4" />
-        </button>
-      )}
 
       {/* Header: status dot + label + device picker */}
       <div className="flex items-center justify-between w-full mb-5 px-5">
@@ -160,6 +138,6 @@ export function EditorPreview({
           Editando sub-página
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

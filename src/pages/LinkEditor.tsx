@@ -1,16 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { BlockEditor } from '@/components/editor/BlockEditor';
 import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { EditorDrawer } from '@/components/editor/EditorDrawer';
 import { EditorPreview } from '@/components/editor/EditorPreview';
+import { EditorLeftPanel } from '@/components/editor/EditorLeftPanel';
+import { EditorRightPanel } from '@/components/editor/EditorRightPanel';
 import { ShortcutsModal } from '@/components/editor/ShortcutsModal';
-import { SmartLink, BlockType } from '@/types/smart-link';
-import { Eye, PanelRightClose, ArrowLeft, FileText } from 'lucide-react';
+import { SmartLink, BlockType, LinkBlock, SmartLinkButton } from '@/types/smart-link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { templates } from '@/data/templates';
 import { useSaveLink, useLink } from '@/hooks/use-links';
@@ -18,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { validateSlug, checkSlugAvailability } from '@/lib/slug-utils';
 import { useEditorStore } from '@/stores/editor-store';
 import { useBlockOperations } from '@/hooks/use-block-operations';
+import { getUnifiedItems } from '@/components/editor/blocks/unified-items';
 import { registerAutosaveSubscriber, flushAutosave, retryAutosave } from '@/stores/autosave-subscriber';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -52,7 +51,6 @@ export default function LinkEditor() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const templateId = searchParams.get('template');
-  const isMobile = useIsMobile();
   const { user } = useAuth();
 
   const isEditing = !!id;
@@ -68,7 +66,6 @@ export default function LinkEditor() {
   const updatePreviewLink = useEditorStore((s) => s.updatePreviewLink);
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
-  const showPreview = useEditorStore((s) => s.ui.showPreview);
   const openDrawer = useEditorStore((s) => s.ui.openDrawer);
   const editingSubPageId = useEditorStore((s) => s.ui.editingSubPageId);
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
@@ -76,6 +73,31 @@ export default function LinkEditor() {
 
   const [initialized, setInitialized] = useState(!isEditing);
   const dragTypeRef = useRef<BlockType | null>(null);
+
+  // ─── Block operations ──────────────────────────────────────────────────────
+
+  const moveBlock = useCallback((id: string, direction: 'up' | 'down') => {
+    const items = getUnifiedItems(link);
+    const idx = items.findIndex((item) => item.id === id);
+    if (idx < 0) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= items.length) return;
+    const swapped = [...items];
+    [swapped[idx], swapped[targetIdx]] = [swapped[targetIdx], swapped[idx]];
+    const withOrders = swapped.map((item, i) => ({ ...item, data: { ...item.data, order: i } }));
+    const newButtons = withOrders.filter((i) => i.kind === 'button').map((i) => i.data as SmartLinkButton);
+    const newBlocks = withOrders.filter((i) => i.kind === 'block').map((i) => i.data as LinkBlock);
+    updateLink({ buttons: newButtons, blocks: newBlocks });
+  }, [link, updateLink]);
+
+  const removeItem = useCallback((id: string, kind: 'button' | 'block') => {
+    if (kind === 'button') {
+      updateLink({ buttons: link.buttons.filter((b) => b.id !== id) });
+    } else {
+      updateLink({ blocks: link.blocks.filter((b) => b.id !== id) });
+    }
+    if (selectedElementId === id) setUI({ selectedElementId: null });
+  }, [link, updateLink, selectedElementId, setUI]);
 
   // Block operations
   const { insertBlockAt, addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
@@ -96,8 +118,6 @@ export default function LinkEditor() {
     return () => { if (previewTimerRef.current) clearTimeout(previewTimerRef.current); };
   }, [link, updatePreviewLink]);
 
-  // Mobile: hide preview
-  useEffect(() => { if (isMobile) setUI({ showPreview: false }); }, [isMobile, setUI]);
 
   // Autosave
   const isExistingLink = isEditing || !link.id?.startsWith('new-');
@@ -237,92 +257,50 @@ export default function LinkEditor() {
 
   // ─── main render ──────────────────────────────────────────────────────────
 
-  const subPage = editingSubPageId ? (link.pages || []).find((p) => p.id === editingSubPageId) : null;
-
   return (
     <DashboardLayout title="Editor de Link" noPadding>
-      <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden relative">
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
 
-        <EditorDrawer link={link} onUpdateLink={updateLink} onAddBlock={addBlock} />
+        {/* Top toolbar */}
+        <EditorToolbar
+          autosaveStatus={autosave.status} savedAt={autosave.savedAt}
+          onRetryAutosave={retryAutosave} onSave={handleSave}
+          isSavePending={saveLink.isPending} isExistingLink={isExistingLink}
+        />
 
-        {/* Center panel */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-background">
-          <EditorToolbar
-            autosaveStatus={autosave.status} savedAt={autosave.savedAt}
-            onRetryAutosave={retryAutosave} onSave={handleSave}
-            isSavePending={saveLink.isPending} isExistingLink={isExistingLink}
+        {/* 3-zone body */}
+        <div className="flex flex-1 overflow-hidden min-h-0">
+
+          {/* Zone 1: Left panel (desktop) */}
+          <EditorLeftPanel
+            link={link}
+            onUpdateLink={updateLink}
+            onMoveBlock={moveBlock}
+            onRemoveItem={removeItem}
           />
-          <div
-            className="flex-1 overflow-y-auto custom-scroll p-4 lg:p-6"
-            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
-            onPointerDown={() => { if (openDrawer) setUI({ openDrawer: null, editingSubPageId: null }); }}
-          >
-            <div className={`mx-auto ${showPreview ? 'max-w-3xl' : 'max-w-2xl'}`}>
-              {subPage ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                    <button
-                      type="button"
-                      onClick={() => { setUI({ editingSubPageId: null }); if (openDrawer !== 'pages') setUI({ openDrawer: 'pages' }); }}
-                      className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5" />Páginas
-                    </button>
-                    <div className="w-px h-4 bg-border shrink-0" />
-                    <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="text-sm font-semibold text-foreground truncate">{subPage.title}</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{subPage.blocks.length} blocos</span>
-                  </div>
-                  <BlockEditor
-                    link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt}
-                    subPageMode={{
-                      page: subPage,
-                      onUpdatePage: (updates) => updateSubPage(editingSubPageId, updates),
-                      onAddBlock: (type, defaults) => addBlockToSubPage(editingSubPageId, type, defaults),
-                      onInsertBlockAt: (type, atIndex, defaults) => insertBlockToSubPageAt(editingSubPageId, type, atIndex, defaults),
-                    }}
-                  />
-                </div>
-              ) : (
-                <BlockEditor
-                  link={link} onUpdateLink={updateLink} onInsertBlockAt={insertBlockAt}
-                  selectedElementId={selectedElementId ?? undefined}
-                  onElementSelected={(id) => setUI({ selectedElementId: id })}
-                />
-              )}
-            </div>
-          </div>
+
+          {/* Mobile: drawer (hidden on lg) */}
+          <EditorDrawer link={link} onUpdateLink={updateLink} onAddBlock={addBlock} />
+
+          {/* Zone 2: Preview (center, always visible) */}
+          <EditorPreview
+            previewLink={previewLink} link={link}
+            onDragOver={handlePreviewDragOver} onDragEnter={handlePreviewDragEnter}
+            onDragLeave={handlePreviewDragLeave} onDrop={handlePreviewDrop}
+          />
+
+          {/* Zone 3: Properties panel (desktop) */}
+          <EditorRightPanel
+            link={link}
+            onUpdateLink={updateLink}
+            onAddBlock={addBlock}
+            updateSubPage={updateSubPage}
+            addBlockToSubPage={addBlockToSubPage}
+            insertBlockToSubPageAt={insertBlockToSubPageAt}
+          />
         </div>
 
-        {/* Right preview panel */}
-        <AnimatePresence>
-          {showPreview && (
-            <EditorPreview
-              previewLink={previewLink} link={link}
-              onDragOver={handlePreviewDragOver} onDragEnter={handlePreviewDragEnter}
-              onDragLeave={handlePreviewDragLeave} onDrop={handlePreviewDrop}
-            />
-          )}
-        </AnimatePresence>
-
         <ShortcutsModal />
-
-        {/* Preview toggle FAB */}
-        <button
-          type="button"
-          onClick={() => setUI({ showPreview: !showPreview })}
-          className={`fixed z-50 shadow-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer select-none ${
-            isMobile
-              ? 'bottom-6 right-6 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-primary/30'
-              : 'bottom-6 right-6 h-10 px-4 rounded-xl bg-card border border-border text-foreground text-xs font-medium gap-2 hover:bg-secondary'
-          }`}
-        >
-          {showPreview ? (
-            <><PanelRightClose className="h-4 w-4" />{!isMobile && <span>Fechar Preview</span>}</>
-          ) : (
-            <><Eye className="h-4 w-4" />{!isMobile && <span>Preview</span>}</>
-          )}
-        </button>
       </div>
     </DashboardLayout>
   );

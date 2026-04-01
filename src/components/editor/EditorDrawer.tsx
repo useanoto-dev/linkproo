@@ -49,6 +49,7 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
 
   return (
     <AnimatePresence>
+      {/* Scrim — mobile only */}
       {openDrawer && isMobile && (
         <motion.div
           key="drawer-scrim"
@@ -61,7 +62,8 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
           onClick={closeDrawer}
         />
       )}
-      {openDrawer && (
+      {/* Drawer panel — mobile only (desktop uses fixed sidebars) */}
+      {openDrawer && isMobile && (
         <motion.div
           role="dialog"
           aria-modal="true"
@@ -70,7 +72,7 @@ export function EditorDrawer({ link, onUpdateLink, onAddBlock }: EditorDrawerPro
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -320, opacity: 0 }}
           transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className={`absolute left-0 top-0 bottom-0 z-40 ${isMobile ? 'w-full' : 'w-[320px]'} bg-card border-r border-border shadow-lg flex flex-col`}
+          className="absolute left-0 top-0 bottom-0 z-40 w-full bg-card border-r border-border shadow-lg flex flex-col"
         >
           <div className="flex items-center justify-between p-3 border-b border-border bg-secondary/30">
             <div className="flex items-center gap-2">

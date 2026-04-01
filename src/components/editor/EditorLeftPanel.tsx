@@ -1,0 +1,274 @@
+import { useState, useMemo, useCallback } from "react";
+import { SmartLink } from "@/types/smart-link";
+import { useEditorStore } from "@/stores/editor-store";
+import {
+  Palette, Sparkles, FileText, Plus, ChevronDown,
+  Zap, MousePointerClick, ImagePlus, Heading, Type,
+  Image as ImageIcon, Video, Images, GalleryHorizontal, Code,
+  MessageSquare, Timer, Star, BarChart3, ShoppingBag,
+  Mail, Megaphone, Users, Music, MapPin, HelpCircle,
+  Award, Space, Minus as MinusIcon, Trash2, ArrowUp, ArrowDown,
+  Info,
+} from "lucide-react";
+import { getUnifiedItems, UnifiedItem } from "./blocks/unified-items";
+import { BLOCK_LABELS } from "./blocks/constants";
+import { BlockType } from "@/types/smart-link";
+import type React from "react";
+
+// ─── Block type → icon ────────────────────────────────────────────────────────
+
+const BLOCK_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'animated-button': Zap, 'button': MousePointerClick, 'image-button': ImagePlus,
+  'header': Heading, 'text': Type, 'image': ImageIcon, 'video': Video,
+  'gallery': Images, 'carousel': GalleryHorizontal, 'html': Code,
+  'cta': MessageSquare, 'countdown': Timer, 'testimonial': Star,
+  'stats': BarChart3, 'product': ShoppingBag, 'email-capture': Mail,
+  'banner': Megaphone, 'contacts': Users, 'spotify': Music,
+  'map': MapPin, 'faq': HelpCircle, 'badges': Award,
+  'spacer': Space, 'separator': MinusIcon,
+};
+
+const BLOCK_CATEGORY: Record<string, string> = {
+  'animated-button': 'BOTÕES', 'button': 'BOTÕES', 'image-button': 'BOTÕES',
+  'header': 'TEXTO', 'text': 'TEXTO',
+  'image': 'MÍDIA', 'video': 'MÍDIA', 'gallery': 'MÍDIA',
+  'carousel': 'MÍDIA', 'html': 'MÍDIA',
+  'cta': 'CONVERSÃO', 'countdown': 'CONVERSÃO', 'testimonial': 'CONVERSÃO',
+  'stats': 'CONVERSÃO', 'product': 'CONVERSÃO', 'email-capture': 'CONVERSÃO',
+  'banner': 'CONVERSÃO',
+  'contacts': 'SOCIAL', 'spotify': 'SOCIAL', 'map': 'SOCIAL',
+  'faq': 'SOCIAL', 'badges': 'SOCIAL',
+  'spacer': 'LAYOUT', 'separator': 'LAYOUT',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'BOTÕES': 'text-pink-400', 'TEXTO': 'text-purple-400', 'MÍDIA': 'text-blue-400',
+  'CONVERSÃO': 'text-green-400', 'SOCIAL': 'text-orange-400', 'LAYOUT': 'text-gray-400',
+};
+
+const CATEGORY_ORDER = ['BOTÕES', 'TEXTO', 'MÍDIA', 'CONVERSÃO', 'SOCIAL', 'LAYOUT'];
+
+function getItemCategory(item: UnifiedItem): string {
+  if (item.kind === 'button') return 'BOTÕES';
+  return BLOCK_CATEGORY[(item.data as { type: string }).type] || 'OUTROS';
+}
+
+function getItemLabel(item: UnifiedItem): string {
+  if (item.kind === 'button') return (item.data as { label?: string }).label || 'Botão';
+  const block = item.data as { content?: string; animButtonLabel?: string; type: string };
+  if (block.content) return block.content.replace(/<[^>]+>/g, '').slice(0, 22) || BLOCK_LABELS[block.type as BlockType] || block.type;
+  if (block.animButtonLabel) return (block.animButtonLabel as string).slice(0, 22);
+  return BLOCK_LABELS[block.type as BlockType] || block.type;
+}
+
+function getItemIcon(item: UnifiedItem): React.ComponentType<{ className?: string }> {
+  if (item.kind === 'button') return MousePointerClick;
+  return BLOCK_ICONS[(item.data as { type: string }).type] || Code;
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
+
+interface EditorLeftPanelProps {
+  link: SmartLink;
+  onUpdateLink: (updates: Partial<SmartLink>) => void;
+  onMoveBlock: (id: string, direction: 'up' | 'down') => void;
+  onRemoveItem: (id: string, kind: 'button' | 'block') => void;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem }: EditorLeftPanelProps) {
+  const [infoOpen, setInfoOpen] = useState(false);
+
+  const openDrawer = useEditorStore((s) => s.ui.openDrawer);
+  const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
+  const setUI = useEditorStore((s) => s.setUI);
+
+  const selectItem = useCallback((id: string) => {
+    setUI({ selectedElementId: id, openDrawer: null });
+  }, [setUI]);
+
+  const selectPanel = useCallback((panel: 'theme' | 'effects' | 'pages' | 'elements') => {
+    setUI({ openDrawer: panel, selectedElementId: null });
+  }, [setUI]);
+
+  // Build grouped block list
+  const unifiedItems = useMemo(() => getUnifiedItems(link), [link]);
+
+  const groupedItems = useMemo(() => {
+    const groups = new Map<string, UnifiedItem[]>();
+    for (const item of unifiedItems) {
+      const cat = getItemCategory(item);
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(item);
+    }
+    // Sort groups by defined order
+    const ordered = new Map<string, UnifiedItem[]>();
+    for (const cat of CATEGORY_ORDER) {
+      if (groups.has(cat)) ordered.set(cat, groups.get(cat)!);
+    }
+    for (const [cat, items] of groups) {
+      if (!ordered.has(cat)) ordered.set(cat, items);
+    }
+    return ordered;
+  }, [unifiedItems]);
+
+  const navItems = [
+    { key: 'theme' as const, icon: Palette, label: 'Tema' },
+    { key: 'effects' as const, icon: Sparkles, label: 'Efeitos' },
+    { key: 'pages' as const, icon: FileText, label: 'Páginas' },
+  ];
+
+  return (
+    <div className="hidden lg:flex w-[180px] shrink-0 h-full flex-col border-r border-border bg-secondary/10">
+
+      {/* ── Info do Negócio ──────────────────────────── */}
+      <div className="shrink-0 border-b border-border/50">
+        <button
+          type="button"
+          onClick={() => setInfoOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-2.5 h-9 hover:bg-secondary/30 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-1.5">
+            <Info className="h-3 w-3 text-primary shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-wide text-foreground">Info</span>
+          </div>
+          <ChevronDown
+            className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${infoOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+
+        {infoOpen && (
+          <div className="border-t border-border/30 p-2 space-y-1.5">
+            <input
+              value={link.businessName || ''}
+              onChange={(e) => onUpdateLink({ businessName: e.target.value })}
+              placeholder="Nome do negócio"
+              className="w-full h-6 px-2 text-[10px] bg-background border border-border rounded outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+            />
+            <input
+              value={link.tagline || ''}
+              onChange={(e) => onUpdateLink({ tagline: e.target.value })}
+              placeholder="Slogan"
+              className="w-full h-6 px-2 text-[10px] bg-background border border-border rounded outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+            />
+            <input
+              value={link.slug || ''}
+              onChange={(e) => onUpdateLink({ slug: e.target.value })}
+              placeholder="meu-link"
+              className="w-full h-6 px-2 text-[9px] bg-background border border-border rounded outline-none focus:border-primary/50 text-foreground placeholder:text-muted-foreground font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setInfoOpen(false);
+                setUI({ openDrawer: null, selectedElementId: '__business-info__' });
+              }}
+              className="text-[9px] text-primary hover:underline w-full text-right cursor-pointer"
+            >
+              Mais opções →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Nav: Tema / Efeitos / Páginas ────────────── */}
+      <div className="shrink-0 border-b border-border/50 p-1.5 space-y-0.5">
+        {navItems.map(({ key, icon: Icon, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => selectPanel(key)}
+            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
+              openDrawer === key
+                ? 'bg-primary/15 text-primary border border-primary/25'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+            }`}
+          >
+            <Icon className="h-3 w-3 shrink-0" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Elementos header ─────────────────────────── */}
+      <div className="flex items-center justify-between px-2.5 pt-2 pb-1 shrink-0">
+        <span className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground/60">Elementos</span>
+        <button
+          type="button"
+          onClick={() => selectPanel('elements')}
+          title="Adicionar elemento"
+          className="h-4 w-4 flex items-center justify-center rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+        >
+          <Plus className="h-3 w-3" />
+        </button>
+      </div>
+
+      {/* ── Block list ───────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto custom-scroll pb-2 min-h-0">
+        {groupedItems.size === 0 ? (
+          <div className="px-2.5 py-4 text-center space-y-1">
+            <p className="text-[10px] text-muted-foreground/50">Nenhum elemento.</p>
+            <p className="text-[9px] text-muted-foreground/35">Clique em + para adicionar.</p>
+          </div>
+        ) : (
+          Array.from(groupedItems.entries()).map(([cat, items]) => (
+            <div key={cat}>
+              <p className={`px-2.5 pt-2 pb-0.5 text-[8px] font-bold uppercase tracking-widest ${CATEGORY_COLORS[cat] || 'text-muted-foreground'}`}>
+                {cat}
+              </p>
+              {items.map((item) => {
+                const Icon = getItemIcon(item);
+                const isSelected = selectedElementId === item.id;
+                const label = getItemLabel(item);
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => selectItem(item.id)}
+                    className={`group relative flex items-center gap-1.5 px-2 h-8 cursor-pointer select-none transition-colors ${
+                      isSelected
+                        ? 'bg-primary/12 border-l-2 border-primary text-foreground'
+                        : 'hover:bg-secondary/30 border-l-2 border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className={`h-3 w-3 shrink-0 ${isSelected ? 'text-primary' : ''}`} />
+                    <span className="flex-1 text-[10px] truncate">
+                      {label}
+                    </span>
+                    {/* Actions on hover */}
+                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'up'); }}
+                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
+                        title="Mover para cima"
+                      >
+                        <ArrowUp className="h-2.5 w-2.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onMoveBlock(item.id, 'down'); }}
+                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-secondary/60 transition-colors"
+                        title="Mover para baixo"
+                      >
+                        <ArrowDown className="h-2.5 w-2.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onRemoveItem(item.id, item.kind); }}
+                        className="h-4 w-4 flex items-center justify-center rounded hover:bg-destructive/20 hover:text-destructive transition-colors"
+                        title="Remover"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
