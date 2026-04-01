@@ -7,9 +7,10 @@ interface Props {
   colorState: ColorState;
   setColorState: React.Dispatch<React.SetStateAction<ColorState>>;
   onUpdate: (id: string, updates: Partial<SmartLinkButton>) => void;
+  onApplyToAll?: () => void;
 }
 
-export function ButtonColorsSection({ button, colorState, setColorState, onUpdate }: Props) {
+export function ButtonColorsSection({ button, colorState, setColorState, onUpdate, onApplyToAll }: Props) {
   if (button.buttonStyle !== undefined && button.buttonStyle !== "card" && button.buttonStyle !== "pill") {
     return null;
   }
@@ -130,6 +131,16 @@ export function ButtonColorsSection({ button, colorState, setColorState, onUpdat
             Aplicar degradê
           </button>
         </div>
+      )}
+
+      {onApplyToAll && (
+        <button
+          type="button"
+          onClick={onApplyToAll}
+          className="w-full h-8 rounded-lg text-[11px] font-medium border border-border/60 hover:bg-secondary/60 transition-colors text-muted-foreground hover:text-foreground mt-1"
+        >
+          Aplicar cor a todos os botões
+        </button>
       )}
     </div>
   );

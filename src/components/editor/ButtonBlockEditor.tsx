@@ -15,6 +15,7 @@ interface ButtonBlockEditorProps {
   onUpdate: (id: string, updates: Partial<SmartLinkButton>) => void;
   onRemove: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  onApplyColorToAll?: () => void;
   dragHandleProps?: Record<string, any>;
   pages?: SubPage[];
 }
@@ -25,6 +26,7 @@ export const ButtonBlockEditor = React.memo(function ButtonBlockEditor({
   onUpdate,
   onRemove,
   onDuplicate,
+  onApplyColorToAll,
   dragHandleProps,
   pages = [],
 }: ButtonBlockEditorProps) {
@@ -138,6 +140,7 @@ export const ButtonBlockEditor = React.memo(function ButtonBlockEditor({
                 colorState={colorState}
                 setColorState={setColorState}
                 onUpdate={onUpdate}
+                onApplyToAll={onApplyColorToAll}
               />
               <ButtonStyleSection button={button} onUpdate={onUpdate} />
               <ButtonDestinationSection button={button} onUpdate={onUpdate} pages={pages} />

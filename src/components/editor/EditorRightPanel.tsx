@@ -165,6 +165,12 @@ function ButtonEditorContent({
     [link.buttons, link.blocks, onUpdateLink]
   );
 
+  const onApplyColorToAll = useCallback(() => {
+    const color = button.gradientColor;
+    if (!color) return;
+    onUpdateLink({ buttons: link.buttons.map((b) => ({ ...b, gradientColor: color })) });
+  }, [button.gradientColor, link.buttons, onUpdateLink]);
+
   const idx = link.buttons.findIndex((b) => b.id === button.id);
 
   return (
@@ -174,6 +180,7 @@ function ButtonEditorContent({
       onUpdate={onUpdate}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
+      onApplyColorToAll={onApplyColorToAll}
       pages={link.pages}
     />
   );
