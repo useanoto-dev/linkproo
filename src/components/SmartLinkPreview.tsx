@@ -18,9 +18,10 @@ interface SmartLinkPreviewProps {
   selectedId?: string;
   ghostBlockType?: BlockType;
   onSelectElement?: (id: string) => void;
+  onContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
-export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement }: SmartLinkPreviewProps) {
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement, onContextMenu }: SmartLinkPreviewProps) {
   const buttons = link.buttons ?? [];
   const blocks = link.blocks ?? [];
   const hasContent = link.businessName || link.heroImage || buttons.length > 0 || blocks.length > 0;
@@ -134,6 +135,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
               <div
                 key={itemId}
                 onClick={onSelectElement ? (e) => { e.stopPropagation(); onSelectElement(itemId); } : undefined}
+                onContextMenu={onContextMenu ? (e) => { e.preventDefault(); e.stopPropagation(); onContextMenu(e, itemId); } : undefined}
                 style={isSelected
                   ? { outline: '2px solid #6366f1', outlineOffset: '3px', borderRadius: '12px', cursor: 'pointer', transition: 'outline 0.15s ease' }
                   : onSelectElement ? { cursor: 'pointer' } : undefined}

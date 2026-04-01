@@ -16,6 +16,7 @@ export interface EditorPreviewProps {
   onDragEnter: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
+  onElementContextMenu?: (e: React.MouseEvent, id: string) => void;
 }
 
 export function EditorPreview({
@@ -25,6 +26,7 @@ export function EditorPreview({
   onDragEnter,
   onDragLeave,
   onDrop,
+  onElementContextMenu,
 }: EditorPreviewProps) {
   const device = useEditorStore((s) => s.ui.device);
   const editingSubPageId = useEditorStore((s) => s.ui.editingSubPageId);
@@ -104,6 +106,7 @@ export function EditorPreview({
                 onSelectElement={(id) => {
                   setUI({ selectedElementId: id, openDrawer: null });
                 }}
+                onContextMenu={onElementContextMenu}
               />
             )}
           </DeviceFrame>
