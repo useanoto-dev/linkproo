@@ -105,6 +105,7 @@ interface SortableBlockItemProps {
 function SortableBlockItem({
   item, isSelected, onSelect, onMoveBlock, onRemoveItem, onDuplicate,
 }: SortableBlockItemProps) {
+  const setUI = useEditorStore((s) => s.setUI);
   const {
     attributes,
     listeners,
@@ -130,6 +131,11 @@ function SortableBlockItem({
       ref={setNodeRef}
       style={style}
       onClick={() => onSelect(item.id)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setUI({ contextMenu: { x: e.clientX, y: e.clientY, itemId: item.id, itemKind: item.kind } });
+      }}
       className={`group relative flex items-center gap-1 px-1 h-8 cursor-pointer select-none transition-colors ${
         isSelected
           ? 'bg-primary/12 border-l-2 border-primary text-foreground'
@@ -244,6 +250,7 @@ export function EditorLeftPanel({ link, onUpdateLink, onMoveBlock, onRemoveItem,
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
+    setUI({ contextMenu: null });
     if (!over || active.id === over.id) return;
 
     const fromIdx = flatDisplayItems.findIndex((i) => i.id === active.id);
