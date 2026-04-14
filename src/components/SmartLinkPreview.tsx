@@ -33,15 +33,25 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
   const [openPageId, setOpenPageId] = useState<string | null>(null);
   const openPage = (link.pages || []).find((p) => p.id === openPageId) || null;
 
-  // Key to force remount and replay animations when animation type changes
+  // Key to force remount and replay animations when the user explicitly changes
+  // the animation type for the SAME link. Resets silently when a different link
+  // is loaded (link.id changes) so that store-state transitions during editor
+  // init (createDefaultLink → existingLink) never trigger phantom replays.
   const [animKey, setAnimKey] = useState(0);
   const prevAnimRef = useRef(entryAnim);
+  const prevLinkIdRef = useRef(link.id);
   useEffect(() => {
+    if (prevLinkIdRef.current !== link.id) {
+      // Different link — sync refs without incrementing animKey
+      prevLinkIdRef.current = link.id;
+      prevAnimRef.current = entryAnim;
+      return;
+    }
     if (prevAnimRef.current !== entryAnim) {
       prevAnimRef.current = entryAnim;
       setAnimKey((k) => k + 1);
     }
-  }, [entryAnim]);
+  }, [entryAnim, link.id]);
 
   const isBioMode = link.headerStyle === 'bio' && !!link.heroImage;
   const textClass = dark ? "text-white" : "text-gray-900";

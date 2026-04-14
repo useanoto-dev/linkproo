@@ -76,7 +76,19 @@ export const BlockRenderer = memo(function BlockRenderer({
 
   if (block.type === "image-button") {
     if (!block.buttonImageUrl || imgBtnError) {
-      if (!isNewLink) return null;
+      // Keep the same height as a loaded image-button so the layout doesn't
+      // shift (causing the "space growing/shrinking" flicker) while the retry
+      // timer is counting down.  New links still show the editor placeholder.
+      if (!isNewLink) {
+        return (
+          <div className="px-4 pb-2">
+            <div
+              className="rounded-2xl bg-white/5"
+              style={{ minHeight: `${block.buttonHeight ?? 148}px` }}
+            />
+          </div>
+        );
+      }
       return <EmptyBlockPlaceholder icon={ImagePlus} label="Adicione uma imagem no editor" />;
     }
     const isPageBlock = !!block.blockPageId;

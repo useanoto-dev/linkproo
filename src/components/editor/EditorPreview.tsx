@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { SmartLinkPreview } from '@/components/SmartLinkPreview';
 import { SubPagePreview } from '@/components/SubPagePreview';
@@ -34,6 +35,13 @@ export function EditorPreview({
   const ghostBlockType = useEditorStore((s) => s.ui.ghostBlockType);
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
   const setUI = useEditorStore((s) => s.setUI);
+
+  // Stable callback — prevents SmartLinkPreview.memo from busting on every
+  // autosave-status re-render (autosave cycles through 3 status values,
+  // each triggering a LinkEditor re-render that propagates here).
+  const handleSelectElement = useCallback((id: string) => {
+    setUI({ selectedElementId: id, openDrawer: null });
+  }, [setUI]);
 
   const subPage = editingSubPageId
     ? (link.pages || []).find((p) => p.id === editingSubPageId)
@@ -103,9 +111,7 @@ export function EditorPreview({
                 link={previewLink}
                 selectedId={selectedElementId ?? undefined}
                 ghostBlockType={ghostBlockType ?? undefined}
-                onSelectElement={(id) => {
-                  setUI({ selectedElementId: id, openDrawer: null });
-                }}
+                onSelectElement={handleSelectElement}
                 onContextMenu={onElementContextMenu}
               />
             )}
