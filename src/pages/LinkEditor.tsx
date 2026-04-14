@@ -11,7 +11,6 @@ import { SmartLink, BlockType, LinkBlock, SmartLinkButton } from '@/types/smart-
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { templates } from '@/data/templates';
 import { useSaveLink, useLink } from '@/hooks/use-links';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateSlug, checkSlugAvailability } from '@/lib/slug-utils';
@@ -32,7 +31,8 @@ function createDefaultLink(): SmartLink {
   };
 }
 
-function createFromTemplate(templateId: string): SmartLink | null {
+async function createFromTemplate(templateId: string): Promise<SmartLink | null> {
+  const { templates } = await import('@/data/templates');
   const tpl = templates.find((t) => t.id === templateId);
   if (!tpl) return null;
   const now = Date.now();
@@ -152,8 +152,11 @@ export default function LinkEditor() {
 
   // Initialize store on first mount
   useEffect(() => {
-    const initialLink = templateId ? createFromTemplate(templateId) ?? createDefaultLink() : createDefaultLink();
-    resetLink(initialLink);
+    if (templateId) {
+      createFromTemplate(templateId).then((link) => resetLink(link ?? createDefaultLink()));
+    } else {
+      resetLink(createDefaultLink());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -306,7 +309,7 @@ export default function LinkEditor() {
 
   return (
     <DashboardLayout title="Editor de Link" noPadding>
-      <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
 
         {/* Top toolbar */}
         <EditorToolbar
