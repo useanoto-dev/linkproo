@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { LinkBlock, ContactItem } from "@/types/smart-link";
 import { recordClick } from "@/hooks/use-links";
+import type { EntryVariants } from "./preview-utils";
 
 interface ContactsBlockProps {
   block: LinkBlock;
@@ -9,6 +10,7 @@ interface ContactsBlockProps {
   subtextClass: string;
   delay: number;
   linkId: string;
+  entryVariants: EntryVariants;
 }
 
 function ContactCard({
@@ -62,7 +64,7 @@ function ContactCard({
   );
 }
 
-export function ContactsBlock({ block, accent, textClass, subtextClass, delay, linkId }: ContactsBlockProps) {
+export function ContactsBlock({ block, accent, textClass, subtextClass, delay, linkId, entryVariants: ev }: ContactsBlockProps) {
   const contacts: ContactItem[] = block.contactsList || [];
   const mode = block.contactsMode || 1;
   const visible = contacts.slice(0, mode);
@@ -72,9 +74,9 @@ export function ContactsBlock({ block, accent, textClass, subtextClass, delay, l
   return (
     <motion.div
       className="px-4 py-3"
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
+      initial={ev.initial}
+      animate={ev.animate}
+      transition={ev.transition}
     >
       {mode === 1 ? (
         <div className="flex justify-center">

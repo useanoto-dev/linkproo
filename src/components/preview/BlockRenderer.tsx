@@ -125,7 +125,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "header" && block.content) {
     return (
       <motion.div className={`px-5 py-3 flex items-center gap-2 ${textClass}`}
-        initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay, duration: 0.5 }}
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}
         style={{ color: block.blockTextColor || undefined, textAlign: block.blockTextAlign || undefined }}>
         {block.emoji && <span className="text-xl">{block.emoji}</span>}
         <h2 className="text-base font-bold">{block.content}</h2>
@@ -136,7 +136,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "image" && block.imageUrl && !imgBlockError) {
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <img src={block.imageUrl} alt={block.content || 'Imagem de destaque'} loading="lazy" onError={handleImgBlockError} className="w-full object-cover shadow-md" style={{ borderRadius: `${block.borderRadius ?? 12}px` }} />
       </motion.div>
     );
@@ -151,7 +151,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     if (!embedUrl) return null;
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div className="relative w-full rounded-2xl overflow-hidden shadow-md" style={{ paddingBottom: "56.25%" }}>
           <iframe src={embedUrl} className="absolute inset-0 w-full h-full"
             sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
@@ -170,7 +170,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "badges" && block.badges && block.badges.length > 0) {
     return (
       <motion.div className="flex justify-center gap-5 px-5 py-4 flex-wrap"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         {block.badges.map((badge, bi) => (
           <motion.div key={badge.id} className="flex flex-col items-center gap-1.5"
             initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
@@ -191,8 +191,8 @@ export const BlockRenderer = memo(function BlockRenderer({
         <motion.div
           className={`rounded-2xl p-5 shadow-md text-center ${dark ? "bg-white/10 backdrop-blur-sm" : "bg-white"}`}
           style={{ borderWidth: 2, borderColor: accent + "40", textAlign: block.blockTextAlign || undefined }}
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay, duration: 0.5 }} whileHover={{ y: -2, boxShadow: `0 8px 25px ${accent}20` }}>
+          initial={bev.initial} animate={bev.animate}
+          transition={bev.transition} whileHover={{ y: -2, boxShadow: `0 8px 25px ${accent}20` }}>
           <h3 className="font-bold text-sm mb-1.5 leading-tight" style={{ color: block.blockTextColor || accent }}>{block.content}</h3>
           {block.subtitle && <p className={`text-[11px] leading-relaxed ${subtextClass}`}>{block.subtitle}</p>}
         </motion.div>
@@ -203,7 +203,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "text" && block.content) {
     return (
       <motion.div className={`px-5 py-2.5 text-xs leading-relaxed ${subtextClass}`}
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay, duration: 0.5 }}
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}
         style={{ color: block.blockTextColor || undefined, textAlign: block.blockTextAlign || "center" }}>
         <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.content || '', {
           ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'p', 'span', 'ul', 'ol', 'li'],
@@ -217,20 +217,20 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "separator") {
     return (
       <motion.div className="px-6 py-3"
-        initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} transition={{ delay, duration: 0.4 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div className="h-px" style={{ backgroundColor: accent + "30" }} />
       </motion.div>
     );
   }
 
   if (block.type === "countdown" && block.countdownDate) {
-    return <CountdownBlock date={block.countdownDate} label={block.countdownLabel} accent={accent} dark={dark} delay={delay} />;
+    return <CountdownBlock date={block.countdownDate} label={block.countdownLabel} accent={accent} dark={dark} delay={delay} entryVariants={bev} />;
   }
 
   if (block.type === "faq" && block.faqItems && block.faqItems.length > 0) {
     return (
       <motion.div className="px-4 py-2 space-y-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         {block.faqItems.map((fItem) => (
           <FaqAccordionItem key={fItem.id} item={fItem} accent={accent} dark={dark} />
         ))}
@@ -243,7 +243,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     return (
       <>
         <motion.div className="px-4 py-2"
-          initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+          initial={bev.initial} animate={bev.animate} transition={bev.transition}>
           <div className={`grid gap-1.5 ${cols}`}>
             {block.galleryImages.map((img, gi) => (
               <motion.div key={img.id} className="w-full aspect-square rounded-xl shadow-sm overflow-hidden"
@@ -292,7 +292,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     const stars = block.testimonialRating ?? 5;
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div className={`rounded-2xl p-4 shadow-sm ${dark ? "bg-white/10 backdrop-blur-sm border border-white/10" : "bg-white border border-gray-100 shadow-md"}`}>
           <div className="flex gap-0.5 mb-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -322,7 +322,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "stats" && block.statItems && block.statItems.length > 0) {
     return (
       <motion.div className="px-4 py-3"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div className={`flex justify-around gap-2 rounded-2xl p-4 ${dark ? "bg-white/10 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
           {block.statItems.map((stat, si) => (
             <motion.div key={stat.id} className="text-center"
@@ -340,7 +340,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   if (block.type === "product" && block.productName) {
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div className={`rounded-2xl overflow-hidden shadow-md ${dark ? "bg-white/10 border border-white/10" : "bg-white border border-gray-100"}`}>
           {block.productImage && (
             <img src={block.productImage} alt={block.productName || 'Imagem do produto'} loading="lazy" className="w-full h-40 object-cover" />
@@ -377,7 +377,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   }
 
   if (block.type === "email-capture") {
-    return <EmailCaptureBlock block={block} accent={accent} dark={dark} textClass={textClass} delay={delay} linkId={linkId} />;
+    return <EmailCaptureBlock block={block} accent={accent} dark={dark} textClass={textClass} delay={delay} linkId={linkId} entryVariants={bev} />;
   }
 
   if (block.type === "spotify" && block.spotifyUrl) {
@@ -386,7 +386,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     const height = block.spotifyCompact ? 80 : 152;
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <iframe
           src={embedUrl}
           width="100%"
@@ -406,13 +406,13 @@ export const BlockRenderer = memo(function BlockRenderer({
       if (!isNewLink) return null;
       return <EmptyBlockPlaceholder icon={MapPin} label="Adicione um endereço no editor" />;
     }
-    return <MapBlock block={block} accent={accent} dark={dark} textClass={textClass} delay={delay} linkId={linkId} isNewLink={isNewLink} />;
+    return <MapBlock block={block} accent={accent} dark={dark} textClass={textClass} delay={delay} linkId={linkId} isNewLink={isNewLink} entryVariants={bev} />;
   }
 
   if (block.type === "html" && block.htmlContent) {
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <FreeHtmlBlock htmlContent={block.htmlContent} fixedHeight={block.htmlHeight || undefined} />
       </motion.div>
     );
@@ -429,7 +429,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     };
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <AnimatedButtonBlock
           block={block}
           dark={dark}
@@ -446,7 +446,7 @@ export const BlockRenderer = memo(function BlockRenderer({
     const bannerTextColor = block.blockTextColor || "white";
     return (
       <motion.div className="px-4 py-2"
-        initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.4 }}>
+        initial={bev.initial} animate={bev.animate} transition={bev.transition}>
         <div
           className="rounded-2xl px-4 py-4 text-center shadow-lg relative overflow-hidden flex flex-col items-center gap-1"
           style={{ background: bg, minHeight: 80 }}
@@ -473,7 +473,7 @@ export const BlockRenderer = memo(function BlockRenderer({
   }
 
   if (block.type === "contacts") {
-    return <ContactsBlock block={block} accent={accent} textClass={textClass} subtextClass={subtextClass} delay={delay} linkId={linkId} />;
+    return <ContactsBlock block={block} accent={accent} textClass={textClass} subtextClass={subtextClass} delay={delay} linkId={linkId} entryVariants={bev} />;
   }
 
   // Legacy block types — intentionally hidden, no editor UI

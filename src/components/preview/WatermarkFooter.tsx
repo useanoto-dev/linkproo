@@ -20,7 +20,7 @@ export function WatermarkFooter({ link, dark, accent }: WatermarkFooterProps) {
       className="px-5 pb-6 pt-4 text-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 0.8, duration: 0.5 }}
+      transition={{ duration: 0.25 }}
     >
       <a
         href={link.watermarkUrl || "https://wa.me/5599984389747?text=Ol%C3%A1%2C+quero+criar+meu+Link+Pro%21"}

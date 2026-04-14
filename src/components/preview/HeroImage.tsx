@@ -23,7 +23,7 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
   if (!link.heroImage || imgError || !isValidImageUrl(link.heroImage)) return null;
 
   // Clamp height defensively — saved data may have extreme values from legacy or direct edits
-  const heightPx: number = Math.min(Math.max(link.heroImageHeightPx ?? 200, MIN_HEIGHT), MAX_HEIGHT);
+  const heightPx: number = Math.min(Math.max(link.heroImageHeightPx ?? 160, MIN_HEIGHT), MAX_HEIGHT);
   const objectFit = link.heroObjectFit ?? 'cover';
   const objectPos = link.heroFocalPoint
     ? `${link.heroFocalPoint.x}% ${link.heroFocalPoint.y}%`

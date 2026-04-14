@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import type { EntryVariants } from "./preview-utils";
 
 function useCountdown(targetDate: string, isVisible: boolean) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -28,9 +29,10 @@ interface CountdownBlockProps {
   accent: string;
   dark: boolean;
   delay: number;
+  entryVariants: EntryVariants;
 }
 
-export function CountdownBlock({ date, label, accent, dark, delay }: CountdownBlockProps) {
+export function CountdownBlock({ date, label, accent, dark, delay, entryVariants: ev }: CountdownBlockProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true); // default true for initial render
 
@@ -56,9 +58,9 @@ export function CountdownBlock({ date, label, accent, dark, delay }: CountdownBl
     <motion.div
       ref={containerRef}
       className="px-4 py-3"
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5 }}
+      initial={ev.initial}
+      animate={ev.animate}
+      transition={ev.transition}
     >
       {label && (
         <p className={`text-center text-xs font-semibold mb-2 ${dark ? "text-white/70" : "text-gray-600"}`}>

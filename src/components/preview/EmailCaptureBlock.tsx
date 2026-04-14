@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { LinkBlock } from "@/types/smart-link";
 import { saveEmailCapture } from "@/hooks/use-email-captures";
 import { toast } from "sonner";
+import type { EntryVariants } from "./preview-utils";
 
 interface EmailCaptureBlockProps {
   block: LinkBlock;
@@ -11,10 +12,11 @@ interface EmailCaptureBlockProps {
   textClass: string;
   delay: number;
   linkId: string;
+  entryVariants: EntryVariants;
 }
 
 export const EmailCaptureBlock = memo(function EmailCaptureBlock({
-  block, accent, dark, textClass, delay, linkId
+  block, accent, dark, textClass, delay, linkId, entryVariants: ev
 }: EmailCaptureBlockProps) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -44,7 +46,7 @@ export const EmailCaptureBlock = memo(function EmailCaptureBlock({
 
   return (
     <motion.div className="px-4 py-2"
-      initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+      initial={ev.initial} animate={ev.animate} transition={ev.transition}>
       <div className={`rounded-2xl p-4 space-y-2 ${dark ? "bg-white/10 border border-white/10" : "bg-white border border-gray-100 shadow-sm"}`}>
         {block.content && <p className={`text-xs font-semibold text-center ${textClass}`}>{block.content}</p>}
         <input

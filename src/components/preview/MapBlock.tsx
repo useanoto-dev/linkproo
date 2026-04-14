@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { LinkBlock } from "@/types/smart-link";
 import { getMapEmbedUrl, isShortMapLink } from "@/components/preview/preview-utils";
+import type { EntryVariants } from "@/components/preview/preview-utils";
 import { recordClick } from "@/hooks/use-links";
 
 interface MapBlockProps {
@@ -11,9 +12,10 @@ interface MapBlockProps {
   delay: number;
   linkId: string;
   isNewLink: boolean;
+  entryVariants: EntryVariants;
 }
 
-export function MapBlock({ block, accent, dark, textClass, delay, linkId, isNewLink }: MapBlockProps) {
+export function MapBlock({ block, accent, dark, textClass, delay, linkId, isNewLink, entryVariants: ev }: MapBlockProps) {
   // Priority: address field generates embed directly
   const addressEmbed = block.mapAddress
     ? `https://maps.google.com/maps?q=${encodeURIComponent(block.mapAddress)}&output=embed&hl=pt-BR`
@@ -26,7 +28,7 @@ export function MapBlock({ block, accent, dark, textClass, delay, linkId, isNewL
 
   return (
     <motion.div className="px-4 py-2"
-      initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.5 }}>
+      initial={ev.initial} animate={ev.animate} transition={ev.transition}>
       {embedUrl ? (
         <div>
           <div className="rounded-2xl overflow-hidden shadow-md" style={{ height: block.mapHeight ?? 220 }}>

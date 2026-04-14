@@ -37,7 +37,7 @@ export function ThemeBannerSection({
         <div className="space-y-3 p-3 rounded-xl bg-secondary/20 border border-border/40">
           <SliderRow
             label="Altura"
-            value={link.heroImageHeightPx ?? 192}
+            value={link.heroImageHeightPx ?? 160}
             min={80}
             max={500}
             step={4}
