@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 import { SmartLink } from "@/types/smart-link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,7 +42,7 @@ export function useLinks() {
 export function useLink(id?: string) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["link", id],
+    queryKey: ["links", "detail", id],
     queryFn: async () => {
       if (!id || !user) return null;
       const { data, error } = await supabase
@@ -57,36 +58,47 @@ export function useLink(id?: string) {
   });
 }
 
-/** Fetch public link by slug (no auth needed) */
+/** Fetch public link by slug (no auth needed) — single RPC call */
 export function usePublicLink(slug?: string) {
   return useQuery({
     queryKey: ["public-link", slug],
     queryFn: async () => {
       if (!slug) return null;
-      const { data, error } = await supabase
+
+      // Single RPC: returns link + owner plan in one round-trip.
+      // Falls back to two-call approach if RPC is unavailable (e.g. local dev
+      // without migration applied).
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc("get_public_link_with_plan", { p_slug: slug });
+
+      if (!rpcError && rpcData && typeof rpcData === "object") {
+        const { link, owner_plan } = rpcData as { link: Record<string, unknown>; owner_plan: string };
+        if (link) return rowToSmartLink(link as Parameters<typeof rowToSmartLink>[0], 0, 0, owner_plan ?? "free");
+      }
+
+      // ── Fallback: sequential calls (used when RPC not yet deployed) ──
+      const { data: linkData, error: linkError } = await supabase
         .from("links")
         .select("*")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
-      if (error) throw error;
-      if (!data) return null;
 
-      // Busca o plano em paralelo — não bloqueia o render do link
+      if (linkError) throw linkError;
+      if (!linkData) return null;
+
       let ownerPlan = "free";
       try {
         const { data: plan, error: planError } = await supabase
-          .rpc("get_link_owner_plan", { _user_id: data.user_id });
+          .rpc("get_link_owner_plan", { _user_id: linkData.user_id });
         if (!planError && typeof plan === "string") ownerPlan = plan;
-      } catch {
-        // Erro de rede — padrão é "free" (exibe marca d'água)
-      }
+      } catch { /* default to free */ }
 
-      return rowToSmartLink(data, 0, 0, ownerPlan);
+      return rowToSmartLink(linkData, 0, 0, ownerPlan);
     },
     enabled: !!slug,
-    staleTime: 0,               // sempre refetch ao montar — evita dados stale após salvar
-    gcTime: 1000 * 60 * 5,     // 5 min no cache
+    staleTime: 1000 * 60 * 2,  // 2 minutos de cache
+    gcTime: 1000 * 60 * 10,    // 10 min no garbage collector
   });
 }
 
@@ -142,8 +154,8 @@ export function useSaveLink() {
       }
     },
     onSuccess: () => {
+      // ["links"] prefix covers ["links"], ["links","detail",id] and ["links","stats",uid]
       queryClient.invalidateQueries({ queryKey: ["links"] });
-      queryClient.invalidateQueries({ queryKey: ["link"] });
       queryClient.invalidateQueries({ queryKey: ["public-link"] });
     },
     onError: (err: Error) => {
@@ -240,22 +252,40 @@ export function useDuplicateLink() {
 
 // ─── Analytics Helpers ──────────────────────────────────────
 
-/** Record a view */
+/** Record a view — deduplicated per session with a 30-minute TTL */
 export async function recordView(linkId: string) {
   try {
+    const key = `lp-viewed-${linkId}`;
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      const ts = parseInt(stored, 10);
+      // TTL: 30 minutos
+      if (Date.now() - ts < 30 * 60 * 1000) return;
+    }
+    sessionStorage.setItem(key, String(Date.now()));
+
     await supabase.from("link_views").insert({
       link_id: linkId,
       referrer: (document.referrer || "").slice(0, 500),
       device: /Mobile/i.test(navigator.userAgent) ? "mobile" : "desktop",
     });
   } catch (err) {
-    console.error("[analytics] recordView failed:", err);
+    logger.error("[analytics] recordView failed:", err);
   }
 }
 
-/** Record a click (optionally with button_id for per-button analytics) */
+/** Record a click — deduplicated per button with a 5-second TTL (evita duplo-clique) */
 export async function recordClick(linkId: string, buttonId?: string) {
   try {
+    const key = `lp-clicked-${linkId}-${buttonId ?? ""}`;
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      const ts = parseInt(stored, 10);
+      // TTL: 5 segundos (evita duplo-clique, mas não impede cliques legítimos)
+      if (Date.now() - ts < 5 * 1000) return;
+    }
+    sessionStorage.setItem(key, String(Date.now()));
+
     const payload: TablesInsert<"link_clicks"> = {
       link_id: linkId,
       referrer: (document.referrer || "").slice(0, 500),
@@ -264,46 +294,40 @@ export async function recordClick(linkId: string, buttonId?: string) {
     if (buttonId) payload.button_id = buttonId;
     await supabase.from("link_clicks").insert(payload);
   } catch (err) {
-    console.error("[analytics] recordClick failed:", err);
+    logger.error("[analytics] recordClick failed:", err);
   }
 }
 
-/** Get aggregated analytics stats for user's links */
+/** Get aggregated analytics stats for user's links — single RPC round-trip. */
 export function useLinkStats() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["link-stats", user?.id],
+    queryKey: ["links", "stats", user?.id],
     queryFn: async () => {
       if (!user) return { totalViews: 0, totalClicks: 0, totalLinks: 0, activeLinks: 0 };
 
-      const { data: links } = await supabase
-        .from("links")
-        .select("id, is_active")
-        .eq("user_id", user.id);
+      const { data, error } = await supabase.rpc("get_user_link_stats");
 
-      if (!links || links.length === 0) {
-        return { totalViews: 0, totalClicks: 0, totalLinks: 0, activeLinks: 0 };
+      if (!error && data && data.length > 0) {
+        const row = data[0] as { total_views: number; total_clicks: number; total_links: number; active_links: number };
+        return {
+          totalViews:  Number(row.total_views)  || 0,
+          totalClicks: Number(row.total_clicks) || 0,
+          totalLinks:  Number(row.total_links)  || 0,
+          activeLinks: Number(row.active_links) || 0,
+        };
       }
 
-      const linkIds = links.map((l) => l.id);
-
-      const [{ count: viewCount }, { count: clickCount }] = await Promise.all([
-        supabase
-          .from("link_views")
-          .select("*", { count: "exact", head: true })
-          .in("link_id", linkIds),
-        supabase
-          .from("link_clicks")
-          .select("*", { count: "exact", head: true })
-          .in("link_id", linkIds),
+      // Fallback for local dev without migration applied
+      const { data: links } = await supabase
+        .from("links").select("id, is_active").eq("user_id", user.id);
+      if (!links || links.length === 0) return { totalViews: 0, totalClicks: 0, totalLinks: 0, activeLinks: 0 };
+      const ids = links.map((l) => l.id);
+      const [{ count: vc }, { count: cc }] = await Promise.all([
+        supabase.from("link_views").select("*", { count: "exact", head: true }).in("link_id", ids),
+        supabase.from("link_clicks").select("*", { count: "exact", head: true }).in("link_id", ids),
       ]);
-
-      return {
-        totalViews: viewCount || 0,
-        totalClicks: clickCount || 0,
-        totalLinks: links.length,
-        activeLinks: links.filter((l) => l.is_active).length,
-      };
+      return { totalViews: vc || 0, totalClicks: cc || 0, totalLinks: links.length, activeLinks: links.filter((l) => l.is_active).length };
     },
     enabled: !!user,
   });

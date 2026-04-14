@@ -2,12 +2,13 @@ import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { SmartLinkButton } from "@/types/smart-link";
 import { recordClick } from "@/hooks/use-links";
+import type { EntryVariants } from "@/components/preview/preview-utils";
 
 interface ButtonPreviewProps {
   btn: SmartLinkButton;
   accent: string;
   linkId: string;
-  entryVariants: { initial: any; animate: any; transition: any };
+  entryVariants: EntryVariants;
   onOpenPage?: (pageId: string) => void;
 }
 
@@ -273,6 +274,8 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
             <img
               src={btn.imageUrl}
               alt=""
+              loading="lazy"
+              decoding="async"
               onError={() => setBtnImgError(true)}
               className={`absolute ${imgPos === "left" ? "left-0" : "right-0"} top-0 h-full object-cover`}
               style={{
@@ -314,13 +317,9 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
           )}
         </div>
         {btn.iconEmoji && (
-          <motion.span
-            className="absolute -top-3 -left-2 text-3xl drop-shadow-xl z-30 pointer-events-none"
-            animate={{ y: [0, -3, 0], rotate: [0, 5, -5, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
+          <span className="absolute -top-3 -left-2 text-3xl drop-shadow-xl z-30 pointer-events-none animate-float-emoji">
             {btn.iconEmoji}
-          </motion.span>
+          </span>
         )}
       </motion.a>
     </div>

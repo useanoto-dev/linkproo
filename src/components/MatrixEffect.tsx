@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isMobileDevice, canvasFrameInterval } from "@/lib/device-utils";
 
 interface Props { speed: number; color: string; }
 
@@ -70,9 +71,13 @@ export function MatrixEffect({ speed, color }: Props) {
       delay: number;
     }
 
+    const isMobile = isMobileDevice();
+    const frameInterval = canvasFrameInterval(isMobile);
+
     let columns: Column[] = [];
     const initCols = () => {
-      const numCols = Math.max(1, Math.floor((w || 400) / FONT_SIZE));
+      const rawCols = Math.max(1, Math.floor((w || 400) / FONT_SIZE));
+      const numCols = isMobile ? Math.floor(rawCols * 0.5) : rawCols;
       columns = Array.from({ length: numCols }, (_, i) => ({
         x: i * FONT_SIZE,
         headY: -Math.random() * (h || 800),
@@ -84,7 +89,11 @@ export function MatrixEffect({ speed, color }: Props) {
     };
     initCols();
 
-    const draw = () => {
+    let lastFrame = 0;
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+      if (frameInterval > 0 && now - lastFrame < frameInterval) return;
+      lastFrame = now;
       ctx.clearRect(0, 0, w, h);
       ctx.font = `${FONT_SIZE}px monospace`;
 
@@ -118,7 +127,6 @@ export function MatrixEffect({ speed, color }: Props) {
         });
       }
 
-      animRef.current = requestAnimationFrame(draw);
     };
 
     animRef.current = requestAnimationFrame(draw);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isMobileDevice, canvasFrameInterval } from "@/lib/device-utils";
 
 interface Props { intensity: number; color: string; }
 
@@ -51,8 +52,10 @@ export function BubblesEffect({ intensity, color }: Props) {
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
-    const isMobile = window.innerWidth < 600;
-    const count = Math.max(5, Math.floor((intensity / 100) * (isMobile ? 18 : 35)));
+    const isMobile = isMobileDevice();
+    const frameInterval = canvasFrameInterval(isMobile);
+    const effectiveIntensity = isMobile ? Math.floor(intensity * 0.5) : intensity;
+    const count = Math.max(5, Math.floor((effectiveIntensity / 100) * 35));
 
     interface Bubble { x: number; y: number; r: number; speed: number; sway: number; swaySpd: number; swayPhase: number; opacity: number; }
     const hexRgb = (hex: string) => {
@@ -71,7 +74,11 @@ export function BubblesEffect({ intensity, color }: Props) {
       opacity: 0.35 + Math.random() * 0.45,
     }));
 
-    const draw = () => {
+    let lastFrame = 0;
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+      if (frameInterval > 0 && now - lastFrame < frameInterval) return;
+      lastFrame = now;
       ctx.clearRect(0, 0, w, h);
       for (const b of bubbles) {
         b.swayPhase += b.swaySpd;
@@ -91,7 +98,6 @@ export function BubblesEffect({ intensity, color }: Props) {
         ctx.fillStyle = `rgba(${rgb.r},${rgb.g},${rgb.b},${b.opacity * 0.55})`;
         ctx.fill();
       }
-      animRef.current = requestAnimationFrame(draw);
     };
 
     animRef.current = requestAnimationFrame(draw);

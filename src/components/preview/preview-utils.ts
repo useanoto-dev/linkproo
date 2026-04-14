@@ -1,5 +1,13 @@
+import type { TargetAndTransition, Transition } from "framer-motion";
 import { EntryAnimation } from "@/types/smart-link";
 import { getCustomBgGradient } from "@/lib/color-utils";
+
+/** Typed shape returned by getEntryVariants and consumed by ButtonPreview / BlockRenderer. */
+export type EntryVariants = {
+  initial: TargetAndTransition;
+  animate: TargetAndTransition;
+  transition: Transition;
+};
 
 export function isDarkBg(bg: string) {
   if (!bg) return false;
@@ -98,11 +106,17 @@ export function loadGoogleFont(font: string) {
   const linkEl = document.createElement("link");
   linkEl.id = id;
   linkEl.rel = "stylesheet";
-  linkEl.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s/g, "+")}:wght@300;400;500;600;700;800&display=swap`;
+  linkEl.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s/g, "+")}:wght@400;700&display=swap`;
   document.head.appendChild(linkEl);
 }
 
-export function getEntryVariants(anim: EntryAnimation, delay: number) {
+export function getEntryVariants(anim: EntryAnimation, delay: number): EntryVariants {
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    return { initial: {}, animate: {}, transition: { duration: 0 } as const };
+  }
   const base = { delay, duration: 0.5 };
   switch (anim) {
     case "none":

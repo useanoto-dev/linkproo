@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isMobileDevice, canvasFrameInterval } from "@/lib/device-utils";
 
 interface Props { count: number; color: string; shooting: boolean; }
 
@@ -63,8 +64,12 @@ export function StarsEffect({ count, color, shooting }: Props) {
     let stars: Star[] = [];
     let shooters: Shooter[] = [];
 
+    const isMobile = isMobileDevice();
+    const frameInterval = canvasFrameInterval(isMobile);
+    const effectiveCount = isMobile ? Math.floor(count * 0.5) : count;
+
     const initStars = () => {
-      stars = Array.from({ length: count }, () => ({
+      stars = Array.from({ length: effectiveCount }, () => ({
         x: Math.random() * (w || 400),
         y: Math.random() * (h || 800),
         r: 0.8 + Math.random() * 2.5,
@@ -76,8 +81,12 @@ export function StarsEffect({ count, color, shooting }: Props) {
     initStars();
 
     let shootTimer = 0;
+    let lastFrame = 0;
 
-    const draw = () => {
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+      if (frameInterval > 0 && now - lastFrame < frameInterval) return;
+      lastFrame = now;
       ctx.clearRect(0, 0, w, h);
 
       // Twinkling stars
@@ -125,7 +134,6 @@ export function StarsEffect({ count, color, shooting }: Props) {
         }
       }
 
-      animRef.current = requestAnimationFrame(draw);
     };
 
     animRef.current = requestAnimationFrame(draw);

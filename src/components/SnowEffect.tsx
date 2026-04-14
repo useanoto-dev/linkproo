@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isMobileDevice, canvasFrameInterval } from "@/lib/device-utils";
 
 interface SnowEffectProps {
   intensity: number; // 5-100
@@ -62,7 +63,8 @@ export function SnowEffect({ intensity, color }: SnowEffectProps) {
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
     // Reduce particle count on mobile to prevent CPU starvation
-    const isMobile = window.innerWidth < 600;
+    const isMobile = isMobileDevice();
+    const frameInterval = canvasFrameInterval(isMobile);
     const count = Math.max(10, Math.floor((intensity / 100) * (isMobile ? 40 : 80)));
 
     interface Particle {
@@ -83,7 +85,11 @@ export function SnowEffect({ intensity, color }: SnowEffectProps) {
       opacity: 0.3 + Math.random() * 0.5,
     }));
 
-    const draw = () => {
+    let lastFrame = 0;
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+      if (frameInterval > 0 && now - lastFrame < frameInterval) return;
+      lastFrame = now;
       ctx.clearRect(0, 0, w, h);
 
       for (const p of particles) {
@@ -105,7 +111,6 @@ export function SnowEffect({ intensity, color }: SnowEffectProps) {
       }
 
       ctx.globalAlpha = 1;
-      animRef.current = requestAnimationFrame(draw);
     };
 
     animRef.current = requestAnimationFrame(draw);

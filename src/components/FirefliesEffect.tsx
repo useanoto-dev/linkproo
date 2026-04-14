@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isMobileDevice, canvasFrameInterval } from "@/lib/device-utils";
 
 interface Props { count: number; color: string; }
 
@@ -57,15 +58,23 @@ export function FirefliesEffect({ count, color }: Props) {
     };
     const rgb = hexRgb(color);
 
+    const isMobile = isMobileDevice();
+    const frameInterval = canvasFrameInterval(isMobile);
+    const effectiveCount = isMobile ? Math.floor(count * 0.5) : count;
+
     interface Fly { x: number; y: number; vx: number; vy: number; r: number; phase: number; phaseSpd: number; }
-    const flies: Fly[] = Array.from({ length: count }, () => ({
+    const flies: Fly[] = Array.from({ length: effectiveCount }, () => ({
       x: Math.random() * (w || 400), y: Math.random() * (h || 800),
       vx: (-0.5 + Math.random()) * 0.4, vy: (-0.5 + Math.random()) * 0.4,
       r: 3 + Math.random() * 4,
       phase: Math.random() * Math.PI * 2, phaseSpd: 0.018 + Math.random() * 0.028,
     }));
 
-    const draw = () => {
+    let lastFrame = 0;
+    const draw = (now: number) => {
+      animRef.current = requestAnimationFrame(draw);
+      if (frameInterval > 0 && now - lastFrame < frameInterval) return;
+      lastFrame = now;
       ctx.clearRect(0, 0, w, h);
       // Set shadow blur once before the loop (reduced from 20 to 6 for GPU performance)
       ctx.shadowBlur = 6;
@@ -88,7 +97,6 @@ export function FirefliesEffect({ count, color }: Props) {
       }
       // Reset shadow blur after the loop to avoid leaking into other draws
       ctx.shadowBlur = 0;
-      animRef.current = requestAnimationFrame(draw);
     };
 
     animRef.current = requestAnimationFrame(draw);

@@ -31,3 +31,10 @@ dist-ssr
 
 # Generated test coverage reports
 coverage/
+
+# Windows metadata files
+desktop.ini
+Thumbs.db
+
+# Supabase local temp files
+supabase/.temp/

@@ -6,12 +6,16 @@ import { MatrixEffect } from "@/components/MatrixEffect";
 import { StarsEffect } from "@/components/StarsEffect";
 import { BgHtmlEffect } from "@/components/BgHtmlEffect";
 import { FloatingEmoji } from "@/components/preview/FloatingEmoji";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface BackgroundEffectsProps {
   link: SmartLink;
 }
 
 export function BackgroundEffects({ link }: BackgroundEffectsProps) {
+  const reducedMotion = useReducedMotion();
+  if (reducedMotion) return null;
+
   return (
     <>
       {link.bgHtml?.enabled && link.bgHtml.html && (

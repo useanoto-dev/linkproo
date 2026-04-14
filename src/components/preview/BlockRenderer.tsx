@@ -1,11 +1,11 @@
 import { memo, useState, useCallback } from "react";
 import type React from "react";
 import { motion } from "framer-motion";
-import type { TargetAndTransition } from "framer-motion";
 import DOMPurify from "dompurify";
 import { Video, MapPin, ImagePlus } from "lucide-react";
 import { LinkBlock } from "@/types/smart-link";
 import { getVideoEmbedUrl, getSpotifyEmbedUrl } from "./preview-utils";
+import type { EntryVariants } from "./preview-utils";
 import { CountdownBlock } from "./CountdownBlock";
 import { FaqAccordionItem } from "./FaqAccordionItem";
 import { AnimatedButtonBlock } from "./AnimatedButtonBlock";
@@ -35,7 +35,7 @@ interface BlockRendererProps {
   subtextClass: string;
   delay: number;
   linkId: string;
-  entryVariants: { initial: TargetAndTransition; animate: TargetAndTransition; transition: Record<string, unknown> };
+  entryVariants: EntryVariants;
   onOpenPage?: (pageId: string) => void;
 }
 

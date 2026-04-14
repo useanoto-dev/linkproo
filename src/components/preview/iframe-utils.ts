@@ -3,6 +3,25 @@
  * Centralises the postMessage height reporter and srcdoc injection logic.
  */
 
+/**
+ * CSP meta tag injected into every sandboxed iframe srcdoc.
+ * Defense-in-depth on top of the `sandbox` attribute:
+ *  - connect-src 'none'  → embedded page cannot make outbound XHR/fetch calls
+ *  - frame-src 'none'    → prevents recursive iframe nesting
+ *  - All other resources are limited to inline / data: URIs
+ */
+export const CSP_META =
+  `<meta http-equiv="Content-Security-Policy" content="` +
+  `default-src 'none'; ` +
+  `script-src 'unsafe-inline'; ` +
+  `style-src 'unsafe-inline' data:; ` +
+  `img-src data: blob: *; ` +
+  `font-src data: *; ` +
+  `media-src *; ` +
+  `connect-src 'none'; ` +
+  `frame-src 'none';` +
+  `">`;
+
 /** Generates a script tag that reports element height to the parent via postMessage. */
 export function buildHeightReporter(msgId: string, messageType: string): string {
   const id = JSON.stringify(msgId);
@@ -33,18 +52,20 @@ export function buildHeightReporter(msgId: string, messageType: string): string 
   );
 }
 
-/** Injects a style block and reporter script into an HTML document string. */
+/** Injects CSP meta, a style block, and a reporter script into an HTML document string. */
 export function injectIntoHtmlDoc(html: string, style: string, reporter: string): string {
+  // CSP is always first so it takes effect before any other resource is parsed
+  const head = CSP_META + style;
   let doc = html;
 
   if (doc.includes("</head>")) {
-    doc = doc.replace("</head>", style + "</head>");
+    doc = doc.replace("</head>", head + "</head>");
   } else if (/<body[\s>]/i.test(doc)) {
-    doc = doc.replace(/<body[\s>]/i, (m) => style + m);
+    doc = doc.replace(/<body[\s>]/i, (m) => head + m);
   } else if (/^\s*<!|^\s*<html[\s>]/i.test(doc)) {
-    doc = style + doc;
+    doc = head + doc;
   } else {
-    doc = `<html><head>${style}</head><body>${doc}</body></html>`;
+    doc = `<html><head>${head}</head><body>${doc}</body></html>`;
   }
 
   return doc.includes("</body>")

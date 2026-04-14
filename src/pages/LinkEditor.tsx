@@ -72,6 +72,8 @@ export default function LinkEditor() {
 
   const [initialized, setInitialized] = useState(!isEditing);
   const dragTypeRef = useRef<BlockType | null>(null);
+  // Guard against double-invocation of save (e.g. Ctrl+S held down, rapid button clicks)
+  const isSavingRef = useRef(false);
 
   // ─── Block operations ──────────────────────────────────────────────────────
 
@@ -150,12 +152,13 @@ export default function LinkEditor() {
   const { addBlock, updateSubPage, addBlockToSubPage, insertBlockToSubPageAt } =
     useBlockOperations({ link, updateLink, setLink });
 
-  // Initialize store on first mount
+  // Initialize store on first mount.
+  // Always reset synchronously first so the editor never renders stale state
+  // from a previous session while the async template import is in-flight.
   useEffect(() => {
+    resetLink(createDefaultLink());
     if (templateId) {
-      createFromTemplate(templateId).then((link) => resetLink(link ?? createDefaultLink()));
-    } else {
-      resetLink(createDefaultLink());
+      createFromTemplate(templateId).then((tplLink) => resetLink(tplLink ?? createDefaultLink()));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -178,7 +181,7 @@ export default function LinkEditor() {
     if (!user?.id) return;
     const unsubscribe = registerAutosaveSubscriber(user.id);
     return () => {
-      void flushAutosave(); // flush on unmount
+      flushAutosave().catch(() => { /* silent — best-effort on unmount */ });
       unsubscribe();
     };
   }, [user?.id]);
@@ -202,7 +205,7 @@ export default function LinkEditor() {
         e.returnValue = 'Há alterações não salvas. Tem certeza que deseja sair?';
       }
     };
-    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') void flushAutosave(); };
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flushAutosave().catch(() => {}); };
     window.addEventListener('beforeunload', onBeforeUnload);
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
@@ -222,11 +225,13 @@ export default function LinkEditor() {
 
   // Save
   const handleSave = useCallback(async () => {
-    const slugError = validateSlug(link.slug);
-    if (slugError) { toast.error(slugError); return; }
-    const isAvailable = await checkSlugAvailability(link.slug, isEditing ? link.id : undefined);
-    if (!isAvailable) { toast.error('Esse endereço já está em uso. Escolha outro slug.'); return; }
+    if (isSavingRef.current) return; // prevent double invocation
+    isSavingRef.current = true;
     try {
+      const slugError = validateSlug(link.slug);
+      if (slugError) { toast.error(slugError); return; }
+      const isAvailable = await checkSlugAvailability(link.slug, isEditing ? link.id : undefined);
+      if (!isAvailable) { toast.error('Esse endereço já está em uso. Escolha outro slug.'); return; }
       const saved = await saveLink.mutateAsync({ link, isNew: !isEditing });
       setLink(saved, true);
       toast.success('Link salvo com sucesso! 🎉');
@@ -237,6 +242,8 @@ export default function LinkEditor() {
       if (msg.includes('Limite de links')) toast.error('Você atingiu o limite de links do seu plano. Faça upgrade para criar mais!');
       else if (msg.includes('duplicate key') || code === '23505') toast.error('Esse endereço já está em uso. Escolha outro slug.');
       else toast.error('Erro ao salvar: ' + (msg || 'tente novamente'));
+    } finally {
+      isSavingRef.current = false;
     }
   }, [link, isEditing, saveLink, setLink, navigate]);
 

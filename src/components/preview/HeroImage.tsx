@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { SmartLink } from "@/types/smart-link";
+import { getOptimizedUrl } from "@/lib/image-optimization";
 
 interface HeroImageProps {
   link: SmartLink;
@@ -30,8 +31,10 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
       style={link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : undefined}
     >
       <img
-        src={link.heroImage}
+        src={getOptimizedUrl(link.heroImage, 480)}
         alt={link.businessName}
+        width={480}
+        height={heightPx}
         className="w-full"
         loading="eager"
         fetchPriority="high"
