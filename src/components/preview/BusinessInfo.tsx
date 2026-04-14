@@ -106,15 +106,15 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
         {!isBioMode && link.logoUrl && (
           <motion.div
             className="relative inline-block mb-2"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3, type: "spring" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.35, delay: 0.2, ease: "easeOut" }}
           >
             <img
               src={link.logoUrl}
               alt="Logo"
               loading="eager"
-              decoding="async"
+              decoding="sync"
               style={{
                 width: link.logoSizePx ?? 80,
                 height: "auto",

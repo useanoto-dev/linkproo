@@ -234,6 +234,8 @@ export default function LinkEditor() {
       if (!isAvailable) { toast.error('Esse endereço já está em uso. Escolha outro slug.'); return; }
       const saved = await saveLink.mutateAsync({ link, isNew: !isEditing });
       setLink(saved, true);
+      useEditorStore.getState().initAutosaveSnapshot(saved);
+      if (!isEditing) useEditorStore.getState().setAutosaveEnabled(true);
       toast.success('Link salvo com sucesso! 🎉');
       if (!isEditing) navigate(`/links/${saved.id}/edit`, { replace: true });
     } catch (error: unknown) {

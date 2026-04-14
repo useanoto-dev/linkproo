@@ -126,7 +126,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
         {/* Buttons + Blocks */}
         <div key={`items-${animKey}`}>
           {items.map((item, idx) => {
-            const itemDelay = 0.3 + idx * 0.08;
+            const itemDelay = 0.1 + Math.min(idx * 0.04, 0.2);
             const ev = getEntryVariants(entryAnim, itemDelay);
             const itemId = item.data.id;
             const isSelected = selectedId === itemId;

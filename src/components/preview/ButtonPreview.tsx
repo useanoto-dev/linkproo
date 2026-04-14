@@ -274,7 +274,7 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
             <img
               src={btn.imageUrl}
               alt=""
-              loading="lazy"
+              loading="eager"
               decoding="async"
               onError={() => setBtnImgError(true)}
               className={`absolute ${imgPos === "left" ? "left-0" : "right-0"} top-0 h-full object-cover`}
