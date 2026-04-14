@@ -245,6 +245,140 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
     );
   }
 
+  // ── FLAT style ───────────────────────────────────────────────────────────────
+  if (style === "flat") {
+    return (
+      <div className="px-4 pb-3">
+        <motion.a
+          href={isPageLink ? "#" : (btn.url || "#")}
+          target={isPageLink ? undefined : "_blank"}
+          rel={isPageLink ? undefined : "noopener noreferrer"}
+          onClick={handleClick}
+          initial={ev.initial}
+          animate={ev.animate}
+          transition={ev.transition}
+          whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+          className="flex items-center justify-center w-full cursor-pointer transition-opacity duration-200"
+          style={{
+            height: "56px",
+            borderRadius: `${btn.buttonBorderRadius ?? 10}px`,
+            background: primaryColor,
+            color: "#ffffff",
+          }}
+        >
+          {btn.iconEmoji && (
+            <span className="mr-2 text-lg">{btn.iconEmoji}</span>
+          )}
+          <span
+            className="font-bold"
+            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+          >
+            {btn.label || "Botão"}
+          </span>
+          {btn.badgeLabel && (
+            <span
+              className="ml-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-black shadow-md leading-none"
+              style={{ background: btn.badgeColor || "#ef4444" }}
+            >
+              {btn.badgeLabel}
+            </span>
+          )}
+        </motion.a>
+      </div>
+    );
+  }
+
+  // ── NEUBRUTALISM style ──────────────────────────────────────────────────────
+  if (style === "neubrutalism") {
+    return (
+      <div className="px-4 pb-3">
+        <motion.a
+          href={isPageLink ? "#" : (btn.url || "#")}
+          target={isPageLink ? undefined : "_blank"}
+          rel={isPageLink ? undefined : "noopener noreferrer"}
+          onClick={handleClick}
+          initial={ev.initial}
+          animate={ev.animate}
+          transition={ev.transition}
+          whileHover={{ x: -2, y: -2, transition: { duration: 0.1 } }}
+          className="flex items-center justify-center w-full cursor-pointer relative"
+          style={{
+            height: "60px",
+            borderRadius: `${btn.buttonBorderRadius ?? 8}px`,
+            background: primaryColor,
+            color: "#ffffff",
+            border: "2.5px solid #000000",
+            boxShadow: "4px 4px 0px #000000",
+          }}
+        >
+          {btn.iconEmoji && (
+            <span className="mr-2 text-lg">{btn.iconEmoji}</span>
+          )}
+          <span
+            className="font-black"
+            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+          >
+            {btn.label || "Botão"}
+          </span>
+          {btn.subtitle && (
+            <span className="ml-2 text-[11px] opacity-80">· {btn.subtitle}</span>
+          )}
+          {btn.badgeLabel && (
+            <span
+              className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-white text-[9px] font-black leading-none"
+              style={{ background: btn.badgeColor || "#ef4444", border: "1.5px solid #000" }}
+            >
+              {btn.badgeLabel}
+            </span>
+          )}
+        </motion.a>
+      </div>
+    );
+  }
+
+  // ── SOFT style ──────────────────────────────────────────────────────────────
+  if (style === "soft") {
+    return (
+      <div className="px-4 pb-3">
+        <motion.a
+          href={isPageLink ? "#" : (btn.url || "#")}
+          target={isPageLink ? undefined : "_blank"}
+          rel={isPageLink ? undefined : "noopener noreferrer"}
+          onClick={handleClick}
+          initial={ev.initial}
+          animate={ev.animate}
+          transition={ev.transition}
+          whileHover={{ scale: 1.02, transition: { duration: 0.15 } }}
+          className="flex items-center justify-center w-full cursor-pointer transition-all duration-200"
+          style={{
+            height: "56px",
+            borderRadius: `${btn.buttonBorderRadius ?? 16}px`,
+            background: `${primaryColor}18`,
+            color: primaryColor,
+          }}
+        >
+          {btn.iconEmoji && (
+            <span className="mr-2 text-lg">{btn.iconEmoji}</span>
+          )}
+          <span
+            className="font-bold"
+            style={{ fontSize: `${btn.titleSize ?? 14}px` }}
+          >
+            {btn.label || "Botão"}
+          </span>
+          {btn.badgeLabel && (
+            <span
+              className="ml-2 px-1.5 py-0.5 rounded-full text-white text-[9px] font-black shadow-md leading-none"
+              style={{ background: btn.badgeColor || "#ef4444" }}
+            >
+              {btn.badgeLabel}
+            </span>
+          )}
+        </motion.a>
+      </div>
+    );
+  }
+
   // ── CARD style (default) ─────────────────────────────────────────────────────
   return (
     <div className="px-4 pb-3">

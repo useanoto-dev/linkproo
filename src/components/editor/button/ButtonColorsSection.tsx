@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function ButtonColorsSection({ button, colorState, setColorState, onUpdate, onApplyToAll }: Props) {
-  if (button.buttonStyle !== undefined && button.buttonStyle !== "card" && button.buttonStyle !== "pill") {
+  if (button.buttonStyle !== undefined && button.buttonStyle !== "card" && button.buttonStyle !== "pill" && button.buttonStyle !== "flat" && button.buttonStyle !== "neubrutalism" && button.buttonStyle !== "soft") {
     return null;
   }
 

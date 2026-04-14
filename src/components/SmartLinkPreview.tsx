@@ -134,11 +134,14 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
             const selectionWrapper = (children: React.ReactNode) => (
               <div
                 key={itemId}
-                onClick={onSelectElement ? (e) => { e.stopPropagation(); onSelectElement(itemId); } : undefined}
+                onClick={onSelectElement ? (e) => { e.preventDefault(); e.stopPropagation(); onSelectElement(itemId); } : undefined}
                 onContextMenu={onContextMenu ? (e) => { e.preventDefault(); e.stopPropagation(); onContextMenu(e, itemId); } : undefined}
+                className={onSelectElement ? (isSelected ? '' : 'group/sel') : ''}
                 style={isSelected
                   ? { outline: '2px solid #6366f1', outlineOffset: '3px', borderRadius: '12px', cursor: 'pointer', transition: 'outline 0.15s ease' }
-                  : onSelectElement ? { cursor: 'pointer' } : undefined}
+                  : onSelectElement ? { cursor: 'pointer', borderRadius: '12px', outline: '2px solid transparent', outlineOffset: '3px', transition: 'outline-color 0.15s ease' } : undefined}
+                onMouseEnter={onSelectElement && !isSelected ? (e) => { (e.currentTarget as HTMLDivElement).style.outlineColor = 'rgba(99,102,241,0.35)'; } : undefined}
+                onMouseLeave={onSelectElement && !isSelected ? (e) => { (e.currentTarget as HTMLDivElement).style.outlineColor = 'transparent'; } : undefined}
               >
                 {children}
               </div>

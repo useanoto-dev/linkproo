@@ -10,12 +10,24 @@ import { toast } from "sonner";
 import type { LinkTemplate } from "@/data/templates";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 
+// Style-filter category IDs — these cross-cut niches and filter by styleTag
+const STYLE_CATEGORIES = new Set(['minimalistas', 'escuros', 'claros']);
+
 /** Derives a CSS background style for the template card preview area. */
 function getTemplateBgStyle(tpl: LinkTemplate, skipHeroImage = false): React.CSSProperties {
   const { heroImage, backgroundColor, accentColor } = tpl.template;
 
   if (heroImage && !skipHeroImage) {
     return {};
+  }
+
+  // Handle custom: format — "custom:#RRGGBB" or "custom:#RRGGBB:#RRGGBB"
+  if (backgroundColor?.startsWith("custom:")) {
+    const parts = backgroundColor.slice(7).split(":");
+    if (parts.length >= 2) {
+      return { background: `linear-gradient(135deg, ${parts[0]}, ${parts[1]})` };
+    }
+    return { background: parts[0] };
   }
 
   // Map Tailwind gradient classes to hex colours
@@ -76,6 +88,18 @@ function getTemplateBgStyle(tpl: LinkTemplate, skipHeroImage = false): React.CSS
   };
 }
 
+function isDarkBgColor(bg: string | undefined): boolean {
+  if (!bg) return true;
+  if (bg.startsWith("custom:")) {
+    const hex = bg.slice(7).split(":")[0];
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+  }
+  return bg.includes("950") || bg.includes("900") || bg.includes("800") || bg.includes("dark");
+}
+
 interface TemplateCardProps {
   tpl: LinkTemplate;
   i: number;
@@ -85,8 +109,11 @@ interface TemplateCardProps {
 function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
   const [imgFailed, setImgFailed] = React.useState(false);
   const bgStyle = getTemplateBgStyle(tpl, imgFailed);
-  const hasHeroImage = !!tpl.template.heroImage && !imgFailed;
+  const hasPreviewImage = !!tpl.previewImage && !imgFailed;
+  const hasHeroImage = !hasPreviewImage && !!tpl.template.heroImage && !imgFailed;
   const hasBgHtml = !!tpl.template.bgHtml?.enabled;
+  const accent = tpl.template.accentColor || "#6366f1";
+  const isDark = isDarkBgColor(tpl.template.backgroundColor);
 
   return (
     <motion.div
@@ -98,6 +125,19 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
     >
       {/* Preview area - portrait */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", ...bgStyle }}>
+        {/* Priority 1: explicit previewImage thumbnail */}
+        {hasPreviewImage && (
+          <img
+            src={tpl.previewImage}
+            alt={tpl.name}
+            loading="eager"
+            decoding="async"
+            onError={() => setImgFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          />
+        )}
+
+        {/* Priority 2: hero image */}
         {hasHeroImage && (
           <img
             src={tpl.template.heroImage}
@@ -109,9 +149,31 @@ function TemplateCard({ tpl, i, onUse }: TemplateCardProps) {
           />
         )}
 
-        {/* Animated shimmer for bgHtml templates without hero */}
-        {hasBgHtml && !hasHeroImage && (
-          <div className="absolute inset-0 animate-pulse bg-white/5" />
+        {/* Priority 3: CSS mini-preview — button bars + name */}
+        {!hasPreviewImage && !hasHeroImage && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
+            {/* Simulated business name */}
+            <div
+              className="text-[10px] font-bold tracking-wide truncate max-w-full"
+              style={{ color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)" }}
+            >
+              {tpl.template.businessName || tpl.name}
+            </div>
+            {/* 3 simulated button bars */}
+            <div className="w-full space-y-1.5">
+              {[0.85, 0.7, 0.6].map((opacity, bi) => (
+                <div
+                  key={bi}
+                  className="w-full rounded-lg"
+                  style={{ height: "20px", background: accent, opacity }}
+                />
+              ))}
+            </div>
+            {/* Animated pulse for bgHtml templates */}
+            {hasBgHtml && (
+              <div className="absolute inset-0 animate-pulse bg-white/5 rounded-xl" />
+            )}
+          </div>
         )}
 
         {/* Hover overlay with "Usar" button */}
@@ -207,10 +269,13 @@ const Dashboard = () => {
     { label: "Taxa de Conversão", value: `${conversionRate}%`, icon: TrendingUp, change: "Cliques / Visualizações" },
   ];
 
-  const filteredTemplates = useMemo(
-    () => selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates,
-    [selectedCategory, templates]
-  );
+  const filteredTemplates = useMemo(() => {
+    if (!selectedCategory) return templates;
+    if (STYLE_CATEGORIES.has(selectedCategory)) {
+      return templates.filter(t => t.styleTag?.includes(selectedCategory));
+    }
+    return templates.filter(t => t.category === selectedCategory);
+  }, [selectedCategory, templates]);
 
   const handleUseTemplate = (templateId: string) => {
     navigate(`/links/new?template=${templateId}`);
@@ -318,7 +383,9 @@ const Dashboard = () => {
 
               {/* Category buttons */}
               {templateCategories.map(cat => {
-                const count = templates.filter(t => t.category === cat.id).length;
+                const count = STYLE_CATEGORIES.has(cat.id)
+                  ? templates.filter(t => t.styleTag?.includes(cat.id)).length
+                  : templates.filter(t => t.category === cat.id).length;
                 if (count === 0) return null;
                 return (
                   <button

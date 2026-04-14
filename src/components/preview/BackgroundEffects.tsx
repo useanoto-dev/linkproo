@@ -14,8 +14,9 @@ interface BackgroundEffectsProps {
 
 export function BackgroundEffects({ link }: BackgroundEffectsProps) {
   const reducedMotion = useReducedMotion();
-  if (reducedMotion) return null;
 
+  // bgHtml always renders — it embeds its own @media(prefers-reduced-motion) rule.
+  // Only gate canvas/particle effects that have no built-in reduced-motion support.
   return (
     <>
       {link.bgHtml?.enabled && link.bgHtml.html && (
@@ -27,26 +28,26 @@ export function BackgroundEffects({ link }: BackgroundEffectsProps) {
           style={{ backgroundColor: `rgba(0,0,0,${(link.bgHtml.overlay ?? 0) / 100})` }}
         />
       )}
-      {link.starsEffect?.enabled && (
+      {!reducedMotion && link.starsEffect?.enabled && (
         <StarsEffect
           count={link.starsEffect.count}
           color={link.starsEffect.color}
           shooting={link.starsEffect.shooting}
         />
       )}
-      {link.matrixEffect?.enabled && (
+      {!reducedMotion && link.matrixEffect?.enabled && (
         <MatrixEffect speed={link.matrixEffect.speed} color={link.matrixEffect.color} />
       )}
-      {link.snowEffect?.enabled && (
+      {!reducedMotion && link.snowEffect?.enabled && (
         <SnowEffect intensity={link.snowEffect.intensity} color={link.snowEffect.color} />
       )}
-      {link.bubblesEffect?.enabled && (
+      {!reducedMotion && link.bubblesEffect?.enabled && (
         <BubblesEffect intensity={link.bubblesEffect.intensity} color={link.bubblesEffect.color} />
       )}
-      {link.firefliesEffect?.enabled && (
+      {!reducedMotion && link.firefliesEffect?.enabled && (
         <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />
       )}
-      {(link.floatingEmojis ?? []).map((emoji, i) => (
+      {!reducedMotion && (link.floatingEmojis ?? []).map((emoji, i) => (
         <FloatingEmoji key={`${emoji}-${i}`} emoji={emoji} delay={i * 1.5} />
       ))}
     </>

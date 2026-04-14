@@ -18,6 +18,7 @@ import { useEditorStore } from '@/stores/editor-store';
 import { useBlockOperations } from '@/hooks/use-block-operations';
 import { getUnifiedItems } from '@/components/editor/blocks/unified-items';
 import { registerAutosaveSubscriber, flushAutosave, retryAutosave } from '@/stores/autosave-subscriber';
+import { popImportedTemplate } from '@/lib/template-io';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ export default function LinkEditor() {
   const selectedElementId = useEditorStore((s) => s.ui.selectedElementId);
   const setUI = useEditorStore((s) => s.setUI);
 
+  const fromImport = searchParams.get('from-import') === '1';
   const [initialized, setInitialized] = useState(!isEditing);
   const dragTypeRef = useRef<BlockType | null>(null);
   // Guard against double-invocation of save (e.g. Ctrl+S held down, rapid button clicks)
@@ -157,7 +159,28 @@ export default function LinkEditor() {
   // from a previous session while the async template import is in-flight.
   useEffect(() => {
     resetLink(createDefaultLink());
-    if (templateId) {
+    if (fromImport) {
+      const imported = popImportedTemplate();
+      if (imported) {
+        const now = Date.now();
+        const tpl = imported.template as Partial<SmartLink>;
+        const importedLink: SmartLink = {
+          ...createDefaultLink(),
+          ...tpl,
+          id: 'new-' + now,
+          slug: '',
+          views: 0,
+          clicks: 0,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          buttons: (tpl.buttons ?? []).map((b, i) => ({ ...b, id: `${now}-btn-${i}`, order: i })),
+          blocks: (tpl.blocks ?? []).map((b, i) => ({ ...b, id: `${now}-blk-${i}`, order: (tpl.buttons ?? []).length + i })),
+          pages: tpl.pages || [],
+        };
+        resetLink(importedLink);
+        toast.success('Template importado com sucesso!');
+      }
+    } else if (templateId) {
       createFromTemplate(templateId).then((tplLink) => resetLink(tplLink ?? createDefaultLink()));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

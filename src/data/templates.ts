@@ -1,4 +1,5 @@
 import { SmartLink, SubPage } from "@/types/smart-link";
+import { premiumTemplates } from "./premium-templates";
 
 export interface LinkTemplate {
   id: string;
@@ -6,10 +7,15 @@ export interface LinkTemplate {
   categoryEmoji: string;
   name: string;
   description: string;
+  /** Visual style tags for cross-cutting style filters */
+  styleTag?: string[];
+  /** Thumbnail URL for gallery preview. Falls back to dynamic CSS mini-preview when absent. */
+  previewImage?: string;
   template: Omit<SmartLink, "id" | "createdAt" | "views" | "clicks" | "isActive" | "pages"> & { pages?: SmartLink["pages"] };
 }
 
 export const templateCategories = [
+  { id: "premium",  label: "✦ Premium",             emoji: "✦",  description: "Templates profissionais com design único",     color: "bg-gradient-to-r from-violet-600 to-indigo-600" },
   { id: "delivery",  label: "Delivery",              emoji: "🍕", description: "Pizzarias, hamburguerias, restaurantes",  color: "bg-orange-500" },
   { id: "saude",     label: "Saúde",                  emoji: "🏥", description: "Clínicas, consultórios, odontologia",     color: "bg-emerald-500" },
   { id: "acaiteria", label: "Açaíteria & Sorvetes",   emoji: "🍦", description: "Açaí, sorveterias, frozen",               color: "bg-purple-500" },
@@ -39,9 +45,16 @@ export const templateCategories = [
   { id: "entretenimento", label: "🎮 Entretenimento",      emoji: "🎮", description: "Games, streamers, eventos, baladas",                   color: "bg-fuchsia-600" },
   { id: "gastronomia", label: "🍷 Gastronomia",           emoji: "🍷", description: "Restaurantes gourmet, chefs, sommeliers",              color: "bg-amber-700" },
   { id: "hospedagem", label: "Hotel & Hospedagem",    emoji: "🏨", description: "Hotéis, pousadas, resorts, turismo",          color: "bg-amber-700" },
+  // ── Style filters (cross-cutting) ────────────────────────────────────────
+  { id: "minimalistas", label: "◻ Minimalistas",   emoji: "◻", description: "Limpo, espaço negativo, tipografia dominante",    color: "bg-zinc-800" },
+  { id: "escuros",      label: "◼ Dark Mode",       emoji: "◼", description: "Fundos escuros sofisticados",                    color: "bg-gray-900" },
+  { id: "claros",       label: "☀ Light & Clean",   emoji: "☀", description: "Fundos claros, profissionais",                   color: "bg-sky-100 text-sky-900" },
 ];
 
 export const templates: LinkTemplate[] = [
+  // ─────────────────────────── PREMIUM (design único) ──────────────────────
+  ...premiumTemplates,
+
   // ─────────────────────────── DELIVERY ──────────────────────────────
   {
     id: "tpl-pizzaria",

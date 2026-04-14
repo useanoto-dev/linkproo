@@ -16,8 +16,10 @@ interface SubPageEditorProps {
 }
 
 const fontOptions = [
-  "Inter", "Poppins", "Space Grotesk", "Montserrat", "Raleway",
-  "DM Sans", "Outfit", "Sora", "Rubik", "Nunito",
+  "Inter", "Plus Jakarta Sans", "DM Sans", "Outfit", "Sora", "Manrope",
+  "Poppins", "Montserrat", "Raleway", "Rubik", "Nunito", "Space Grotesk", "Unbounded",
+  "Playfair Display", "Cormorant Garamond", "Libre Baskerville", "DM Serif Display", "Fraunces", "Lora",
+  "Archivo Black", "Bebas Neue", "Caveat",
 ];
 
 const bgColorOptions = [

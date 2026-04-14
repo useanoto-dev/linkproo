@@ -1,11 +1,13 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SmartLinkCard } from "@/components/SmartLinkCard";
 import { motion } from "framer-motion";
-import { Plus, Inbox, Search, CheckSquare, Square, X, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { Plus, Inbox, Search, CheckSquare, Square, X, ToggleLeft, ToggleRight, Trash2, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLinks, useDeleteLink, useDuplicateLink, useToggleLinkActive } from "@/hooks/use-links";
 import { Skeleton } from "@/components/ui/skeleton";
+import { importTemplateFromJson, storeImportedTemplate, type TemplateExport } from "@/lib/template-io";
+import { toast } from "sonner";
 
 export default function LinksPage() {
   const navigate = useNavigate();
@@ -20,6 +22,33 @@ export default function LinksPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importPending, setImportPending] = useState<TemplateExport | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const result = importTemplateFromJson(text);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setImportPending(result.data);
+      }
+    };
+    reader.readAsText(file);
+    // reset so the same file can be selected again
+    e.target.value = "";
+  };
+
+  const confirmImport = () => {
+    if (!importPending) return;
+    storeImportedTemplate(importPending);
+    setImportPending(null);
+    navigate("/links/new/edit?from-import=1");
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setSearchDebounced(search), 200);
@@ -100,6 +129,47 @@ export default function LinksPage() {
 
   return (
     <DashboardLayout title="Meus Links">
+      {/* Hidden file input for JSON import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
+
+      {/* Import confirmation modal */}
+      {importPending && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <h2 className="font-bold text-base">Importar template?</h2>
+            <div className="rounded-xl bg-secondary/60 border border-border p-4 space-y-1 text-sm">
+              <p><span className="text-muted-foreground">Nome:</span> <strong>{(importPending.template.businessName as string) || "—"}</strong></p>
+              <p><span className="text-muted-foreground">Botões:</span> {Array.isArray(importPending.template.buttons) ? (importPending.template.buttons as unknown[]).length : 0}</p>
+              <p><span className="text-muted-foreground">Blocos:</span> {Array.isArray(importPending.template.blocks) ? (importPending.template.blocks as unknown[]).length : 0}</p>
+              <p><span className="text-muted-foreground">Exportado em:</span> {new Date(importPending.exportedAt).toLocaleString("pt-BR")}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">O template será aberto no editor como novo link. Os dados originais não serão alterados.</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setImportPending(null)}
+                className="flex-1 px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-secondary transition-colors cursor-pointer select-none"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmImport}
+                className="flex-1 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer select-none"
+              >
+                Abrir no Editor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-muted-foreground">
           {isLoading
@@ -117,6 +187,15 @@ export default function LinksPage() {
               Selecionar
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary border border-border text-foreground text-sm font-medium hover:bg-secondary/80 transition-colors cursor-pointer select-none"
+            title="Importar template JSON"
+          >
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Importar Template</span>
+          </button>
           <button
             type="button"
             onClick={() => navigate("/links/new")}

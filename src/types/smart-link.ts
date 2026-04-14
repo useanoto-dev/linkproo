@@ -21,7 +21,7 @@ export interface SmartLinkButton {
   pageId?: string;
   badgeLabel?: string;
   badgeColor?: string;
-  buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal';
+  buttonStyle?: 'card' | 'pill' | 'outline' | 'glass' | 'minimal' | 'flat' | 'neubrutalism' | 'soft';
   buttonBorderRadius?: number;  // per-button border radius override, 0-24px
   whatsappMessage?: string;     // pre-filled message for WhatsApp links
 }

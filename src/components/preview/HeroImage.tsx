@@ -10,12 +10,20 @@ interface HeroImageProps {
   curveClipId: string;
 }
 
+const MIN_HEIGHT = 80;
+const MAX_HEIGHT = 420;
+
+function isValidImageUrl(url: string): boolean {
+  return typeof url === 'string' && url.length > 10 && (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/'));
+}
+
 export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroImageProps) {
   const [imgError, setImgError] = useState(false);
-  if (!link.heroImage || imgError) return null;
 
-  // Resolve height — new px value takes precedence over legacy enum
-  const heightPx: number = link.heroImageHeightPx ?? 192;
+  if (!link.heroImage || imgError || !isValidImageUrl(link.heroImage)) return null;
+
+  // Clamp height defensively — saved data may have extreme values from legacy or direct edits
+  const heightPx: number = Math.min(Math.max(link.heroImageHeightPx ?? 200, MIN_HEIGHT), MAX_HEIGHT);
   const objectFit = link.heroObjectFit ?? 'cover';
   const objectPos = link.heroFocalPoint
     ? `${link.heroFocalPoint.x}% ${link.heroFocalPoint.y}%`
@@ -41,11 +49,13 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
         decoding="async"
         onError={() => setImgError(true)}
         style={{
-          height:         heightPx,
+          height:     heightPx,
+          minHeight:  `${MIN_HEIGHT}px`,
+          maxHeight:  `${MAX_HEIGHT}px`,
           objectFit,
           objectPosition: objectPos,
-          display:        'block',
-          opacity:        (link.heroImageOpacity ?? 100) / 100,
+          display:    'block',
+          opacity:    (link.heroImageOpacity ?? 100) / 100,
         }}
       />
       {(link.heroOverlayOpacity ?? 0) > 0 && (() => {

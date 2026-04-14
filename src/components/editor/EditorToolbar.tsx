@@ -1,11 +1,12 @@
 import {
   Save, Copy, ExternalLink, Undo2, Redo2,
   Check, AlertCircle, Cloud, Sparkles, FileText, Keyboard,
-  Layers, Palette, Loader2,
+  Layers, Palette, Loader2, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEditorStore } from '@/stores/editor-store';
 import { getPublicLinkUrl } from '@/hooks/use-links';
+import { downloadTemplateJson } from '@/lib/template-io';
 
 export interface EditorToolbarProps {
   autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
@@ -28,6 +29,7 @@ export function EditorToolbar({
   const canRedo = useEditorStore((s) => s.canRedo);
   const linkSlug = useEditorStore((s) => s.link.slug);
   const linkId = useEditorStore((s) => s.link.id);
+  const currentLink = useEditorStore((s) => s.link);
   const openDrawer = useEditorStore((s) => s.ui.openDrawer);
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
@@ -151,6 +153,19 @@ export function EditorToolbar({
           </a>
         </>
       )}
+
+      <button
+        type="button"
+        onClick={() => {
+          downloadTemplateJson(currentLink);
+          toast.success('Template exportado!');
+        }}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-secondary text-muted-foreground hover:text-foreground border border-border/50 hover:border-primary/30 transition-all cursor-pointer select-none"
+        title="Exportar como template JSON"
+      >
+        <Download className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Exportar</span>
+      </button>
 
       <button
         type="button"

@@ -26,17 +26,25 @@ export function BgHtmlEffect({ html }: Props) {
     return doc;
   }, [html]);
 
+  // Use position:fixed so the iframe covers the visible viewport, not the full
+  // document height. Inside a CSS transform (e.g. DeviceFrame scale), fixed
+  // elements are contained to the transformed ancestor — giving the correct
+  // visible area in both the editor preview and the public page.
   return (
-    <iframe
-      srcDoc={srcDoc}
-      sandbox="allow-scripts"
-      allow=""
-      referrerPolicy="no-referrer"
-      scrolling="no"
-      loading="lazy"
-      title="background-html"
-      className="absolute inset-0 w-full h-full pointer-events-none z-0 border-none"
-      style={{ display: "block", background: "transparent" }}
-    />
+    <div
+      className="pointer-events-none z-0"
+      style={{ position: "fixed", inset: 0, overflow: "hidden" }}
+    >
+      <iframe
+        srcDoc={srcDoc}
+        sandbox="allow-scripts"
+        allow=""
+        referrerPolicy="no-referrer"
+        scrolling="no"
+        loading="eager"
+        title="background-html"
+        style={{ display: "block", width: "100%", height: "100%", background: "transparent", border: "none" }}
+      />
+    </div>
   );
 }

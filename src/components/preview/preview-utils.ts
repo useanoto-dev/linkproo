@@ -88,16 +88,48 @@ export function getSpotifyEmbedUrl(url: string): string | null {
 }
 
 export const FONT_LINKS: Record<string, string> = {
+  // ── Sans-serif — Modern & Clean ──
   Inter: "'Inter', sans-serif",
-  Poppins: "'Poppins', sans-serif",
-  "Space Grotesk": "'Space Grotesk', sans-serif",
-  Montserrat: "'Montserrat', sans-serif",
-  Raleway: "'Raleway', sans-serif",
+  "Plus Jakarta Sans": "'Plus Jakarta Sans', sans-serif",
   "DM Sans": "'DM Sans', sans-serif",
   Outfit: "'Outfit', sans-serif",
   Sora: "'Sora', sans-serif",
+  Manrope: "'Manrope', sans-serif",
+  // ── Sans-serif — Geometric & Bold ──
+  Poppins: "'Poppins', sans-serif",
+  Montserrat: "'Montserrat', sans-serif",
+  Raleway: "'Raleway', sans-serif",
   Rubik: "'Rubik', sans-serif",
   Nunito: "'Nunito', sans-serif",
+  "Space Grotesk": "'Space Grotesk', sans-serif",
+  Unbounded: "'Unbounded', sans-serif",
+  // ── Serif — Elegant & Editorial ──
+  "Playfair Display": "'Playfair Display', serif",
+  "Cormorant Garamond": "'Cormorant Garamond', serif",
+  "Libre Baskerville": "'Libre Baskerville', serif",
+  "DM Serif Display": "'DM Serif Display', serif",
+  Fraunces: "'Fraunces', serif",
+  Lora: "'Lora', serif",
+  // ── Display — Personality & Impact ──
+  "Archivo Black": "'Archivo Black', sans-serif",
+  "Bebas Neue": "'Bebas Neue', sans-serif",
+  // ── Handwritten — Casual & Friendly ──
+  Caveat: "'Caveat', cursive",
+  // ── Premium (Fontshare) ──
+  Satoshi: "'Satoshi', sans-serif",
+  "General Sans": "'General Sans', sans-serif",
+  "Cabinet Grotesk": "'Cabinet Grotesk', sans-serif",
+  "Clash Display": "'Clash Display', sans-serif",
+  Switzer: "'Switzer', sans-serif",
+};
+
+/** Fontshare slug map (not on Google Fonts) */
+const FONTSHARE_SLUGS: Record<string, string> = {
+  Satoshi: "satoshi",
+  "General Sans": "general-sans",
+  "Cabinet Grotesk": "cabinet-grotesk",
+  "Clash Display": "clash-display",
+  Switzer: "switzer",
 };
 
 export function loadGoogleFont(font: string) {
@@ -106,7 +138,10 @@ export function loadGoogleFont(font: string) {
   const linkEl = document.createElement("link");
   linkEl.id = id;
   linkEl.rel = "stylesheet";
-  linkEl.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s/g, "+")}:wght@400;700&display=swap`;
+  const fsSlug = FONTSHARE_SLUGS[font];
+  linkEl.href = fsSlug
+    ? `https://api.fontshare.com/v2/css?f[]=${fsSlug}@400,700&display=swap`
+    : `https://fonts.googleapis.com/css2?family=${font.replace(/\s/g, "+")}:wght@400;700&display=swap`;
   document.head.appendChild(linkEl);
 }
 

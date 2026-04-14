@@ -87,6 +87,9 @@ export const BUTTON_STYLE_OPTIONS = [
   { value: "outline", label: "Borda", desc: "Contorno" },
   { value: "glass", label: "Vidro", desc: "Glass" },
   { value: "minimal", label: "Mínimo", desc: "Texto" },
+  { value: "flat", label: "Flat", desc: "Sólido" },
+  { value: "neubrutalism", label: "Bold", desc: "Brutalism" },
+  { value: "soft", label: "Soft", desc: "Suave" },
 ] as const;
 
 export const BUTTON_ALIGN_OPTIONS = [
