@@ -13,10 +13,10 @@ interface BackgroundEffectsProps {
 }
 
 export function BackgroundEffects({ link }: BackgroundEffectsProps) {
-  const reducedMotion = useReducedMotion();
-
-  // bgHtml always renders — it embeds its own @media(prefers-reduced-motion) rule.
-  // Only gate canvas/particle effects that have no built-in reduced-motion support.
+  // Effects that the user EXPLICITLY enabled must always render regardless of
+  // prefers-reduced-motion. The user made an active choice to enable them.
+  // bgHtml embeds its own @media(prefers-reduced-motion) rule internally.
+  // Each canvas effect component self-regulates via IntersectionObserver and RAF.
   return (
     <>
       {link.bgHtml?.enabled && link.bgHtml.html && (
@@ -28,26 +28,26 @@ export function BackgroundEffects({ link }: BackgroundEffectsProps) {
           style={{ backgroundColor: `rgba(0,0,0,${(link.bgHtml.overlay ?? 0) / 100})` }}
         />
       )}
-      {!reducedMotion && link.starsEffect?.enabled && (
+      {link.starsEffect?.enabled && (
         <StarsEffect
           count={link.starsEffect.count}
           color={link.starsEffect.color}
           shooting={link.starsEffect.shooting}
         />
       )}
-      {!reducedMotion && link.matrixEffect?.enabled && (
+      {link.matrixEffect?.enabled && (
         <MatrixEffect speed={link.matrixEffect.speed} color={link.matrixEffect.color} />
       )}
-      {!reducedMotion && link.snowEffect?.enabled && (
+      {link.snowEffect?.enabled && (
         <SnowEffect intensity={link.snowEffect.intensity} color={link.snowEffect.color} />
       )}
-      {!reducedMotion && link.bubblesEffect?.enabled && (
+      {link.bubblesEffect?.enabled && (
         <BubblesEffect intensity={link.bubblesEffect.intensity} color={link.bubblesEffect.color} />
       )}
-      {!reducedMotion && link.firefliesEffect?.enabled && (
+      {link.firefliesEffect?.enabled && (
         <FirefliesEffect count={link.firefliesEffect.count} color={link.firefliesEffect.color} />
       )}
-      {!reducedMotion && (link.floatingEmojis ?? []).map((emoji, i) => (
+      {(link.floatingEmojis ?? []).map((emoji, i) => (
         <FloatingEmoji key={`${emoji}-${i}`} emoji={emoji} delay={i * 1.5} />
       ))}
     </>

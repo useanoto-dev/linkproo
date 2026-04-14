@@ -50,7 +50,7 @@ export const SmartLinkButtonSchema = z.object({
   pageId: z.string().optional().nullable(),
   badgeLabel: z.string().optional().nullable(),
   badgeColor: z.string().optional().nullable(),
-  buttonStyle: z.enum(['card', 'pill', 'outline', 'glass', 'minimal']).optional(),
+  buttonStyle: z.enum(['card', 'pill', 'outline', 'glass', 'minimal', 'flat', 'soft', 'neubrutalism']).optional(),
   buttonBorderRadius: z.number().optional(),
   whatsappMessage: z.string().optional().nullable(),
 }).passthrough();
