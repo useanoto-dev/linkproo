@@ -41,7 +41,7 @@ export function EditorPreview({
 
   return (
     <div
-      className="flex-1 min-w-0 flex flex-col items-center justify-center overflow-hidden relative bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]"
+      className="flex-1 min-w-0 h-full flex flex-col items-center justify-center overflow-hidden relative bg-[radial-gradient(ellipse_80%_55%_at_50%_65%,hsl(var(--primary)/0.07),transparent)]"
     >
 
       {/* Header: status dot + label + device picker */}

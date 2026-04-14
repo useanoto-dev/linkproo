@@ -196,12 +196,6 @@ export function AnimatedButtonBlock({ block, onClick, overrideUrl }: AnimatedBut
     }
   };
 
-  const cardShadow = [
-    `0 4px 16px ${theme.shadow}`,
-    `0 10px 32px ${theme.shadow}`,
-    `0 4px 16px ${theme.shadow}`,
-  ];
-
   return (
     <div className="px-4 pb-3">
       <motion.div
@@ -210,39 +204,34 @@ export function AnimatedButtonBlock({ block, onClick, overrideUrl }: AnimatedBut
         aria-label={label}
         onClick={handleClick}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(); }}
-        className="w-full rounded-2xl overflow-hidden cursor-pointer relative select-none"
-        style={{ background: theme.bg, minHeight: minH }}
-        animate={{ boxShadow: cardShadow }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        className="w-full rounded-2xl overflow-hidden cursor-pointer relative select-none animate-card-glow"
+        style={{ background: theme.bg, minHeight: minH, "--anim-glow": theme.shadow } as React.CSSProperties}
         whileHover={{ scale: 1.015, transition: { duration: 0.2 } }}
         whileTap={{ scale: 0.985, transition: { duration: 0.1 } }}
       >
         {/* Shimmer sweep */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none z-0"
+        <div
+          className="absolute inset-0 pointer-events-none z-0 animate-shimmer"
           style={{
             background: "linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)",
             width: "70%",
           }}
-          animate={{ x: ["-100%", "250%"] }}
-          transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 4.5, ease: "easeInOut" }}
         />
 
         {/* Ripple rings — location only */}
         {style === "location" && (
           <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none z-0">
-            {[0, 1.2, 2.4].map((delay) => (
-              <motion.div
-                key={delay}
-                className="absolute rounded-full"
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-ripple"
                 style={{
                   width: 88, height: 88,
                   border: "2px solid rgba(99,162,255,0.30)",
                   top: "50%", left: "50%",
                   marginTop: -44, marginLeft: -44,
+                  animationDelay: `${i * 1.2}s`,
                 }}
-                animate={{ scale: [0.5, 2.0], opacity: [0.55, 0] }}
-                transition={{ duration: 2.4, delay, repeat: Infinity, ease: "easeOut" }}
               />
             ))}
           </div>
@@ -298,35 +287,30 @@ export function AnimatedButtonBlock({ block, onClick, overrideUrl }: AnimatedBut
             className="flex items-center justify-center flex-shrink-0"
             style={{ width: iconColW }}
           >
-            <motion.div
+            <div
+              className="animate-icon-float"
               style={{ filter: "drop-shadow(0 6px 16px rgba(0,0,0,0.22))" }}
-              animate={{ y: [0, -7, 0] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
             >
               <div className="relative">
                 <StyleIcon style={style} size={iconSize} />
 
                 {/* WhatsApp notification badge */}
                 {style === "whatsapp" && (
-                  <motion.span
-                    className="absolute -top-1 -right-1 flex items-center justify-center rounded-full text-white font-black"
+                  <span
+                    className="absolute -top-1 -right-1 flex items-center justify-center rounded-full text-white font-black animate-badge-pulse"
                     style={{ width: 20, height: 20, fontSize: 9, background: "#ef4444", border: "2px solid rgba(255,255,255,0.5)" }}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                  >1</motion.span>
+                  >1</span>
                 )}
 
                 {/* Phone online dot */}
                 {style === "phone" && (
-                  <motion.span
-                    className="absolute bottom-0 right-0 rounded-full"
+                  <span
+                    className="absolute bottom-0 right-0 rounded-full animate-dot-blink"
                     style={{ width: 14, height: 14, background: "#22c55e", border: "2px solid rgba(255,255,255,0.7)" }}
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 1.8, repeat: Infinity }}
                   />
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </motion.div>

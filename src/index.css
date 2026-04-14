@@ -412,3 +412,89 @@
 .wa-float-label-left[data-shown="true"] {
   transform: translateX(0) scale(1);
 }
+
+/* ─── Performance: CSS replacements for Framer Motion repeat:Infinity ─────── */
+
+/* ButtonPreview — emoji floating icon */
+@keyframes float-emoji {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-3px) rotate(5deg); }
+  66%       { transform: translateY(0) rotate(-5deg); }
+}
+.animate-float-emoji {
+  animation: float-emoji 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* AnimatedButtonBlock — card shadow pulse */
+@keyframes card-glow {
+  0%, 100% { box-shadow: 0 4px 16px var(--anim-glow); }
+  50%       { box-shadow: 0 10px 32px var(--anim-glow); }
+}
+.animate-card-glow {
+  animation: card-glow 2.5s ease-in-out infinite;
+}
+
+/* AnimatedButtonBlock — shimmer sweep (1.6s sweep + 4.5s pause ≈ 6.1s cycle) */
+@keyframes shimmer-sweep {
+  0%     { transform: translateX(-100%); opacity: 1; }
+  26%    { transform: translateX(250%);  opacity: 1; }
+  26.1%  { transform: translateX(-100%); opacity: 0; }
+  99.9%  { transform: translateX(-100%); opacity: 0; }
+  100%   { transform: translateX(-100%); opacity: 1; }
+}
+.animate-shimmer {
+  animation: shimmer-sweep 6.1s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* AnimatedButtonBlock — floating icon */
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+.animate-icon-float {
+  animation: icon-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* AnimatedButtonBlock — WhatsApp badge scale pulse */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.2); }
+}
+.animate-badge-pulse {
+  animation: badge-pulse 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* AnimatedButtonBlock — phone online dot blink */
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.animate-dot-blink {
+  animation: dot-blink 1.8s ease-in-out infinite;
+}
+
+/* AnimatedButtonBlock — location ripple rings */
+@keyframes ripple-ring {
+  from { transform: scale(0.5); opacity: 0.55; }
+  to   { transform: scale(2.0); opacity: 0; }
+}
+.animate-ripple {
+  animation: ripple-ring 2.4s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ─── Reduced motion: disable specific animation classes ────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-emoji,
+  .animate-card-glow,
+  .animate-shimmer,
+  .animate-icon-float,
+  .animate-badge-pulse,
+  .animate-ripple {
+    animation: none !important;
+  }
+}

@@ -111,7 +111,7 @@ function AppLayout() {
                * Outlet is keyed by pathname so AnimatePresence can track
                * unmount/mount and run PageTransition exit animations.
                */}
-              <AnimatePresence mode="sync">
+              <AnimatePresence mode="wait">
                 <Outlet key={location.pathname} />
               </AnimatePresence>
             </Suspense>

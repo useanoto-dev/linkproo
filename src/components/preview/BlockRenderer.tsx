@@ -435,18 +435,25 @@ export const BlockRenderer = memo(function BlockRenderer({
     return (
       <motion.div className="px-4 py-2"
         initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay, duration: 0.4 }}>
-        <div className="rounded-2xl p-4 text-center shadow-lg relative overflow-hidden" style={{ background: bg }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+        <div
+          className="rounded-2xl px-5 py-6 text-center shadow-xl relative overflow-hidden flex flex-col items-center gap-1.5"
+          style={{ background: bg, minHeight: 100 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
           {block.bannerTag && (
-            <span className="inline-block px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold mb-2" style={{ color: bannerTextColor }}>
+            <span
+              className="inline-block px-3 py-1 rounded-full bg-white/25 text-[11px] font-bold uppercase tracking-wider relative z-10 backdrop-blur-sm"
+              style={{ color: bannerTextColor }}
+            >
               {block.bannerTag}
             </span>
           )}
           {block.content && (
-            <p className="font-black text-base leading-tight relative z-10" style={{ color: bannerTextColor }}>{block.content}</p>
+            <p className="font-black text-xl leading-tight relative z-10" style={{ color: bannerTextColor }}>{block.content}</p>
           )}
           {block.subtitle && (
-            <p className="text-xs mt-1 relative z-10" style={{ color: bannerTextColor, opacity: 0.8 }}>{block.subtitle}</p>
+            <p className="text-sm leading-snug relative z-10 max-w-[240px]" style={{ color: bannerTextColor, opacity: 0.88 }}>{block.subtitle}</p>
           )}
         </div>
       </motion.div>

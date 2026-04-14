@@ -47,18 +47,25 @@ export const CarouselBlock = memo(function CarouselBlock({ block, delay }: Carou
           if (e.key === 'ArrowRight') setIdx(i => (i + 1) % slides.length);
         }}
       >
-        {slides.map((slide, i) => (
-          <motion.img
-            key={slide.id}
-            src={slide.url}
-            alt={slide.caption || `Slide ${i + 1}`}
-            className="absolute inset-0 w-full h-full object-cover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: i === idx ? 1 : 0 }}
-            transition={{ duration: 0.5 }}
-            aria-hidden={i !== idx}
-          />
-        ))}
+        {slides.map((slide, i) => {
+          const shouldRender = Math.abs(i - idx) <= 1 ||
+            (i === 0 && idx === slides.length - 1) ||
+            (i === slides.length - 1 && idx === 0);
+          return (
+            <motion.img
+              key={slide.id}
+              src={shouldRender ? slide.url : undefined}
+              alt={slide.caption || `Slide ${i + 1}`}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: i === idx ? 1 : 0 }}
+              transition={{ duration: 0.5 }}
+              aria-hidden={i !== idx}
+            />
+          );
+        })}
         {/* aria-live announces slide change to screen readers */}
         <div aria-live="polite" className="sr-only">
           {slides[idx]?.caption || `Slide ${idx + 1} de ${slides.length}`}

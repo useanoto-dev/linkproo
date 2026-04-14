@@ -3,7 +3,6 @@ import { Eye, MousePointerClick, Link as LinkIcon, TrendingUp, Plus, Layout } fr
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useMemo, useEffect } from "react";
-import { templates, templateCategories } from "@/data/templates";
 import { useLinks, useLinkStats } from "@/hooks/use-links";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlanLimits } from "@/hooks/use-plan-limits";
@@ -175,6 +174,8 @@ function EmptyState({ onReset }: { onReset: () => void }) {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<LinkTemplate[]>([]);
+  const [templateCategories, setTemplateCategories] = useState<{ id: string; label: string; emoji: string; description: string; color: string }[]>([]);
   const { data: links = [], isLoading: linksLoading } = useLinks();
   const { data: stats, isLoading: statsLoading } = useLinkStats();
   const { isAtLimit, limits, totalLinks } = usePlanLimits();
@@ -186,6 +187,13 @@ const Dashboard = () => {
       return () => clearTimeout(t);
     }
   }, [completed, isActive, start]);
+
+  useEffect(() => {
+    import("@/data/templates").then((m) => {
+      setTemplates(m.templates);
+      setTemplateCategories(m.templateCategories);
+    });
+  }, []);
 
   const isLoading = linksLoading || statsLoading;
   const totalViews = stats?.totalViews ?? 0;
@@ -201,7 +209,7 @@ const Dashboard = () => {
 
   const filteredTemplates = useMemo(
     () => selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates,
-    [selectedCategory]
+    [selectedCategory, templates]
   );
 
   const handleUseTemplate = (templateId: string) => {

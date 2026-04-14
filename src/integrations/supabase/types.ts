@@ -478,6 +478,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_link_with_plan: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
       get_admin_users: {
         Args: Record<PropertyKey, never>
         Returns: {
