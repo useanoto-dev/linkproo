@@ -28,6 +28,8 @@ export function EditorToolbar({
   const canUndo = useEditorStore((s) => s.canUndo);
   const canRedo = useEditorStore((s) => s.canRedo);
   const linkSlug = useEditorStore((s) => s.link.slug);
+  const canRollback = useEditorStore((s) => s.autosave.lastSavedLink !== null);
+  const rollbackToLastSaved = useEditorStore((s) => s.rollbackToLastSaved);
   const linkId = useEditorStore((s) => s.link.id);
   const currentLink = useEditorStore((s) => s.link);
   const openDrawer = useEditorStore((s) => s.ui.openDrawer);
@@ -107,14 +109,31 @@ export function EditorToolbar({
             <><Check className="h-3 w-3 text-green-400" /><span className="text-green-400">Salvo</span></>
           )}
           {autosaveStatus === 'error' && (
-            <button
-              type="button"
-              onClick={onRetryAutosave}
-              className="flex items-center gap-1 text-destructive hover:underline cursor-pointer"
-            >
-              <AlertCircle className="h-3 w-3" />
-              <span>Erro — tentar novamente</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onRetryAutosave}
+                className="flex items-center gap-1 text-destructive hover:underline cursor-pointer"
+              >
+                <AlertCircle className="h-3 w-3" />
+                <span>Erro — tentar novamente</span>
+              </button>
+              {canRollback && (
+                <>
+                  <span className="text-border">·</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      rollbackToLastSaved();
+                      toast.info('Revertido para o último estado salvo.');
+                    }}
+                    className="text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+                  >
+                    Reverter
+                  </button>
+                </>
+              )}
+            </div>
           )}
           {autosaveStatus === 'idle' && isExistingLink && (
             savedAt ? (

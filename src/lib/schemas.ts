@@ -78,6 +78,15 @@ const BgEffectsSchema = z.object({
   stars: z.unknown().optional(),
   bgHtml: z.unknown().optional(),
   whatsappFloat: z.unknown().optional(),
+  logoBorderWidth: z.unknown().optional(),
+  businessNameWidth: z.unknown().optional(),
+  taglineWidth: z.unknown().optional(),
+  businessNameBgBox: z.unknown().optional(),
+  taglineBgBox: z.unknown().optional(),
+  businessNameEffect: z.unknown().optional(),
+  businessNameEffectIntensity: z.unknown().optional(),
+  taglineEffect: z.unknown().optional(),
+  taglineEffectIntensity: z.unknown().optional(),
 }).passthrough().optional().nullable();
 
 // ---------------------------------------------------------------------------
@@ -103,6 +112,7 @@ export const SmartLinkRowSchema = z.object({
   logo_shadow: z.boolean().optional().nullable(),
   header_style: z.string().optional().nullable(),
   banner_curve: z.boolean().optional().nullable(),
+  banner_curve_intensity: z.number().optional().nullable(),
   logo_border_color: z.string().optional().nullable(),
   title_color: z.string().optional().nullable(),
   tagline_color: z.string().optional().nullable(),
@@ -117,6 +127,7 @@ export const SmartLinkRowSchema = z.object({
   business_name_align: z.string().optional().nullable(),
   hide_business_name: z.boolean().optional().nullable(),
   hide_tagline: z.boolean().optional().nullable(),
+  tagline_font_size: z.union([z.number(), z.string()]).optional().nullable(),
   entry_animation: z.string().optional().nullable(),
   snow_effect: z.unknown().optional(),
   bg_effects: BgEffectsSchema,

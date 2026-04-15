@@ -145,27 +145,38 @@ export function loadGoogleFont(font: string) {
   document.head.appendChild(linkEl);
 }
 
-export function getEntryVariants(anim: EntryAnimation, delay: number): EntryVariants {
+/**
+ * Returns Framer Motion variants for the chosen entry animation.
+ *
+ * @param anim         - Animation type selected by the user
+ * @param delay        - Stagger delay in seconds
+ * @param forceAnimate - When true (editor preview), bypass prefers-reduced-motion so
+ *                       the user can always see the animation they're configuring.
+ *                       On the public page (default false), accessibility is respected.
+ */
+export function getEntryVariants(anim: EntryAnimation, delay: number, forceAnimate = false): EntryVariants {
   if (
+    !forceAnimate &&
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   ) {
     return { initial: {}, animate: {}, transition: { duration: 0 } as const };
   }
-  const base = { delay, duration: 0.5 };
+  if (anim === "none") {
+    return { initial: {}, animate: {}, transition: { duration: 0 } as const };
+  }
+  const base = { delay, duration: 0.55 };
   switch (anim) {
-    case "none":
-      return { initial: {}, animate: {}, transition: { duration: 0 } as const };
     case "slide-left":
-      return { initial: { opacity: 0, x: -60 }, animate: { opacity: 1, x: 0 }, transition: { ...base, type: "spring" as const, stiffness: 150, damping: 20 } };
+      return { initial: { opacity: 0, x: -80 }, animate: { opacity: 1, x: 0 }, transition: { ...base, type: "spring" as const, stiffness: 140, damping: 18 } };
     case "slide-right":
-      return { initial: { opacity: 0, x: 60 }, animate: { opacity: 1, x: 0 }, transition: { ...base, type: "spring" as const, stiffness: 150, damping: 20 } };
+      return { initial: { opacity: 0, x: 80 }, animate: { opacity: 1, x: 0 }, transition: { ...base, type: "spring" as const, stiffness: 140, damping: 18 } };
     case "scale":
-      return { initial: { opacity: 0, scale: 0.7 }, animate: { opacity: 1, scale: 1 }, transition: { ...base, type: "spring" as const, stiffness: 200, damping: 18 } };
+      return { initial: { opacity: 0, scale: 0.6 }, animate: { opacity: 1, scale: 1 }, transition: { ...base, type: "spring" as const, stiffness: 220, damping: 16 } };
     case "bounce":
-      return { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0 }, transition: { ...base, type: "spring" as const, stiffness: 300, damping: 12 } };
+      return { initial: { opacity: 0, y: 60 }, animate: { opacity: 1, y: 0 }, transition: { ...base, type: "spring" as const, stiffness: 320, damping: 10 } };
     case "fade-up":
     default:
-      return { initial: { opacity: 0, y: 25, scale: 0.92 }, animate: { opacity: 1, y: 0, scale: 1 }, transition: { ...base, type: "spring" as const, stiffness: 180, damping: 20 } };
+      return { initial: { opacity: 0, y: 35, scale: 0.90 }, animate: { opacity: 1, y: 0, scale: 1 }, transition: { ...base, type: "spring" as const, stiffness: 170, damping: 18 } };
   }
 }

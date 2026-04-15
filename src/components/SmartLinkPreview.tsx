@@ -19,9 +19,11 @@ interface SmartLinkPreviewProps {
   ghostBlockType?: BlockType;
   onSelectElement?: (id: string) => void;
   onContextMenu?: (e: React.MouseEvent, id: string) => void;
+  /** Editor preview: always show animations regardless of prefers-reduced-motion */
+  forceAnimate?: boolean;
 }
 
-export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement, onContextMenu }: SmartLinkPreviewProps) {
+export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedId, ghostBlockType, onSelectElement, onContextMenu, forceAnimate = false }: SmartLinkPreviewProps) {
   const buttons = link.buttons ?? [];
   const blocks = link.blocks ?? [];
   const hasContent = link.businessName || link.heroImage || buttons.length > 0 || blocks.length > 0;
@@ -137,7 +139,7 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
         <div key={`items-${animKey}`}>
           {items.map((item, idx) => {
             const itemDelay = 0.1 + Math.min(idx * 0.04, 0.2);
-            const ev = getEntryVariants(entryAnim, itemDelay);
+            const ev = getEntryVariants(entryAnim, itemDelay, forceAnimate);
             const itemId = item.data.id;
             const isSelected = selectedId === itemId;
 

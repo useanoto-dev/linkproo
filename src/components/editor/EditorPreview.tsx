@@ -113,6 +113,7 @@ export function EditorPreview({
                 ghostBlockType={ghostBlockType ?? undefined}
                 onSelectElement={handleSelectElement}
                 onContextMenu={onElementContextMenu}
+                forceAnimate={true}
               />
             )}
           </DeviceFrame>

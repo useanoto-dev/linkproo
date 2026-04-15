@@ -129,9 +129,13 @@ export function BusinessInfo({ link, isBioMode, dark, accent, fontFamily, subtex
 
         {/* ── Business name ─────────────────────────────────────────────── */}
         {!link.hideBusinessName && (() => {
-          const wrapperStyle: CSSProperties = link.businessNameBgBox?.enabled
-            ? getBgBoxStyle(link.businessNameBgBox)
-            : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
+          // HTML mode: block wrapper (full width, no inline-block circular dependency)
+          // Regular mode: inline-block for centering + maxWidth support
+          const wrapperStyle: CSSProperties = link.businessNameHtml
+            ? { width: '100%', display: 'block' }
+            : link.businessNameBgBox?.enabled
+              ? getBgBoxStyle(link.businessNameBgBox)
+              : { maxWidth: `${link.businessNameWidth ?? 100}%`, display: 'inline-block' };
 
           const inner = link.businessNameHtml ? (
             <HtmlTitle

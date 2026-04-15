@@ -216,7 +216,7 @@ export interface SubPage {
   linkedButtonId?: string;
 }
 
-export type HeroObjectFit = 'cover' | 'contain' | 'fill';
+export type HeroObjectFit = 'cover' | 'contain' | 'fill' | 'none';
 
 export interface HeroFocalPoint {
   x: number;  // 0–100 %

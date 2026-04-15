@@ -47,6 +47,8 @@ export interface EditorStore {
     status: 'idle' | 'saving' | 'saved' | 'error';
     savedAt: Date | null;
     lastSavedSnapshot: string;
+    /** Last successfully persisted link — used for rollback on repeated save failures */
+    lastSavedLink: SmartLink | null;
     enabled: boolean;
   };
 
@@ -68,6 +70,8 @@ export interface EditorStore {
   setAutosaveSavedAt: (date: Date) => void;
   initAutosaveSnapshot: (link: SmartLink) => void;
   setAutosaveEnabled: (enabled: boolean) => void;
+  /** Revert link to the last successfully saved state, clearing undo history. */
+  rollbackToLastSaved: () => void;
 }
 
 const EMPTY_LINK: SmartLink = {
@@ -101,6 +105,7 @@ export const useEditorStore = create<EditorStore>()(
       status: 'idle',
       savedAt: null,
       lastSavedSnapshot: '',
+      lastSavedLink: null,
       enabled: false,
     },
     ui: {
@@ -189,7 +194,16 @@ export const useEditorStore = create<EditorStore>()(
 
     setAutosaveStatus: (status) => set((state) => ({ autosave: { ...state.autosave, status } })),
     setAutosaveSavedAt: (date) => set((state) => ({ autosave: { ...state.autosave, savedAt: date } })),
-    initAutosaveSnapshot: (link) => set((state) => ({ autosave: { ...state.autosave, lastSavedSnapshot: serializeLink(link) } })),
+    initAutosaveSnapshot: (link) => set((state) => ({
+      autosave: { ...state.autosave, lastSavedSnapshot: serializeLink(link), lastSavedLink: link },
+    })),
     setAutosaveEnabled: (enabled) => set((state) => ({ autosave: { ...state.autosave, enabled } })),
+    rollbackToLastSaved: () => {
+      const { autosave } = get();
+      if (!autosave.lastSavedLink) return;
+      // Reset link + clear undo/redo history — we're going back to a clean known-good state
+      get().resetLink(autosave.lastSavedLink);
+      set((state) => ({ autosave: { ...state.autosave, status: 'idle' } }));
+    },
   }))
 );
