@@ -666,7 +666,7 @@ export const templates: LinkTemplate[] = [
       heroOverlayColor: "dark",
       textColor: "text-white",
       accentColor: "#a855f7",
-      fontFamily: "Space Grotesk",
+      fontFamily: "Manrope",
       bgHtml: {
         enabled: false,
         html: `<style>*{margin:0;padding:0}body{width:100%;height:100%;background:transparent;overflow:hidden}@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-28px) scale(1.06)}}@keyframes pulse{0%,100%{opacity:.12;transform:scale(1)}50%{opacity:.32;transform:scale(1.08)}}.o{position:fixed;border-radius:50%;filter:blur(75px);animation:pulse ease-in-out infinite}</style><div class="o" style="width:420px;height:420px;background:radial-gradient(circle,rgba(168,85,247,.3),transparent);top:-100px;left:-80px;animation-duration:8s"></div><div class="o" style="width:320px;height:320px;background:radial-gradient(circle,rgba(139,92,246,.22),transparent);bottom:-60px;right:-70px;animation-duration:10s;animation-delay:-4s"></div><div class="o" style="width:220px;height:220px;background:radial-gradient(circle,rgba(236,72,153,.18),transparent);top:38%;left:38%;animation-duration:12s;animation-delay:-2.5s"></div>`,

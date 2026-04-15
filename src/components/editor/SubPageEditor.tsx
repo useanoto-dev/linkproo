@@ -145,7 +145,7 @@ export function SubPageEditor({ link, onUpdateLink, onEditingPageChange, onOpenP
       return;
     }
     const newPage: SubPage = {
-      id: `page-${Date.now()}`,
+      id: crypto.randomUUID(),
       title: `Página ${pages.length + 1}`,
       blocks: [],
     };

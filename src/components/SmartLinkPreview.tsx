@@ -117,7 +117,15 @@ export const SmartLinkPreview = memo(function SmartLinkPreview({ link, selectedI
         );
       })()}
 
-      <BackgroundEffects link={link} />
+      <BackgroundEffects
+        bgHtml={link.bgHtml}
+        snowEffect={link.snowEffect}
+        bubblesEffect={link.bubblesEffect}
+        firefliesEffect={link.firefliesEffect}
+        matrixEffect={link.matrixEffect}
+        starsEffect={link.starsEffect}
+        floatingEmojis={link.floatingEmojis}
+      />
 
       <HeroImage link={link} heroBgColor={heroBgColor} isBioMode={isBioMode} curveClipId={curveClipId} />
 

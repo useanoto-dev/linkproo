@@ -42,7 +42,7 @@ export function useBlockOperations({ link, updateLink, setLink }: UseBlockOperat
       );
       if (type === 'button') {
         updateLink({
-          buttons: [...updatedButtons, { id: Date.now().toString(), ...NEW_BUTTON_DEFAULTS, order: atIndex }],
+          buttons: [...updatedButtons, { id: crypto.randomUUID(), ...NEW_BUTTON_DEFAULTS, order: atIndex }],
           blocks: updatedBlocks,
         });
       } else {
@@ -61,7 +61,7 @@ export function useBlockOperations({ link, updateLink, setLink }: UseBlockOperat
       const nextOrder = getNextOrder();
       if (type === 'button') {
         updateLink({
-          buttons: [...(link.buttons ?? []), { id: Date.now().toString(), ...NEW_BUTTON_DEFAULTS, order: nextOrder }],
+          buttons: [...(link.buttons ?? []), { id: crypto.randomUUID(), ...NEW_BUTTON_DEFAULTS, order: nextOrder }],
         });
       } else {
         updateLink({ blocks: [...(link.blocks ?? []), createBlockDefaults(type, nextOrder, extraDefaults)] });

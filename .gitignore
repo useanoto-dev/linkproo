@@ -38,3 +38,6 @@ Thumbs.db
 
 # Supabase local temp files
 supabase/.temp/
+
+# Session handoff files
+SESSAO_HANDOFF.md

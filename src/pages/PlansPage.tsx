@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { motion } from "framer-motion";
-import { Zap, Gift, Link, LifeBuoy } from "lucide-react";
+import { Zap, Gift, Link, LifeBuoy, BarChart2, Globe } from "lucide-react";
 
 export default function PlansPage() {
   return (
@@ -40,8 +40,26 @@ export default function PlansPage() {
                 <Link className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">1 link inteligente</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Personalizável, com analytics e domínio LinkPro</p>
+                <p className="text-sm font-semibold text-foreground">Até 3 links inteligentes</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Personalizáveis, com analytics e domínio LinkPro</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 mt-0.5">
+                <BarChart2 className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Analytics completo</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Visualizações, cliques e origem do tráfego</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 mt-0.5">
+                <Globe className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">55+ templates prontos</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Para todos os segmentos de negócio</p>
               </div>
             </div>
           </div>

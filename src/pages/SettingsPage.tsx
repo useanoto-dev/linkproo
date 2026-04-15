@@ -3,13 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
-import { User, Building2, Save, Loader2, Camera, Shield } from "lucide-react";
+import { User, Building2, Save, Loader2, Camera, Shield, Globe } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadImage } from "@/lib/storage-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { logger } from "@/lib/logger";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -51,7 +52,7 @@ export default function SettingsPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          console.error("Profile load error:", err);
+          logger.error("Profile load error:", err);
           toast.error("Erro ao carregar perfil. Recarregue a página.");
         }
       } finally {
@@ -86,7 +87,7 @@ export default function SettingsPage() {
       update("avatar_url", url);
       toast.success("Avatar atualizado!");
     } catch (err) {
-      console.error("Avatar upload error:", err);
+      logger.error("Avatar upload error:", err);
       toast.error("Erro ao enviar avatar. Tente novamente.");
     } finally {
       setUploading(false);
@@ -108,7 +109,7 @@ export default function SettingsPage() {
     setSaving(false);
 
     if (error) {
-      toast.error("Erro ao salvar: " + error.message);
+      toast.error("Erro ao salvar perfil. Tente novamente.");
     } else {
       await supabase.auth.updateUser({
         data: { display_name: profile.display_name },
@@ -235,6 +236,23 @@ export default function SettingsPage() {
               />
             </div>
           )}
+        </motion.div>
+
+        {/* Custom Domains — stub (real implementation pending) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-xl border border-border bg-card p-5 space-y-3"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <Globe className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Domínio Personalizado</h2>
+            <span className="ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">Em breve</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Em breve você poderá conectar seu próprio domínio (ex: <span className="font-mono text-foreground">links.minhaempresa.com.br</span>) ao seu mini-site LinkPro. Ative seu domínio personalizado e elimine a URL padrão.
+          </p>
         </motion.div>
 
         {/* Privacy & Security — LGPD disclosure (per D-18) */}

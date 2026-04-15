@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 const BUCKET = "link-images";
 
@@ -77,7 +78,7 @@ export async function uploadImage(
         await supabase.storage.from(BUCKET).remove([decodeURIComponent(pathMatch[1])]);
       }
     } catch (err) {
-      console.warn("[storage] Failed to delete old image:", err);
+      logger.warn("[storage] Failed to delete old image:", err);
       // Continue upload even if delete fails
     }
   }

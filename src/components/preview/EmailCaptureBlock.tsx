@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { LinkBlock } from "@/types/smart-link";
 import { saveEmailCapture } from "@/hooks/use-email-captures";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import type { EntryVariants } from "./preview-utils";
 
 interface EmailCaptureBlockProps {
@@ -25,7 +26,7 @@ export const EmailCaptureBlock = memo(function EmailCaptureBlock({
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
     setSubmitted(true);
     saveEmailCapture(linkId, email, block.id).catch((err) => {
-      console.error('[EmailCapture] Falha ao salvar email:', err);
+      logger.error('[EmailCapture] Falha ao salvar email:', err);
       toast.error('Não foi possível registrar seu e-mail. Tente novamente.');
     });
   };

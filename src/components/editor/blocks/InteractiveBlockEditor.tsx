@@ -32,7 +32,7 @@ export const InteractiveBlockEditor = memo(function InteractiveBlockEditor({ blo
                 const COLORS = ["bg-blue-500", "bg-green-500", "bg-red-500", "bg-purple-500", "bg-orange-500"];
                 const idx = (block.badges || []).length;
                 const newBadge: BadgeItem = {
-                  id: `badge-${Date.now()}`,
+                  id: crypto.randomUUID(),
                   emoji: "⭐",
                   label: "Novo Badge",
                   color: COLORS[idx % COLORS.length],

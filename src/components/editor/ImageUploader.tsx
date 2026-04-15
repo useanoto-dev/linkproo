@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { uploadImage } from "@/lib/storage-utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 // ─── Preset types ──────────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ export function ImageUploader({
         onChange(publicUrl);
         return true;
       } catch (err) {
-        console.error("Upload error:", err);
+        logger.error("Upload error:", err);
         toast.error("Erro no upload da imagem. Tente novamente.");
         return false;
       }
@@ -169,7 +170,7 @@ export function ImageUploader({
       const success = await uploadAndSave(rawImage);
       if (success) closeModal();
     } catch (err) {
-      console.error("[ImageUploader] handleUseOriginal failed:", err);
+      logger.error("[ImageUploader] handleUseOriginal failed:", err);
       toast.error("Erro ao salvar imagem. Tente novamente.");
     } finally {
       setUploading(false);
@@ -191,7 +192,7 @@ export function ImageUploader({
       setCroppedPreview(cropped);
       setMode("preview");
     } catch (err) {
-      console.error(err);
+      logger.error("[ImageUploader] crop failed:", err);
       toast.error("Erro ao recortar imagem. Tente novamente.");
     } finally {
       setUploading(false);
@@ -207,7 +208,7 @@ export function ImageUploader({
       const success = await uploadAndSave(croppedPreview);
       if (success) closeModal();
     } catch (err) {
-      console.error("[ImageUploader] handleSaveCropped failed:", err);
+      logger.error("[ImageUploader] handleSaveCropped failed:", err);
       toast.error("Erro ao salvar imagem recortada. Tente novamente.");
     } finally {
       setUploading(false);

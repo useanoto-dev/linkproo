@@ -5,7 +5,7 @@ export function createBlockDefaults(
   order: number = 0,
   extraDefaults?: Record<string, unknown>
 ): LinkBlock {
-  const id = `blk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const id = crypto.randomUUID();
   const base: LinkBlock = { id, type, order, content: "", subtitle: "" };
 
   const typeDefaults: Partial<LinkBlock> = (() => {
@@ -17,9 +17,9 @@ export function createBlockDefaults(
       case "testimonial": return { testimonialRating: 5 };
       case "stats": return {
         statItems: [
-          { id: `stat-${Date.now()}-1`, value: "10k", label: "Clientes" },
-          { id: `stat-${Date.now()}-2`, value: "4.9★", label: "Avaliação" },
-          { id: `stat-${Date.now()}-3`, value: "100%", label: "Satisfação" },
+          { id: crypto.randomUUID(), value: "10k", label: "Clientes" },
+          { id: crypto.randomUUID(), value: "4.9★", label: "Avaliação" },
+          { id: crypto.randomUUID(), value: "100%", label: "Satisfação" },
         ] as StatItem[],
       };
       case "email-capture": return { emailPlaceholder: "seu@email.com", emailButtonLabel: "Quero receber!" };
@@ -41,7 +41,7 @@ export function createBlockDefaults(
         contactsMode: 1,
         contactsList: [
           {
-            id: `contact-${Date.now()}-1`,
+            id: crypto.randomUUID(),
             name: "Nome do Contato",
             role: "Cargo / Função",
             photo: "",

@@ -159,7 +159,7 @@ export const MediaBlockEditor = memo(function MediaBlockEditor({ block, onUpdate
           <ImageUploader
             value=""
             onChange={url => {
-              const newSlide: CarouselSlide = { id: `slide-${Date.now()}`, url };
+              const newSlide: CarouselSlide = { id: crypto.randomUUID(), url };
               onUpdate(block.id, { carouselSlides: [...(block.carouselSlides || []), newSlide] });
             }}
             aspectRatio={16 / 9}

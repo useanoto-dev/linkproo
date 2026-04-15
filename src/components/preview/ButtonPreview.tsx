@@ -394,10 +394,10 @@ export const ButtonPreview = memo(function ButtonPreview({ btn, accent, linkId, 
         className="block w-full rounded-2xl transition-all relative overflow-visible group cursor-pointer"
       >
         <div
-          className={`relative ${customGrad ? "" : `bg-gradient-to-r ${btn.gradientColor || "from-blue-600 to-blue-800"}`} px-5 py-6 flex items-center rounded-2xl overflow-hidden`}
+          className={`relative ${customGrad ? "" : `bg-gradient-to-r ${btn.gradientColor || "from-blue-600 to-blue-800"}`} px-5 py-4 flex items-center rounded-2xl overflow-hidden`}
           style={{
             ...(customGrad ? { background: customGrad } : {}),
-            minHeight: `${btn.buttonHeight ?? 148}px`,
+            minHeight: `${btn.buttonHeight ?? 80}px`,
           }}
         >
           <div

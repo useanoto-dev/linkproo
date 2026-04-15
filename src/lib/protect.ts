@@ -1,7 +1,11 @@
 /**
- * Content protection — blocks devtools shortcuts, right-click and image saving.
+ * Content protection — prevents right-click context menu and image dragging/saving.
  * Shows a branded toast when triggered.
  * Scoped to PublicLinkPage only (per D-02).
+ *
+ * Note: keyboard shortcut blocking (F12, DevTools, Ctrl+U) was intentionally
+ * removed — it is trivial to bypass and creates a frustrating UX for legitimate
+ * users (e.g. a11y tools, power users).  The protection here is UX-level only.
  */
 
 let toastTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -19,8 +23,8 @@ function showProtectToast() {
     "bottom:20px",
     "right:20px",
     "z-index:99999",
-    "background:#7C3AED",
-    "color:#fff",
+    "background:var(--primary,#7C3AED)",
+    "color:var(--primary-foreground,#fff)",
     "font-family:Inter,sans-serif",
     "font-size:13px",
     "font-weight:500",
@@ -74,24 +78,6 @@ export function initProtection(): () => void {
     showProtectToast();
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    const ctrl = e.ctrlKey || e.metaKey;
-    const blocked =
-      e.key === "F12" ||
-      (ctrl && e.shiftKey && ["I","J","C"].includes(e.key.toUpperCase())) ||
-      (ctrl && e.key.toUpperCase() === "U") ||
-      (ctrl && e.key.toUpperCase() === "S") ||
-      (ctrl && e.shiftKey && e.key.toUpperCase() === "S") ||
-      (e.key === "F5" && ctrl) ||
-      e.key === "PrintScreen";
-
-    if (blocked) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      showProtectToast();
-    }
-  }
-
   function onDragStart(e: DragEvent) {
     if ((e.target as HTMLElement).tagName === "IMG") {
       e.preventDefault();
@@ -104,13 +90,11 @@ export function initProtection(): () => void {
   }
 
   document.addEventListener("contextmenu", onContextMenu);
-  document.addEventListener("keydown", onKeyDown, true);
   document.addEventListener("dragstart", onDragStart);
   document.addEventListener("selectstart", onSelectStart);
 
   return () => {
     document.removeEventListener("contextmenu", onContextMenu);
-    document.removeEventListener("keydown", onKeyDown, true);
     document.removeEventListener("dragstart", onDragStart);
     document.removeEventListener("selectstart", onSelectStart);
   };

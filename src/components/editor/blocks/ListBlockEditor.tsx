@@ -57,7 +57,7 @@ export const ListBlockEditor = memo(function ListBlockEditor({ block, onUpdate }
           ))}
           <button
             onClick={() => {
-              const newItem: FaqItem = { id: `faq-${Date.now()}`, question: "", answer: "" };
+              const newItem: FaqItem = { id: crypto.randomUUID(), question: "", answer: "" };
               onUpdate(block.id, { faqItems: [...(block.faqItems || []), newItem] });
             }}
             className="w-full py-2 rounded-lg border border-dashed border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
@@ -89,7 +89,7 @@ export const ListBlockEditor = memo(function ListBlockEditor({ block, onUpdate }
           <ImageUploader
             value=""
             onChange={(url) => {
-              const newImg: GalleryImage = { id: `gal-${Date.now()}`, url };
+              const newImg: GalleryImage = { id: crypto.randomUUID(), url };
               onUpdate(block.id, { galleryImages: [...(block.galleryImages || []), newImg] });
             }}
             aspectRatio={1}
@@ -189,7 +189,7 @@ export const ListBlockEditor = memo(function ListBlockEditor({ block, onUpdate }
           ))}
           <button
             onClick={() => {
-              const newItem: StatItem = { id: `stat-${Date.now()}`, value: "", label: "" };
+              const newItem: StatItem = { id: crypto.randomUUID(), value: "", label: "" };
               onUpdate(block.id, { statItems: [...(block.statItems || []), newItem] });
             }}
             className="w-full py-2 rounded-lg border border-dashed border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors cursor-pointer"
@@ -282,7 +282,7 @@ export const ListBlockEditor = memo(function ListBlockEditor({ block, onUpdate }
         const addContact = () => {
           if (contacts.length >= 2) return;
           const newContact: ContactItem = {
-            id: `contact-${Date.now()}`,
+            id: crypto.randomUUID(),
             name: "Novo Contato",
             role: "",
             photo: "",

@@ -321,7 +321,7 @@ const Dashboard = () => {
           onClick={() => {
             if (isAtLimit) {
               toast.error(
-                "Você já possui seu link inteligente gratuito. Contate o suporte para mais informações."
+                `Você atingiu o limite de ${limits.maxLinks} links do plano ${limits.label}. Acesse Planos para fazer upgrade.`
               );
               return;
             }

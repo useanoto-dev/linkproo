@@ -233,22 +233,26 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
     entry_animation: link.entryAnimation || "fade-up",
     // SnowEffect is a structured object that maps to JSONB in the DB
     snow_effect: toJsonb(link.snowEffect ?? null),
-    bg_effects: toJsonb({
-      bubbles: link.bubblesEffect ?? null,
-      fireflies: link.firefliesEffect ?? null,
-      matrix: link.matrixEffect ?? null,
-      stars: link.starsEffect ?? null,
-      bgHtml: link.bgHtml ?? null,
-      whatsappFloat: link.whatsappFloat ?? null,
-      logoBorderWidth: link.logoBorderWidth ?? null,
-      businessNameWidth: link.businessNameWidth ?? null,
-      taglineWidth: link.taglineWidth ?? null,
-      businessNameBgBox: link.businessNameBgBox ?? null,
-      taglineBgBox: link.taglineBgBox ?? null,
-      businessNameEffect: link.businessNameEffect ?? null,
-      businessNameEffectIntensity: link.businessNameEffectIntensity ?? null,
-      taglineEffect: link.taglineEffect ?? null,
-      taglineEffectIntensity: link.taglineEffectIntensity ?? null,
-    }),
+    bg_effects: (() => {
+      const effects = {
+        bubbles: link.bubblesEffect ?? null,
+        fireflies: link.firefliesEffect ?? null,
+        matrix: link.matrixEffect ?? null,
+        stars: link.starsEffect ?? null,
+        bgHtml: link.bgHtml ?? null,
+        whatsappFloat: link.whatsappFloat ?? null,
+        logoBorderWidth: link.logoBorderWidth ?? null,
+        businessNameWidth: link.businessNameWidth ?? null,
+        taglineWidth: link.taglineWidth ?? null,
+        businessNameBgBox: link.businessNameBgBox ?? null,
+        taglineBgBox: link.taglineBgBox ?? null,
+        businessNameEffect: link.businessNameEffect ?? null,
+        businessNameEffectIntensity: link.businessNameEffectIntensity ?? null,
+        taglineEffect: link.taglineEffect ?? null,
+        taglineEffectIntensity: link.taglineEffectIntensity ?? null,
+      };
+      const hasAny = Object.values(effects).some((v) => v !== null);
+      return toJsonb(hasAny ? effects : null);
+    })(),
   };
 }

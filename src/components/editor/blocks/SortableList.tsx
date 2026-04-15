@@ -224,8 +224,7 @@ export const SortableList = memo(function SortableList({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const unifiedItems = useMemo(() => getUnifiedItemsForMode(link, subPageMode),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [link.buttons, link.blocks, subPageMode?.page.blocks]);
+    [link.buttons, link.blocks, subPageMode]);
 
   const updateBlocks = useCallback((newBlocks: LinkBlock[]) => {
     if (isSubPage) subPageMode!.onUpdatePage({ blocks: newBlocks });
@@ -264,7 +263,7 @@ export const SortableList = memo(function SortableList({
       (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
     );
     onUpdateLink({
-      buttons: [...newButtons, { ...btn, id: `btn-${Date.now()}`, order: newOrder }],
+      buttons: [...newButtons, { ...btn, id: crypto.randomUUID(), order: newOrder }],
       blocks: newBlocks,
     });
   }, [onUpdateLink]);
@@ -284,7 +283,7 @@ export const SortableList = memo(function SortableList({
       const updatedBlocks = blocks.map((b) =>
         b.id !== id && (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
       );
-      updateBlocks([...updatedBlocks, { ...blk, id: `blk-${Date.now()}`, order: newOrder }]);
+      updateBlocks([...updatedBlocks, { ...blk, id: crypto.randomUUID(), order: newOrder }]);
     } else {
       const updatedButtons = buttonsRef.current.map((b) =>
         (b.order ?? 0) >= newOrder ? { ...b, order: (b.order ?? 0) + 1 } : b
@@ -294,7 +293,7 @@ export const SortableList = memo(function SortableList({
       );
       onUpdateLink({
         buttons: updatedButtons,
-        blocks: [...updatedBlocks, { ...blk, id: `blk-${Date.now()}`, order: newOrder }],
+        blocks: [...updatedBlocks, { ...blk, id: crypto.randomUUID(), order: newOrder }],
       });
     }
   }, [isSubPage, updateBlocks, onUpdateLink]);

@@ -9,10 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { SmartLink } from '@/types/smart-link';
 
 const AUTOSAVE_DELAY_MS = 1500;
-/** Max extra attempts after the first failure (total = 1 + MAX_RETRIES) */
-const MAX_RETRIES = 2;
-/** Delay between retry attempts in ms — doubles each time */
-const RETRY_BASE_DELAY_MS = 2000;
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let statusResetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -28,8 +24,7 @@ async function sendToServer(link: SmartLink, userId: string): Promise<void> {
   const row = smartLinkToRow(link, userId);
   const { error } = await supabase
     .from('links')
-    // @ts-expect-error smartLinkToRow includes fields not yet in generated Supabase types
-    .update(row)
+    .update(row as Record<string, unknown>)
     .eq('id', link.id)
     .eq('user_id', userId);
 
@@ -40,47 +35,27 @@ async function performSave(link: SmartLink, userId: string): Promise<void> {
   const store = useEditorStore.getState();
   store.setAutosaveStatus('saving');
 
-  let lastError: unknown;
+  try {
+    await sendToServer(link, userId);
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    // Wait before retry (not before first attempt)
-    if (attempt > 0) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, RETRY_BASE_DELAY_MS * attempt)
-      );
-      // If the subscriber was torn down during the wait, abort silently
-      if (currentUserId !== userId) return;
-    }
+    // ── SUCCESS ──────────────────────────────────────────────────────────────
+    store.setAutosaveSavedAt(new Date());
+    store.initAutosaveSnapshot(link); // also stores lastSavedLink for rollback
+    store.setAutosaveStatus('saved');
 
-    try {
-      await sendToServer(link, userId);
-
-      // ── SUCCESS ──────────────────────────────────────────────────────────────
-      store.setAutosaveSavedAt(new Date());
-      store.initAutosaveSnapshot(link); // also stores lastSavedLink for rollback
-      store.setAutosaveStatus('saved');
-
-      if (statusResetTimer) clearTimeout(statusResetTimer);
-      statusResetTimer = setTimeout(() => {
-        const current = useEditorStore.getState();
-        if (current.autosave.status === 'saved') {
-          current.setAutosaveStatus('idle');
-        }
-      }, 2000);
-
-      return; // done
-    } catch (err) {
-      lastError = err;
-    }
+    if (statusResetTimer) clearTimeout(statusResetTimer);
+    statusResetTimer = setTimeout(() => {
+      const current = useEditorStore.getState();
+      if (current.autosave.status === 'saved') {
+        current.setAutosaveStatus('idle');
+      }
+    }, 2000);
+  } catch {
+    // Set error status immediately — the UI shows "Erro — tentar novamente".
+    // Manual retry is available via retryAutosave() / the retry button.
+    if (statusResetTimer) clearTimeout(statusResetTimer);
+    store.setAutosaveStatus('error');
   }
-
-  // ── ALL RETRIES EXHAUSTED ─────────────────────────────────────────────────
-  // Set error status and leave it there — do NOT auto-reset to idle.
-  // The UI already shows "Erro — tentar novamente" with a retry button.
-  // The user can also click "Reverter" to go back to the last saved state.
-  void lastError; // acknowledged
-  if (statusResetTimer) clearTimeout(statusResetTimer);
-  store.setAutosaveStatus('error');
 }
 
 /**

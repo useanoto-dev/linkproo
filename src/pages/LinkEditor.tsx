@@ -190,7 +190,7 @@ export default function LinkEditor() {
   const previewTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
-    previewTimerRef.current = setTimeout(() => updatePreviewLink(link), 50);
+    previewTimerRef.current = setTimeout(() => updatePreviewLink(link), 150);
     return () => { if (previewTimerRef.current) clearTimeout(previewTimerRef.current); };
   }, [link, updatePreviewLink]);
 
@@ -266,7 +266,7 @@ export default function LinkEditor() {
       const code = (error as { code?: string })?.code;
       if (msg.includes('Limite de links')) toast.error('Você atingiu o limite de links do seu plano. Faça upgrade para criar mais!');
       else if (msg.includes('duplicate key') || code === '23505') toast.error('Esse endereço já está em uso. Escolha outro slug.');
-      else toast.error('Erro ao salvar: ' + (msg || 'tente novamente'));
+      else toast.error('Erro ao salvar. Tente novamente em alguns instantes.');
     } finally {
       isSavingRef.current = false;
     }

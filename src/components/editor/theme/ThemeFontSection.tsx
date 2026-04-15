@@ -2,6 +2,9 @@ import React from "react";
 import { SmartLink } from "@/types/smart-link";
 import { Type } from "lucide-react";
 import { SectionHeader } from "./shared";
+import { loadGoogleFont } from "@/components/preview/preview-utils";
+
+export { loadGoogleFont };
 
 interface ThemeFontSectionProps {
   link: SmartLink;
@@ -35,18 +38,6 @@ const fontGroups = [
   },
 ];
 
-export function loadGoogleFont(font: string) {
-  const id = `gf-${font.replace(/\s/g, "-")}`;
-  if (document.getElementById(id)) return;
-  const link = document.createElement("link");
-  link.id = id;
-  link.rel = "stylesheet";
-  link.href = `https://fonts.googleapis.com/css2?family=${font.replace(
-    /\s/g,
-    "+"
-  )}:wght@300;400;500;600;700;800&display=swap`;
-  document.head.appendChild(link);
-}
 
 export function ThemeFontSection({
   link,
