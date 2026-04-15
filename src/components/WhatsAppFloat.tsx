@@ -28,8 +28,6 @@ function WhatsAppIcon({ size = 28 }: { size?: number }) {
 }
 
 export function WhatsAppFloat({ config }: Props) {
-  if (!config.enabled) return null;
-
   const {
     phone,
     message,
@@ -51,21 +49,22 @@ export function WhatsAppFloat({ config }: Props) {
 
   // Force CSS animation restart on animation type change
   useEffect(() => {
+    if (!config.enabled) return;
     if (prevAnimRef.current !== animation) {
       prevAnimRef.current = animation;
       setAnimKey((k) => k + 1);
     }
-  }, [animation]);
+  }, [animation, config.enabled]);
 
   // Label visibility cycle: delay → visible → hidden → repeat
   useEffect(() => {
-    if (!showLabel || !label) return;
+    if (!config.enabled || !showLabel || !label) return;
     const init = setTimeout(() => setLabelShown(true), labelDelayMs);
     return () => clearTimeout(init);
-  }, [showLabel, label, labelDelayMs]);
+  }, [config.enabled, showLabel, label, labelDelayMs]);
 
   useEffect(() => {
-    if (!showLabel || !label) return;
+    if (!config.enabled || !showLabel || !label) return;
     if (!labelShown) {
       const t = setTimeout(() => setLabelShown(true), labelHiddenMs);
       return () => clearTimeout(t);
@@ -73,7 +72,9 @@ export function WhatsAppFloat({ config }: Props) {
       const t = setTimeout(() => setLabelShown(false), labelDurationMs);
       return () => clearTimeout(t);
     }
-  }, [labelShown, showLabel, label, labelDurationMs, labelHiddenMs]);
+  }, [config.enabled, labelShown, showLabel, label, labelDurationMs, labelHiddenMs]);
+
+  if (!config.enabled) return null;
 
   const waUrl = `https://wa.me/${phone.replace(/\D/g, "")}${
     message ? `?text=${encodeURIComponent(message)}` : ""

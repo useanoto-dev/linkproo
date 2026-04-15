@@ -16,7 +16,7 @@ let currentUserId: string | null = null;
 let pendingLink: SmartLink | null = null;
 
 function serializeLink(l: SmartLink): string {
-  const { views, clicks, createdAt, ...rest } = l;
+  const { views: _views, clicks: _clicks, createdAt: _createdAt, ...rest } = l;
   return JSON.stringify(rest);
 }
 

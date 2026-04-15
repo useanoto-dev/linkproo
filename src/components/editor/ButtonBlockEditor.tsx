@@ -16,7 +16,7 @@ interface ButtonBlockEditorProps {
   onRemove: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onApplyColorToAll?: () => void;
-  dragHandleProps?: Record<string, any>;
+  dragHandleProps?: Record<string, unknown>;
   pages?: SubPage[];
 }
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { SmartLink, BlockType } from "@/types/smart-link";
 import { BusinessInfoPanel } from "./blocks/BusinessInfoPanel";
 import { SortableList } from "./blocks/SortableList";

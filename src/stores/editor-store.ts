@@ -5,7 +5,7 @@ import { DeviceType } from '@/components/editor/DeviceFrame';
 import { EDITOR_MAX_HISTORY } from '@/lib/editor-constants';
 
 export function serializeLink(l: SmartLink): string {
-  const { views, clicks, createdAt, ...rest } = l;
+  const { views: _views, clicks: _clicks, createdAt: _createdAt, ...rest } = l;
   return JSON.stringify(rest);
 }
 

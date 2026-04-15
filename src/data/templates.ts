@@ -1,4 +1,4 @@
-import { SmartLink, SubPage } from "@/types/smart-link";
+import { SmartLink } from "@/types/smart-link";
 import { premiumTemplates } from "./premium-templates";
 
 export interface LinkTemplate {
