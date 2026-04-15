@@ -64,12 +64,14 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
         decoding="async"
         onError={() => setImgError(true)}
         style={isOriginalMode ? {
+          // Original mode: zoom via width expansion + negative margin to keep centered.
+          // transform:scale() doesn't work here because it doesn't affect layout flow
+          // — the container stays at natural height and clips the overflow awkwardly.
           display: 'block',
-          width: '100%',
+          width: `${zoom * 100}%`,
           height: 'auto',
+          marginLeft: zoom > 1 ? `${-(zoom - 1) * 50}%` : undefined,
           opacity,
-          transform: zoom !== 1 ? `scale(${zoom})` : undefined,
-          transformOrigin: 'center center',
         } : {
           display: 'block',
           width: '100%',
