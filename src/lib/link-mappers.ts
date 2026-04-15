@@ -71,6 +71,8 @@ export interface SmartLinkRow {
     businessNameEffectIntensity?: unknown;
     taglineEffect?: unknown;
     taglineEffectIntensity?: unknown;
+    heroImageZoom?: unknown;
+    heroBannerPaddingX?: unknown;
   } | null;
   buttons?: unknown;
   pages?: unknown;
@@ -151,6 +153,8 @@ export function rowToSmartLink(row: Partial<SmartLinkRow>, viewCount = 0, clickC
     businessNameEffectIntensity: (row.bg_effects?.businessNameEffectIntensity as number | undefined) ?? undefined,
     taglineEffect: (row.bg_effects?.taglineEffect as string | undefined) ?? undefined,
     taglineEffectIntensity: (row.bg_effects?.taglineEffectIntensity as number | undefined) ?? undefined,
+    heroImageZoom: (row.bg_effects?.heroImageZoom as number | undefined) ?? undefined,
+    heroBannerPaddingX: (row.bg_effects?.heroBannerPaddingX as number | undefined) ?? undefined,
     titleColor: row.title_color ?? undefined,
     taglineColor: row.tagline_color ?? undefined,
     taglineFontSize: row.tagline_font_size ? Number(row.tagline_font_size) : undefined,
@@ -250,6 +254,8 @@ export function smartLinkToRow(link: SmartLink, userId: string) {
         businessNameEffectIntensity: link.businessNameEffectIntensity ?? null,
         taglineEffect: link.taglineEffect ?? null,
         taglineEffectIntensity: link.taglineEffectIntensity ?? null,
+        heroImageZoom: link.heroImageZoom ?? null,
+        heroBannerPaddingX: link.heroBannerPaddingX ?? null,
       };
       const hasAny = Object.values(effects).some((v) => v !== null);
       return toJsonb(hasAny ? effects : null);

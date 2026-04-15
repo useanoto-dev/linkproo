@@ -238,6 +238,10 @@ export interface SmartLink {
   heroFocalPoint?: HeroFocalPoint;
   /** Opacity of the hero image itself (10–100, default 100) */
   heroImageOpacity?: number;
+  /** Zoom scale applied to the image (100–200, default 100). */
+  heroImageZoom?: number;
+  /** Horizontal padding (each side, 0–40 %) to narrow the banner (default 0). */
+  heroBannerPaddingX?: number;
   /** Opacity of the overlay on top of hero image (0–80, default 0) */
   heroOverlayOpacity?: number;
   /** Color of the overlay: "dark" | "light" | hex string (default "dark") */

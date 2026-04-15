@@ -28,26 +28,34 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
     ? `${link.heroFocalPoint.x}% ${link.heroFocalPoint.y}%`
     : 'center';
   const opacity = (link.heroImageOpacity ?? 100) / 100;
+  const zoom = (link.heroImageZoom ?? 100) / 100;
+  const paddingX = link.heroBannerPaddingX ?? 0;
   const heightPx = isOriginalMode
     ? undefined
     : Math.min(Math.max(link.heroImageHeightPx ?? 160, MIN_HEIGHT), MAX_HEIGHT);
 
   return (
     <motion.div
-      className="relative w-full z-[2] overflow-hidden"
+      className="relative w-full z-[2]"
       initial={{ opacity: 0, scale: 1.05 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
       style={{
-        ...(link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : {}),
-        // Fixed-height modes: container controls the height and bg color
-        ...(!isOriginalMode ? {
-          height: heightPx,
-          // contain leaves empty space — fill it with the page bg so it looks intentional
-          backgroundColor: objectFit === 'contain' ? heroBgColor : undefined,
-        } : {}),
+        paddingLeft: paddingX > 0 ? `${paddingX}%` : undefined,
+        paddingRight: paddingX > 0 ? `${paddingX}%` : undefined,
       }}
     >
+      <div
+        className="relative w-full overflow-hidden"
+        style={{
+          ...(link.bannerCurve ? { clipPath: `url(#${curveClipId})` } : {}),
+          ...(!isOriginalMode ? {
+            height: heightPx,
+            backgroundColor: objectFit === 'contain' ? heroBgColor : undefined,
+          } : {}),
+          borderRadius: paddingX > 0 ? 12 : undefined,
+        }}
+      >
       <img
         src={getOptimizedUrl(link.heroImage, isOriginalMode ? 1080 : 480)}
         alt={link.businessName}
@@ -56,19 +64,21 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
         decoding="async"
         onError={() => setImgError(true)}
         style={isOriginalMode ? {
-          // Original: image renders at its natural proportions — no forced height
           display: 'block',
           width: '100%',
           height: 'auto',
           opacity,
+          transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+          transformOrigin: 'center center',
         } : {
-          // Fixed-height modes: image fills the container using chosen object-fit
           display: 'block',
           width: '100%',
           height: '100%',
           objectFit: objectFit as React.CSSProperties['objectFit'],
           objectPosition: objectPos,
           opacity,
+          transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+          transformOrigin: 'center center',
         }}
       />
 
@@ -91,6 +101,7 @@ export function HeroImage({ link, heroBgColor, isBioMode, curveClipId }: HeroIma
           style={{ background: `linear-gradient(to bottom, ${heroBgColor}80 0%, transparent 40%)` }}
         />
       )}
+      </div>
     </motion.div>
   );
 }

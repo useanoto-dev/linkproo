@@ -81,6 +81,28 @@ export function ThemeBannerSection({
             />
           )}
 
+          {/* Zoom */}
+          <SliderRow
+            label="Zoom"
+            value={link.heroImageZoom ?? 100}
+            min={100}
+            max={200}
+            step={5}
+            unit="%"
+            onChange={(v) => onThrottle({ heroImageZoom: v })}
+          />
+
+          {/* Width (padding on sides) */}
+          <SliderRow
+            label="Largura"
+            value={100 - 2 * (link.heroBannerPaddingX ?? 0)}
+            min={40}
+            max={100}
+            step={5}
+            unit="%"
+            onChange={(v) => onThrottle({ heroBannerPaddingX: Math.round((100 - v) / 2) })}
+          />
+
           {/* Focal point — only useful in cover mode (image is cropped) */}
           {isCover && (
             <div className="space-y-1">
